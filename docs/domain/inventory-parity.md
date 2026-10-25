@@ -9,14 +9,14 @@ Verifica del 2026-10-25 sulla base di `docs/domain/data-dictionary.md`, `docs/se
 | Provider | `GET/POST /api/providers`, `GET/PUT/DELETE /api/providers/{id}` | autenticati | `SystemAdmin` | integrazione, dry-run, E2E |
 | Ambienti | `GET/POST /api/environments`, `GET/PUT /api/environments/{id}` | autenticati | `SystemAdmin` | integrazione, E2E |
 | Provider × ambiente | `GET/POST /api/provider-environments`, `GET/PUT/DELETE /api/provider-environments/{id}` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Ruoli per ambiente | `GET/POST /api/provider-environments/{id}/group-roles`, `DELETE …/{groupRoleId}` | autenticati | `SystemAdmin` | integrazione |
+| Ruoli per ambiente | `GET/POST /api/provider-environments/{id}/group-roles` (lista paginata), `DELETE …/{groupRoleId}` | autenticati | `SystemAdmin` | integrazione |
 | Server | `GET/POST /api/servers`, `GET/PUT/DELETE /api/servers/{id}` | autenticati | `ServerAdmin` sugli ambienti coinvolti | integrazione, E2E |
 | Move server | `PUT /api/servers/{id}/provider-environment/{providerEnvironmentId}` | — | `ServerAdmin` su source e target; `SystemAdmin` se il server ha una credenziale | integrazione |
 | Server application | `GET/POST /api/servers/{id}/applications`, CRUD `/api/server-applications` | autenticati | `ServerAdmin` sull'ambiente del server (entrambi se cambia server) | integrazione, E2E |
 | Applicazioni | `GET/POST /api/applications`, `GET/PUT/DELETE /api/applications/{id}` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Versioni | CRUD `/api/application-versions`, `GET/POST /api/applications/{id}/versions` | autenticati | `SystemAdmin` | integrazione, E2E |
-| API applicazione | CRUD `/api/application-version-apis`, `GET/POST /api/application-versions/{id}/apis` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Query param | CRUD `/api/application-api-query-params`, `GET/POST /api/application-version-apis/{id}/query-params` | autenticati | `SystemAdmin` | integrazione |
+| Versioni | CRUD `/api/application-versions`, `GET/POST /api/applications/{id}/versions` (lista paginata) | autenticati | `SystemAdmin` | integrazione, E2E |
+| API applicazione | CRUD `/api/application-version-apis`, `GET/POST /api/application-versions/{id}/apis` (lista paginata) | autenticati | `SystemAdmin` | integrazione, E2E |
+| Query param | CRUD `/api/application-api-query-params`, `GET/POST /api/application-version-apis/{id}/query-params` (lista paginata) | autenticati | `SystemAdmin` | integrazione |
 | Progetti | CRUD `/api/projects` | autenticati | `SystemAdmin` | integrazione, E2E |
 | Link applicazione ↔ progetto | `GET/POST/DELETE /api/projects/{id}/applications`, `GET/POST/DELETE /api/applications/{id}/projects` | autenticati | `SystemAdmin` | integrazione, E2E |
 | Server access | `GET /api/server-access/me` | autenticati | — | integrazione |
@@ -44,7 +44,6 @@ Liste paginate `{items,total,page,pageSize}` con `page`, `pageSize` (max 200), `
 7. **Ordinamento limitato** ai campi esposti (`id`, `name`, `version`, `provider`, `environment`, `url`, `server`, `application`). Il legacy ordinava lato client.
 8. **`SystemAdmin` non basta per i server.** Coerente con D7 = B: serve `ServerAdmin` sull'ambiente, salvo le eccezioni credenziali che richiedono `SystemAdmin`.
 9. **Cambio coppia provider/ambiente bloccato con dati collegati.** Se la coppia ha server o assegnazioni di ruolo, PUT risponde 409: altrimenti sposterebbe server e permessi senza i controlli di `ServerAdmin`.
-10. **Liste annidate non paginate** (versioni, API, query param, group roles). Limite noto: paginare oltre ~100 righe; il catalogo attuale resta sotto.
 
 ## Differenze dati
 
