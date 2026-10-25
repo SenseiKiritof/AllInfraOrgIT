@@ -1,0 +1,72 @@
+name: e2e
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  keycloak-login:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout meta
+        uses: actions/checkout@v4
+        with:
+          path: AllInfraOrgIT
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/infraorgit
+          path: infraorgit
+          token: ${{ secrets.REPO_TOKEN || github.token }}
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/infraorgit-web
+          path: infraorgit-web
+          token: ${{ secrets.REPO_TOKEN || github.token }}
+      - name: Checkout docker
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/infraorgit-docker
+          path: infraorgit-docker
+          token: ${{ secrets.REPO_TOKEN || github.token }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: |
+          npm install -g yarn@1.22.22
+          yarn --cwd infraorgit-web install --frozen-lockfile
+          yarn --cwd infraorgit-web playwright install --with-deps chromium
+
+      - name: Start stack
+        run: |
+          make -C AllInfraOrgIT dev > /tmp/dev.log 2>&1 &
+          echo $! > /tmp/dev.pid
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:5298/health/ready >/dev/null &&
+               curl -fsS http://localhost:3000/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/dev.log
+          exit 1
+
+      - name: Playwright login
+        run: make -C AllInfraOrgIT e2e
+
+      - name: Stop stack
+        if: always()
+        run: |
+          kill "$(cat /tmp/dev.pid)" 2>/dev/null || true
+          docker compose -f infraorgit-docker/compose.yaml down -v

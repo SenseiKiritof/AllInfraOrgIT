@@ -1,6 +1,6 @@
 COMPOSE ?= docker compose -f ../infraorgit-docker/compose.yaml
 
-.PHONY: dev infra down config api web migrate seed test e2e release
+.PHONY: dev infra down config reset api web migrate seed test e2e release
 
 dev:
 	./scripts/dev.sh
@@ -10,6 +10,10 @@ infra:
 
 down:
 	$(COMPOSE) down
+
+reset:
+	$(COMPOSE) down -v
+	@echo "Volumi rimossi: al prossimo make dev Keycloak reimporta il realm."
 
 config:
 	@if [ -f ../infraorgit-docker/.env ]; then \
