@@ -1,6 +1,6 @@
 COMPOSE ?= docker compose -f ../infraorgit-docker/compose.yaml
 
-.PHONY: dev infra down config reset api web migrate seed test e2e release
+.PHONY: dev infra down config reset api web migrate seed test e2e ci release
 
 dev:
 	./scripts/dev.sh
@@ -44,6 +44,17 @@ test:
 
 e2e:
 	yarn --cwd ../infraorgit-web playwright test
+
+ci: config
+	dotnet build ../infraorgit/InfraOrgIt.slnx -warnaserror
+	dotnet test ../infraorgit/InfraOrgIt.slnx
+	yarn --cwd ../infraorgit-web install --frozen-lockfile
+	yarn --cwd ../infraorgit-web biome ci .
+	yarn --cwd ../infraorgit-web tsc --noEmit
+	yarn --cwd ../infraorgit-web vitest run
+	yarn --cwd ../infraorgit-web build
+	jq empty versions.lock
+	npx --yes @redocly/cli lint docs/api/openapi.yaml
 
 release:
 	@echo "Release e versions.lock: Fase 8." >&2

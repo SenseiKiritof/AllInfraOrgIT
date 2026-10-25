@@ -52,15 +52,22 @@ Liste paginate `{items,total,page,pageSize}` con `page`, `pageSize` (max 200), `
 - `Version` come token di concorrenza; update concorrenti → 409 `concurrent_update`.
 - `CreatedAt`/`UpdatedAt` UTC su ogni entità con PK.
 
-## Dry-run di import (fixture sintetica)
+## Dry-run di import (fixture legacy-shaped)
 
-`Inventory_dry_run_loads_reference_and_catalog_fixture` carica nel nuovo schema, tramite EF, un set rappresentativo: provider, ambiente, provider × ambiente, 2 server, applicazione, versione, API con query param, progetto e link applicazione-progetto. Poi verifica via API i conteggi e il blocco della delete del provider (409).
+`Legacy_dry_run_maps_reference_and_catalog_fixture` carica `tests/InfraOrgIt.IntegrationTests/Legacy/Fixtures/legacy-reference-catalog.json`: una fixture sanificata con la **forma delle tabelle legacy** (ID espliciti, enum interi) per riferimento e catalogo. La fixture viene validata (unicità, FK, porte, lunghezze), mappata verso le entità nuove e inserita nel DB di test. Il test verifica:
 
-Il dry-run **con dati legacy reali resta in Fase 7**: richiede un dump sanificato, e `the legacy export` è vietato perché contiene dati locali reali. La fixture sintetica valida schema, relazioni e contratti senza usare dati cliente.
+- ID preservati (9101, 9001, 9401, 9501, 9601);
+- enum legacy mappati (0 → `GET`, 4 → `DELETE`, 2 → `Bool`);
+- letture API coerenti per provider, coppie provider/ambiente, versioni, API con query param e link progetto;
+- delete del provider bloccata con 409.
+
+`Legacy_fixture_rejects_orphan_foreign_keys` verifica che una coppia provider/ambiente orfana venga rifiutata prima dell'inserimento.
+
+Il dry-run **con dati legacy reali resta in Fase 7**: richiede un dump sanificato e l'importatore .NET. Il seed di riferimento versionato contiene solo anagrafiche di base; il catalogo reale è in `the legacy export`, vietato perché contiene dati locali.
 
 ## Copertura test Fase 3
 
-- `InventoryApiTests` (12 test di integrazione, MySQL Testcontainers): RBAC scritture, CRUD provider, catalogo completo con update di versione/API/query param, server con ruolo d'ambiente, deploy e delete bloccata, proxy route rifiutata, filtro non valido, cambio coppia bloccato, link progetto, dry-run.
+- `InventoryApiTests` (13 test di integrazione, MySQL Testcontainers): RBAC scritture, CRUD provider, catalogo completo con update di versione/API/query param, server con ruolo d'ambiente, deploy e delete bloccata, proxy route rifiutata, filtro non valido, cambio coppia bloccato, link progetto, dry-run.
 - `EntitySection.test.tsx`: tabella, creazione, azioni nascoste senza permesso.
 - `inventory.test.ts`: `saveEntity` crea sulla collezione e aggiorna sull'elemento (`/api/providers/{id}`).
 - Playwright: provider creato e modificato → ambiente collegato → applicazione con versione e API create e modificate → progetto collegato.

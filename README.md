@@ -26,6 +26,7 @@ Prerequisiti: Docker con Compose v2, .NET SDK 10, Node 24, Yarn 1, `make`.
 ```bash
 make dev      # infra + API :5298 + Vite :3000; crea .env se manca
 make test     # xunit + Testcontainers MySQL + Vitest
+make ci       # stessi gate dei workflow, in locale
 make migrate  # dotnet-ef dal manifest locale
 make e2e      # Playwright; richiede make dev attivo
 make config   # valida il Compose

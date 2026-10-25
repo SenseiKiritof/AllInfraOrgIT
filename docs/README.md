@@ -12,6 +12,7 @@ Indice dei documenti di Fase 1.
 | `migration/legacy-mapping.md` | mapping schema legacy → nuovo, ID, credenziali, diagrammi |
 | `api/route-inventory.md` | inventario completo delle route legacy e nuova route |
 | `api/openapi.yaml` | draft OpenAPI 3.0.3 del contratto v1 |
+| `operations/first-push.md` | creazione repo, primo push, protezione `main`, segreti CI |
 | `adr/` | ADR 001–008 |
 
 L'OpenAPI copre 148 operazioni: le 20 route legacy `/Paginated` sono fuse nelle liste con `page`/`pageSize` e il refresh token non è esposto (avviene lato server). Le 168 operazioni HTTP legacy + il WebSocket sono tutte mappate in `api/route-inventory.md`.
