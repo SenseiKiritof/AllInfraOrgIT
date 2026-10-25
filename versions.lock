@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-25T23:04:51Z",
+  "generatedAt": "2026-10-25T23:21:35Z",
   "repos": {
-    "infraorgit": "1db900978bf12bfb4091a11d2d6885908cd29530",
-    "infraorgit-web": "8a25f7f7616dc534b00ed2b1558d9f636a5430ab",
+    "infraorgit": "40bd9a66080d9bf103ff005f4278dd814fda61ac",
+    "infraorgit-web": "7c192238422a6187fd00bd4600e1f36b31392b7e",
     "infraorgit-docker": "042ba8b7446dc918786329e5db17f66eee72b5e9"
   }
 }
