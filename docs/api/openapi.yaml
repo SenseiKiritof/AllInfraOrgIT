@@ -4209,6 +4209,7 @@ components:
           type: integer
           nullable: true
           format: int32
+          description: Riservato alla Fase 4; un valore non nullo restituisce 422.
       required:
       - serverId
       - applicationVersionId

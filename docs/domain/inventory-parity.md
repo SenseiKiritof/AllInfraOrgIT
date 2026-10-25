@@ -38,11 +38,13 @@ Liste paginate `{items,total,page,pageSize}` con `page`, `pageSize` (max 200), `
 1. **Delete senza cascata distruttiva.** Il legacy cancellava il sottoalbero dalla topologia; qui i padri con figli rispondono 409 con il conteggio. Le join `ApplicationProject` sono le uniche con `ON DELETE CASCADE`. Motivazione: evitare cancellazioni involontarie di server o catalogo; l'anteprima impatti arriva con la topologia (Fase 4).
 2. **Nessuna delete ambiente.** Parità con il legacy; il target la valuta solo con anteprima impatti.
 3. **Credenziali e proxy non ancora collegati.** `Servers.CredentialId` e `ServerApplications.ProxyRouteId` esistono come colonne senza FK: le entità arrivano in Fase 5 e Fase 4. `credentialName` è sempre `null`.
-4. **`ProxyRouteId` accettato ma non validato** finché `ProxyRoutes` non esiste (Fase 4). Non usarlo da client esterni.
+4. **`ProxyRouteId` rifiutato con 422** finché `ProxyRoutes` non esiste (Fase 4): un id pendente bloccherebbe la FK in migrazione.
 5. **Assegnazione ruoli per ambiente senza UI.** L'API nested `group-roles` esiste ed è usata dai test e dall'ambiente di sviluppo; la pagina admin arriva in Fase 6.
 6. **Nessun endpoint di delete preview.** Il 409 riporta il conteggio delle dipendenze; la preview strutturata è nella Fase 4.
 7. **Ordinamento limitato** ai campi esposti (`id`, `name`, `version`, `provider`, `environment`, `url`, `server`, `application`). Il legacy ordinava lato client.
 8. **`SystemAdmin` non basta per i server.** Coerente con D7 = B: serve `ServerAdmin` sull'ambiente, salvo le eccezioni credenziali che richiedono `SystemAdmin`.
+9. **Cambio coppia provider/ambiente bloccato con dati collegati.** Se la coppia ha server o assegnazioni di ruolo, PUT risponde 409: altrimenti sposterebbe server e permessi senza i controlli di `ServerAdmin`.
+10. **Liste annidate non paginate** (versioni, API, query param, group roles). Limite noto: paginare oltre ~100 righe; il catalogo attuale resta sotto.
 
 ## Differenze dati
 
@@ -59,9 +61,10 @@ Il dry-run **con dati legacy reali resta in Fase 7**: richiede un dump sanificat
 
 ## Copertura test Fase 3
 
-- `InventoryApiTests` (11 test di integrazione, MySQL Testcontainers): RBAC scritture, CRUD provider, catalogo completo, server con ruolo d'ambiente, deploy e delete bloccata, link progetto, dry-run.
+- `InventoryApiTests` (12 test di integrazione, MySQL Testcontainers): RBAC scritture, CRUD provider, catalogo completo con update di versione/API/query param, server con ruolo d'ambiente, deploy e delete bloccata, proxy route rifiutata, filtro non valido, cambio coppia bloccato, link progetto, dry-run.
 - `EntitySection.test.tsx`: tabella, creazione, azioni nascoste senza permesso.
-- Playwright: provider → ambiente collegato → applicazione con versione e API → progetto collegato.
+- `inventory.test.ts`: `saveEntity` crea sulla collezione e aggiorna sull'elemento (`/api/providers/{id}`).
+- Playwright: provider creato e modificato → ambiente collegato → applicazione con versione e API create e modificate → progetto collegato.
 
 ## Fuori perimetro Fase 3
 
