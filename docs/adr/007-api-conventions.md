@@ -1,8 +1,8 @@
 # ADR-007 — Convenzioni del contratto API
 
-- Stato: proposta
+- Stato: accettata
 - Data: 2026-10-25
-- Decisione: D10 (route) e convenzioni §5.8
+- Decisione: D10 (route) e convenzioni §5.8; D10 confermata il 2026-10-25
 
 ## Contesto
 

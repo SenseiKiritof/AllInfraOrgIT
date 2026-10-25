@@ -1,6 +1,6 @@
 # ADR-008 — Nomi dello schema e colonne di audit
 
-- Stato: proposta
+- Stato: accettata
 - Data: 2026-10-25
 
 ## Contesto

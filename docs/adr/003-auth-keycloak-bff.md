@@ -1,7 +1,8 @@
 # ADR-003 — Autenticazione Keycloak con BFF
 
-- Stato: proposta
+- Stato: accettata
 - Data: 2026-10-25
+- Decisione: D6 confermata il 2026-10-25 (realm `infraorgit`)
 
 ## Contesto
 

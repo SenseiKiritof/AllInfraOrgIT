@@ -4,7 +4,8 @@ Generato dal codice legacy `InfraOrgIt/MinimalApis` il 2026-10-25. 168 operazion
 
 `/Paginated` è fuso nella lista con `page`/`pageSize`; le route target sono la proposta v1, non implementate.
 
-| Gruppo | Metodo | Route legacy | Route target | Permesso effettivo |
+| Gruppo | Metodo | Route legacy | Route target | Permesso legacy |
+|---|---|---|---|---|
 |---|---|---|---|---|
 | ApplicationActions | Delete | `/ApplicationActions/{id}` | `/api/application-actions/{id}` | SystemAdmin |
 | ApplicationActions | Put | `/ApplicationActions/{id}` | `/api/application-actions/{id}` | SystemAdmin |
@@ -178,6 +179,7 @@ Generato dal codice legacy `InfraOrgIt/MinimalApis` il 2026-10-25. 168 operazion
 
 ## Eccezioni e note
 
+- La colonna `Permesso legacy` descrive il comportamento dell'originale; il target D7 = B è in `docs/security/permissions.md`.
 - `Enviroments` legacy → `environments` target; nessun alias in v1 (D10).
 - `GET /X` e `GET /X/Paginated` convergono in `GET /api/x?page=&pageSize=`; risposta `{items,total,page,pageSize}`.
 - `Auth/*` diventa BFF: `GET /auth/login`, `GET /auth/callback`, `POST /auth/logout`, `GET /api/session`; i metodi target di login/callback sono GET. Gli endpoint token non sono esposti alla SPA.

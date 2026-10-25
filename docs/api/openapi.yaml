@@ -3,7 +3,7 @@ info:
   title: InfraOrgIT API
   version: 0.1.0-draft
   description: 'Draft Fase 1. Route target v1 derivate dall''inventario legacy; schema dei payload da rifinire per slice. Autenticazione BFF: cookie di sessione HttpOnly; mutazioni con CSRF token e Origin
-    valido.'
+    valido. RBAC D7 = B: anagrafiche globali a SystemAdmin; server, deploy, proxy e diagrammi con scope ambiente a ServerAdmin su tutti gli ambienti coinvolti.'
 servers:
 - url: https://{host}
   variables:

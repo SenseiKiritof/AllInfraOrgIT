@@ -82,6 +82,14 @@ Verificata sul frontend legacy (`infra-org-it-fe/app`, Next.js) il 2026-10-25. T
 | Stato server con `useServerAccess` | stesso modello, dati da `/api/server-access/me` |
 | Form senza schema | RHF + Zod, errori RFC 7807 |
 
+## Visibilità target (D7 = B)
+
+- **SystemAdmin**: anagrafiche globali (provider, ambienti, provider×ambiente, catalogo, progetti, template, credenziali, utenti/gruppi/ruoli/menu), diagrammi globali o con scope Provider/Project, audit.
+- **ServerAdmin sull'ambiente**: server, deploy, proxy, diagrammi con soli scope ambiente, console; la scrittura multi-ambiente richiede il ruolo su tutti gli ambienti coinvolti.
+- **ServerOperator sull'ambiente**: run azioni e reachability.
+- **Tutti gli autenticati**: letture; il menu mostra solo le voci assegnate.
+- **SystemAdmin non basta** per server/console/run: serve anche il ruolo d'ambiente.
+
 ## Pagine che il target può semplificare
 
 - Home: dashboard con diagrammi recenti o stato ambienti; il placeholder legacy non serve.

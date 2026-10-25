@@ -50,25 +50,54 @@ Verificata sul backend legacy il 2026-10-25 (`MinimalApis/*`, `ServerAccessServi
 4. **CSRF implicito.** Non c'è un token CSRF; `SameSite=Strict` protegge, ma la difesa non è esplicita e non è testata.
 5. **Audit incompleto sulle scritture inventario.** Non c'è audit per create/update/delete di inventario e diagrammi; solo le esecuzioni remote sono registrate.
 
-## Target v1 (proposta, D7 aperta)
+## Target v1 — D7 = B (deciso 2026-10-25)
 
-Mantenere la matrice attuale come baseline documentata, con due correzioni non negoziabili:
+Tightening per ambiente. Le letture restano aperte a ogni autenticato; cambiano le scritture.
 
-- **Menu filtrato**: `GET /api/menus` restituisce solo le voci visibili ai ruoli dell'utente; `MenuRole` diventa effettivo; test per ogni ruolo.
-- **CSRF esplicito** su tutte le mutazioni, oltre a `Origin` e `SameSite`.
+Regole generali:
 
-Per il resto, D7 resta aperta. Le opzioni:
+- **Anagrafiche globali** → `SystemAdmin`.
+- **Risorse legate a uno o più ambienti** → `ServerAdmin` su **tutti** gli ambienti coinvolti. `SystemAdmin` da solo non basta: la separazione dei ruoli per ambiente resta.
+- Se un'operazione tocca entità in ambienti diversi (proxy source→target, deploy con route, move di un server), servono i ruoli su tutti gli ambienti coinvolti.
+- **Eccezione credenziali**: assegnazione SSH, reset host key e cambio indirizzo/ambiente di un server con credenziale restano `SystemAdmin`, come nell'originale; non richiedono `ServerAdmin`.
+- La UI nasconde le azioni non consentite; l'API resta la fonte di verità (403, non 404, per risorse esistenti).
+- **Menu filtrato** da `MenuRole` e **CSRF esplicito** su tutte le mutazioni, oltre a `Origin` e `SameSite`.
 
-- **A — Preservare** (default del piano): scritture inventario a tutti gli autenticati, documentate e coperte da test. Rapido, ma lascia il gap 1.
-- **B — Tightening**: scritture inventario richiedono `SystemAdmin` per le anagrafiche globali (provider, ambienti, catalogo) e `ServerAdmin` sull'ambiente per server, deploy, proxy e diagrammi che lo contengono. Più sicuro, ma cambia il flusso e richiede una matrice di test più ampia.
+### Matrice target
 
-La UI deve comunque nascondere le azioni non consentite; l'API resta la fonte di verità (403, non 404, per risorse esistenti).
+| Operazione | Ruolo richiesto |
+|---|---|
+| CRUD Providers, EnvironmentDefinitions, ProviderEnvironments | `SystemAdmin` |
+| CRUD Applications, ApplicationVersions, ApplicationVersionApis, ApplicationApiQueryParams, Projects | `SystemAdmin` |
+| CRUD Users, Groups, Roles, Menus, ProviderEnvironmentGroupRoles | `SystemAdmin` |
+| CRUD ServerCredentials; assegnazione SSH; reset host key | `SystemAdmin` |
+| CRUD CommandTemplates; config ApplicationActions | `SystemAdmin` |
+| ReachabilityTests globali (CRUD e run) | `SystemAdmin` |
+| Lettura CommandExecutions (audit) | `SystemAdmin` |
+| Creazione/modifica/delete Server | `ServerAdmin` sull'ambiente del server |
+| Move Server tra ambienti | `ServerAdmin` su source e target; `SystemAdmin` se il server ha una credenziale |
+| Cambio IP/hostname di un server con credenziale | `SystemAdmin` |
+| CRUD ServerApplications | `ServerAdmin` sull'ambiente del server; se la route target è in un altro ambiente, `ServerAdmin` anche lì |
+| CRUD ProxyConnections | `ServerAdmin` sugli ambienti di source e target |
+| CRUD ProxyRoutes | `ServerAdmin` sugli ambienti della connessione e del target (ServerApplication o ProxyConnection) |
+| CRUD Diagrammi e salvataggio nodi/edge, diagramma default o globale | `SystemAdmin` |
+| CRUD Diagrammi con soli scope `ProviderEnvironment` | `ServerAdmin` su tutti gli ambienti in scope |
+| Cambio scope di un diagramma | unione vecchi/nuovi scope; se compare `Provider`, `Project` o default → `SystemAdmin` |
+| Delete nodo Topology `Provider` o `ProviderEnvironment` | `SystemAdmin` |
+| Delete nodo Topology `Server` o `ServerApplication` | `ServerAdmin` su tutti gli ambienti toccati dalla cascata |
+| Console SSH | `ServerAdmin` sull'ambiente del server |
+| Run ApplicationActions e reachability per server/ambiente | `ServerOperator` sull'ambiente |
+| CRUD ReachabilityTests per server | `ServerAdmin` sull'ambiente del server |
+| Tutte le letture | autenticato |
+| `/auth/login`, `/auth/callback` | anonimo |
+
+`SystemAdmin` non implica `ServerAdmin`/`ServerOperator`: per un server o una console serve comunque il ruolo d'ambiente. Un `ServerAdmin` è anche operatore sul proprio ambiente.
 
 ## Test da scrivere in Fase 2–6
 
-- `SystemAdmin` senza ruoli ambiente: console e run devono fallire.
-- `ServerAdmin` su ambiente A: console A ok, ambiente B 403, run A ok, CRUD credenziali 403.
-- `ServerOperator` su A: run A ok, console A 403, CRUD reachability A 403.
-- Utente autenticato senza ruoli: letture ok; scritture secondo D7.
+- `SystemAdmin` senza ruoli ambiente: CRUD provider ok; creazione server 403; console 403; run 403.
+- `ServerAdmin` su ambiente A: CRUD server A ok; CRUD provider 403; server B 403; proxy A→B 403 se non è admin anche su B; diagramma con scope A ok; diagramma con scope B 403; diagramma Provider 403.
+- `ServerOperator` su A: run A ok; console A 403; CRUD server A 403; CRUD reachability A 403.
+- Utente autenticato senza ruoli: letture ok; ogni scrittura 403.
 - Menu: ogni ruolo vede solo le voci assegnate.
 - CSRF: mutazione senza token → 403; `Origin` estranea → 403.
