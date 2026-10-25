@@ -38,7 +38,7 @@ Liste paginate `{items,total,page,pageSize}` con `page`, `pageSize` (max 200), `
 1. **Delete senza cascata distruttiva.** Il legacy cancellava il sottoalbero dalla topologia; qui i padri con figli rispondono 409 con il conteggio. Le join `ApplicationProject` sono le uniche con `ON DELETE CASCADE`. Motivazione: evitare cancellazioni involontarie di server o catalogo; l'anteprima impatti arriva con la topologia (Fase 4).
 2. **Nessuna delete ambiente.** Parità con il legacy; il target la valuta solo con anteprima impatti.
 3. **Credenziali e proxy non ancora collegati.** `Servers.CredentialId` e `ServerApplications.ProxyRouteId` esistono come colonne senza FK: le entità arrivano in Fase 5 e Fase 4. `credentialName` è sempre `null`.
-4. **`ProxyRouteId` rifiutato con 422** finché `ProxyRoutes` non esiste (Fase 4): un id pendente bloccherebbe la FK in migrazione.
+4. **`ProxyRouteId` accettato dalla Fase 4** e validato: un id inesistente risponde 404; la FK è attiva e la delete della route azzera il link sul deploy.
 5. **Assegnazione ruoli per ambiente senza UI.** L'API nested `group-roles` esiste ed è usata dai test e dall'ambiente di sviluppo; la pagina admin arriva in Fase 6.
 6. **Nessun endpoint di delete preview.** Il 409 riporta il conteggio delle dipendenze; la preview strutturata è nella Fase 4.
 7. **Ordinamento limitato** ai campi esposti (`id`, `name`, `version`, `provider`, `environment`, `url`, `server`, `application`). Il legacy ordinava lato client.

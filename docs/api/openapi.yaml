@@ -1290,6 +1290,21 @@ paths:
       security:
       - sessionCookie: []
         csrfToken: []
+  /api/diagrams/default:
+    get:
+      tags:
+      - Diagrams
+      operationId: getApiDiagramsDefault
+      summary: GET /api/diagrams/default
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+        default:
+          $ref: '#/components/responses/Problem'
   /api/diagrams/{id}:
     get:
       tags:
@@ -2596,15 +2611,30 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: q
+        in: query
+        schema:
+          type: string
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProxyRoute'
+                $ref: '#/components/schemas/Paginated'
         default:
           $ref: '#/components/responses/Problem'
     post:
@@ -4269,7 +4299,7 @@ components:
           type: integer
           nullable: true
           format: int32
-          description: Riservato alla Fase 4; un valore non nullo restituisce 422.
+          description: Route proxy esistente; un id sconosciuto restituisce 404.
       required:
       - serverId
       - applicationVersionId
