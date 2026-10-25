@@ -17,6 +17,6 @@ L'OpenAPI copre 148 operazioni: le 20 route legacy `/Paginated` sono fuse nelle 
 
 ## Stato
 
-Fase 1 — contratti e dominio — 2026-10-25. Documenti allineati al codice legacy `../InfraOrgIT` e al piano `../../PLAN.md`. D1–D10 chiuse; D7 = B (tightening per ambiente).
+Fase 1 — contratti e dominio — 2026-10-25. Documenti allineati al codice legacy `../InfraOrgIT` e al piano `../../PLAN.md`. D1–D10 chiuse; D7 = B (tightening per ambiente). Fase 2 ha implementato auth BFF, identity e shell; i documenti di dominio restano la base per Fase 3.
 
 Nessun codice applicativo è stato copiato: i documenti descrivono il dominio e le scelte, non il codice sorgente.

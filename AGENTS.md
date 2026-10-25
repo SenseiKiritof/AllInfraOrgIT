@@ -7,7 +7,8 @@ Repo meta. Le regole di workspace sono in `../AGENTS.md`; il piano in `../PLAN.m
 - `docs/adr/`: ogni decisione architetturale, una voce per ADR, stato esplicito.
 - `versions.lock`: SHA dei repo applicativi; aggiornarlo solo a release verificate.
 - `tools/graphify/workspace.json`: configurazione locale, mai committata; l'esempio sì.
-- `Makefile`: orchestrazione; i comandi applicativi arrivano con lo scaffolding.
+- `Makefile` e `scripts/`: orchestrazione e ambiente di sviluppo.
+- `.config/dotnet-tools.json`: versione locale di `dotnet-ef`.
 
 ## Regole
 

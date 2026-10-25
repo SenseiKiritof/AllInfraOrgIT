@@ -13,7 +13,7 @@ Applicazione interna su singolo host Linux. Servono HTTPS e un solo origin per S
 - Docker Compose su singolo host; niente Kubernetes in v1.
 - Caddy al bordo: serve `dist/` della SPA, fa reverse proxy di `/api/*` e `/auth/*` verso l'API e gestisce TLS automatico (ACME o CA interna per la LAN).
 - Stesso origin per SPA e API. In sviluppo niente Caddy: Vite :3000 con proxy verso l'API :5298.
-- Keycloak sullo stesso host tramite Caddy (sottodominio o path prefix) in Fase 2.
+- Keycloak sullo stesso host tramite Caddy (sottodominio o path prefix) in Fase 8, insieme alla configurazione di produzione.
 - `versions.lock` per release e rollback.
 
 ## Alternative considerate

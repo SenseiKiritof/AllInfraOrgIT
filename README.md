@@ -4,7 +4,7 @@ Repo meta di InfraOrgIT: decisioni architetturali, configurazione del workspace 
 
 ## Stato
 
-Fase 1 (contratti e dominio) — 2026-10-25. Documenti di dominio, API e migrazione in `docs/`; nessun codice applicativo: backend e frontend partono in Fase 2.
+Fase 2 (fondamenta e auth) — 2026-10-25. Backend identity + BFF Keycloak, frontend shell, Compose e CI sono operativi. L'inventario parte in Fase 3.
 
 ## Contenuto
 
@@ -12,25 +12,29 @@ Fase 1 (contratti e dominio) — 2026-10-25. Documenti di dominio, API e migrazi
 |---|---|
 | `docs/` | ERD, data dictionary, permessi, UX, mapping legacy, OpenAPI |
 | `docs/adr/` | ADR 001–008 e template |
+| `scripts/` | `dev.sh` e `env.sh` per lo sviluppo locale |
 | `tools/graphify/` | configurazione del workspace graphify |
-| `Makefile` | comandi di orchestrazione |
+| `Makefile` | orchestrazione di infra, API, web, test e migrazioni |
 | `versions.lock` | commit SHA dei repo applicativi per release riproducibili |
 
 I documenti di workspace `AGENTS.md` e `PLAN.md` stanno nella radice, un livello sopra questo repo.
 
 ## Comandi
 
-Prerequisiti: Docker con Compose v2, `make`.
+Prerequisiti: Docker con Compose v2, .NET SDK 10, Node 24, Yarn 1, `make`.
 
 ```bash
-cp ../infraorgit-docker/.env.example ../infraorgit-docker/.env  # una volta
-make infra   # MySQL, MySQL Keycloak, Keycloak
+make dev      # infra + API :5298 + Vite :3000; crea .env se manca
+make test     # xunit + Testcontainers MySQL + Vitest
+make migrate  # dotnet-ef dal manifest locale
+make e2e      # Playwright; richiede make dev attivo
+make config   # valida il Compose
 make down
-make config  # valida il Compose con .env.example
-npx --yes @redocly/cli lint docs/api/openapi.yaml
 ```
 
-`make test`, `migrate`, `seed`, `e2e`, `release` falliscono con TODO fino alla Fase 2.
+`make e2e` usa `http://localhost:3000`; per un ambiente diverso impostare `E2E_BASE_URL`.
+
+`make release` resta TODO fino alla Fase 8.
 
 ## Release
 
