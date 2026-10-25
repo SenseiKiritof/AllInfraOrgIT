@@ -5410,6 +5410,10 @@ components:
           maxLength: 500
         script:
           type: string
+        placeholderCount:
+          type: integer
+          format: int32
+          readOnly: true
         createdAt:
           type: string
           format: date-time
@@ -5620,6 +5624,10 @@ components:
           type: string
           nullable: true
           format: date-time
+        idempotencyKey:
+          type: string
+          nullable: true
+          maxLength: 100
       required:
       - id
       - username
