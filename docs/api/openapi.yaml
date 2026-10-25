@@ -3927,6 +3927,10 @@ components:
         name:
           type: string
           maxLength: 200
+        environmentCount:
+          type: integer
+          format: int32
+          readOnly: true
         createdAt:
           type: string
           format: date-time
@@ -3963,6 +3967,10 @@ components:
         description:
           type: string
           maxLength: 250
+        providerCount:
+          type: integer
+          format: int32
+          readOnly: true
         createdAt:
           type: string
           format: date-time

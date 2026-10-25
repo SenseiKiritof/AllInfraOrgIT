@@ -9,7 +9,7 @@ Database: MySQL LTS (8.4), InnoDB, `utf8mb4_0900_ai_ci`. Nomi tabella/colonna in
 - **Version**: token di concorrenza ottimistica incrementato da `SaveChanges`; MySQL non ha `xmin`.
 - **Date**: UTC, ISO 8601 nelle API.
 - **Enum**: stringhe con check constraint, salvo diversa indicazione.
-- **Delete**: hard delete in v1; anteprima impatti e audit per le operazioni distruttive.
+- **Delete**: hard delete in v1; anteprima impatti e audit per le operazioni distruttive. I padri con figli sono bloccati (409), non cancellati in cascata: solo le tabelle di join usano `ON DELETE CASCADE`.
 - **UQ***: vincolo consigliato, da verificare sui dati legacy prima dell'import.
 
 ## Identità e RBAC
@@ -82,7 +82,7 @@ Database: MySQL LTS (8.4), InnoDB, `utf8mb4_0900_ai_ci`. Nomi tabella/colonna in
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ProviderEnvironmentId | int | no | FK `ProviderEnvironments.Id` cascade |
+| ProviderEnvironmentId | int | no | FK `ProviderEnvironments.Id` restrict |
 | GroupId | int | no | FK `Groups.Id` cascade |
 | RoleId | int | no | FK `Roles.Id` cascade |
 | audit | | | UQ* (`ProviderEnvironmentId`, `GroupId`, `RoleId`) |
@@ -113,8 +113,8 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ProviderId | int | no | FK `Providers.Id` cascade |
-| EnvironmentDefinitionId | int | no | FK `EnvironmentDefinitions.Id` cascade; ex `EnvironmentId` |
+| ProviderId | int | no | FK `Providers.Id` restrict |
+| EnvironmentDefinitionId | int | no | FK `EnvironmentDefinitions.Id` restrict; ex `EnvironmentId` |
 | audit | | | UQ* (`ProviderId`, `EnvironmentDefinitionId`) |
 
 ### Servers
@@ -122,11 +122,11 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ProviderEnvironmentId | int | no | FK `ProviderEnvironments.Id` cascade |
+| ProviderEnvironmentId | int | no | FK `ProviderEnvironments.Id` restrict |
 | Name | varchar(200) | no | |
 | IpAddress | varchar(200) | no | |
 | Hostname | varchar(200) | no | |
-| CredentialId | int | sì | FK `ServerCredentials.Id` restrict |
+| CredentialId | int | sì | FK `ServerCredentials.Id` aggiunta in Fase 5 |
 | SshPort | int | no | default 22 |
 | HostKeyFingerprint | varchar(100) | sì | SHA256 TOFU |
 | audit | | | |
@@ -152,10 +152,10 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ServerId | int | no | FK `Servers.Id` cascade |
-| ApplicationVersionId | int | no | FK `ApplicationVersions.Id` cascade |
+| ServerId | int | no | FK `Servers.Id` restrict |
+| ApplicationVersionId | int | no | FK `ApplicationVersions.Id` restrict |
 | ExposedPort | int | no | |
-| ProxyRouteId | int | sì | FK `ProxyRoutes.Id`, UQ* (relazione 1-1) |
+| ProxyRouteId | int | sì | FK `ProxyRoutes.Id` aggiunta in Fase 4, UQ* (relazione 1-1) |
 | audit | | | |
 
 ## Catalogo
@@ -176,7 +176,7 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ApplicationId | int | no | FK `Applications.Id` cascade |
+| ApplicationId | int | no | FK `Applications.Id` restrict |
 | VersionNumber | varchar(25) | no | UQ* (`ApplicationId`, `VersionNumber`) |
 | audit | | | |
 
@@ -185,7 +185,7 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ApplicationVersionId | int | no | FK `ApplicationVersions.Id` cascade |
+| ApplicationVersionId | int | no | FK `ApplicationVersions.Id` restrict |
 | Url | varchar(200) | no | |
 | RequestTypeEnum | varchar(10) | no | `GET` \| `POST` \| `PUT` \| `PATCH` \| `DELETE` |
 | Description | varchar(200) | no | |
@@ -197,7 +197,7 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ApplicationApiId | int | no | FK `ApplicationVersionApis.Id` cascade |
+| ApplicationApiId | int | no | FK `ApplicationVersionApis.Id` restrict |
 | Name | varchar(200) | no | |
 | ParamType | varchar(20) | no | `Int` \| `String` \| `Bool` \| `DateTime` \| `Double` \| `Decimal` |
 | audit | | | |
@@ -215,8 +215,8 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
-| ApplicationsId | int | no | PK, FK `Applications.Id` cascade |
-| ProjectsId | int | no | PK, FK `Projects.Id` cascade |
+| ApplicationsId | int | no | PK, FK `Applications.Id` cascade (solo link) |
+| ProjectsId | int | no | PK, FK `Projects.Id` cascade (solo link) |
 
 ### CommandTemplates
 
@@ -233,7 +233,7 @@ Tabella nuova; sostituisce `Environments` del legacy. L'entità si chiama `Envir
 | Colonna | Tipo | Null | Vincoli / note |
 |---|---|---|---|
 | Id | int | no | PK |
-| ApplicationId | int | no | FK `Applications.Id` cascade |
+| ApplicationId | int | no | FK `Applications.Id` restrict |
 | Label | varchar(100) | no | |
 | Order | int | no | |
 | CommandTemplateId | int | sì | FK `CommandTemplates.Id` restrict |
