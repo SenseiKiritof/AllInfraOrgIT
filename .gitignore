@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+graphify-out/
+tools/graphify/workspace.json
+.DS_Store

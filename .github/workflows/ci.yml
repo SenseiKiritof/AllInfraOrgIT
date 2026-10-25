@@ -1,0 +1,19 @@
+name: meta
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: versions.lock è JSON valido
+        run: jq empty versions.lock
+      - name: Nessun .env versionato
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "File .env versionato: rimuoverlo." >&2
+            exit 1
+          fi

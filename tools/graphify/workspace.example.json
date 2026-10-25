@@ -1,0 +1,45 @@
+{
+  "root": "/path/to/Progetti",
+  "repos": [
+    "InfraOrgIT/infraorgit",
+    "InfraOrgIT/infraorgit-web",
+    "InfraOrgIT/infraorgit-docker"
+  ],
+  "profiles": [
+    "dotnet",
+    "node"
+  ],
+  "skip_dirs": [
+    "/node_modules/",
+    "/bin/",
+    "/obj/",
+    "/graphify-out/",
+    "/build/",
+    "/dist/",
+    "/target/",
+    "/.gradle/",
+    "/.venv/",
+    "/venv/",
+    "/__pycache__/",
+    "/.next/",
+    "/.dart_tool/",
+    "/Pods/",
+    "/coverage/",
+    "/Migrations/"
+  ],
+  "http": {
+    "default_targets": {
+      "InfraOrgIT/infraorgit-web": "InfraOrgIT/infraorgit"
+    },
+    "file_targets": {}
+  },
+  "frontend_links": [],
+  "shared_db": [],
+  "translators": {},
+  "hooks": [
+    "post-checkout",
+    "post-merge",
+    "post-commit",
+    "post-rewrite"
+  ]
+}
