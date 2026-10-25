@@ -1,0 +1,5652 @@
+openapi: 3.0.3
+info:
+  title: InfraOrgIT API
+  version: 0.1.0-draft
+  description: 'Draft Fase 1. Route target v1 derivate dall''inventario legacy; schema dei payload da rifinire per slice. Autenticazione BFF: cookie di sessione HttpOnly; mutazioni con CSRF token e Origin
+    valido.'
+servers:
+- url: https://{host}
+  variables:
+    host:
+      default: localhost
+      description: Host Caddy
+tags:
+- name: ApplicationActions
+- name: ApplicationApiQueryParams
+- name: ApplicationVersionApis
+- name: ApplicationVersions
+- name: Applications
+- name: Auth
+- name: CommandExecutions
+- name: CommandTemplates
+- name: Diagrams
+- name: Enviroments
+- name: Groups
+- name: Menus
+- name: Projects
+- name: ProviderEnvironmentGroupRoles
+- name: ProviderEnvironments
+- name: Providers
+- name: ProxyConnections
+- name: ProxyRoutes
+- name: ReachabilityTests
+- name: Roles
+- name: ServerAccess
+- name: ServerApplications
+- name: ServerCredentials
+- name: Servers
+- name: Topology
+- name: Users
+- name: socket
+security:
+- sessionCookie: []
+paths:
+  /api/application-actions/{id}:
+    put:
+      tags:
+      - ApplicationActions
+      operationId: putApiApplicationActionsId
+      summary: PUT /api/application-actions/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationActionInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ApplicationActions
+      operationId: deleteApiApplicationActionsId
+      summary: DELETE /api/application-actions/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/applications/{id}/actions:
+    get:
+      tags:
+      - Applications
+      operationId: getApiApplicationsIdActions
+      summary: GET /api/applications/{id}/actions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationAction'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Applications
+      operationId: postApiApplicationsIdActions
+      summary: POST /api/applications/{id}/actions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationActionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationAction'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/server-applications/{id}/actions:
+    get:
+      tags:
+      - ServerApplications
+      operationId: getApiServerApplicationsIdActions
+      summary: GET /api/server-applications/{id}/actions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationAction'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/server-applications/{id}/actions/{actionId}/run:
+    post:
+      tags:
+      - ServerApplications
+      operationId: postApiServerApplicationsIdActionsActionidRun
+      summary: POST /api/server-applications/{id}/actions/{actionId}/run
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: actionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResult'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-api-query-params:
+    get:
+      tags:
+      - ApplicationApiQueryParams
+      operationId: getApiApplicationApiQueryParams
+      summary: GET /api/application-api-query-params
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ApplicationApiQueryParams
+      operationId: postApiApplicationApiQueryParams
+      summary: POST /api/application-api-query-params
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationApiQueryParamInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationApiQueryParam'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-api-query-params/{id}:
+    get:
+      tags:
+      - ApplicationApiQueryParams
+      operationId: getApiApplicationApiQueryParamsId
+      summary: GET /api/application-api-query-params/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationApiQueryParam'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ApplicationApiQueryParams
+      operationId: putApiApplicationApiQueryParamsId
+      summary: PUT /api/application-api-query-params/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationApiQueryParamInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ApplicationApiQueryParams
+      operationId: deleteApiApplicationApiQueryParamsId
+      summary: DELETE /api/application-api-query-params/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-version-apis:
+    get:
+      tags:
+      - ApplicationVersionApis
+      operationId: getApiApplicationVersionApis
+      summary: GET /api/application-version-apis
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ApplicationVersionApis
+      operationId: postApiApplicationVersionApis
+      summary: POST /api/application-version-apis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationVersionApiInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersionApi'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-version-apis/{id}:
+    get:
+      tags:
+      - ApplicationVersionApis
+      operationId: getApiApplicationVersionApisId
+      summary: GET /api/application-version-apis/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersionApi'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ApplicationVersionApis
+      operationId: putApiApplicationVersionApisId
+      summary: PUT /api/application-version-apis/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationVersionApiInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ApplicationVersionApis
+      operationId: deleteApiApplicationVersionApisId
+      summary: DELETE /api/application-version-apis/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-version-apis/{id}/query-params:
+    get:
+      tags:
+      - ApplicationVersionApis
+      operationId: getApiApplicationVersionApisIdQueryParams
+      summary: GET /api/application-version-apis/{id}/query-params
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationApiQueryParam'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ApplicationVersionApis
+      operationId: postApiApplicationVersionApisIdQueryParams
+      summary: POST /api/application-version-apis/{id}/query-params
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationApiQueryParamInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationApiQueryParam'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-versions:
+    get:
+      tags:
+      - ApplicationVersions
+      operationId: getApiApplicationVersions
+      summary: GET /api/application-versions
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ApplicationVersions
+      operationId: postApiApplicationVersions
+      summary: POST /api/application-versions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationVersionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersion'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-versions/{id}:
+    get:
+      tags:
+      - ApplicationVersions
+      operationId: getApiApplicationVersionsId
+      summary: GET /api/application-versions/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersion'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ApplicationVersions
+      operationId: putApiApplicationVersionsId
+      summary: PUT /api/application-versions/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationVersionInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ApplicationVersions
+      operationId: deleteApiApplicationVersionsId
+      summary: DELETE /api/application-versions/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/application-versions/{id}/apis:
+    get:
+      tags:
+      - ApplicationVersions
+      operationId: getApiApplicationVersionsIdApis
+      summary: GET /api/application-versions/{id}/apis
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationVersionApi'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ApplicationVersions
+      operationId: postApiApplicationVersionsIdApis
+      summary: POST /api/application-versions/{id}/apis
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationVersionApiInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersionApi'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/applications:
+    get:
+      tags:
+      - Applications
+      operationId: getApiApplications
+      summary: GET /api/applications
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Applications
+      operationId: postApiApplications
+      summary: POST /api/applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/applications/{id}:
+    get:
+      tags:
+      - Applications
+      operationId: getApiApplicationsId
+      summary: GET /api/applications/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Applications
+      operationId: putApiApplicationsId
+      summary: PUT /api/applications/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Applications
+      operationId: deleteApiApplicationsId
+      summary: DELETE /api/applications/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/applications/{id}/versions:
+    get:
+      tags:
+      - Applications
+      operationId: getApiApplicationsIdVersions
+      summary: GET /api/applications/{id}/versions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationVersion'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Applications
+      operationId: postApiApplicationsIdVersions
+      summary: POST /api/applications/{id}/versions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationVersionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersion'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/applications/{id}/projects:
+    get:
+      tags:
+      - Applications
+      operationId: getApiApplicationsIdProjects
+      summary: GET /api/applications/{id}/projects
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Applications
+      operationId: postApiApplicationsIdProjects
+      summary: POST /api/applications/{id}/projects
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectLink'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/applications/{id}/projects/{projectId}:
+    delete:
+      tags:
+      - Applications
+      operationId: deleteApiApplicationsIdProjectsProjectid
+      summary: DELETE /api/applications/{id}/projects/{projectId}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /auth/login:
+    get:
+      tags:
+      - Auth
+      operationId: getAuthLogin
+      summary: GET /auth/login
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '302':
+          description: Redirect OIDC
+          headers:
+            Location:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/Problem'
+      security: []
+  /auth/callback:
+    get:
+      tags:
+      - Auth
+      operationId: getAuthCallback
+      summary: GET /auth/callback
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '302':
+          description: Redirect OIDC
+          headers:
+            Location:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/Problem'
+      security: []
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      operationId: postAuthLogout
+      summary: POST /auth/logout
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/session:
+    get:
+      tags:
+      - Auth
+      operationId: getApiSession
+      summary: GET /api/session
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/command-templates:
+    get:
+      tags:
+      - CommandTemplates
+      operationId: getApiCommandTemplates
+      summary: GET /api/command-templates
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - CommandTemplates
+      operationId: postApiCommandTemplates
+      summary: POST /api/command-templates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandTemplateInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandTemplate'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/command-templates/{id}:
+    get:
+      tags:
+      - CommandTemplates
+      operationId: getApiCommandTemplatesId
+      summary: GET /api/command-templates/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandTemplate'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - CommandTemplates
+      operationId: putApiCommandTemplatesId
+      summary: PUT /api/command-templates/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandTemplateInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - CommandTemplates
+      operationId: deleteApiCommandTemplatesId
+      summary: DELETE /api/command-templates/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/diagrams:
+    get:
+      tags:
+      - Diagrams
+      operationId: getApiDiagrams
+      summary: GET /api/diagrams
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Diagrams
+      operationId: postApiDiagrams
+      summary: POST /api/diagrams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagramInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/diagrams/{id}:
+    get:
+      tags:
+      - Diagrams
+      operationId: getApiDiagramsId
+      summary: GET /api/diagrams/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Diagrams
+      operationId: putApiDiagramsId
+      summary: PUT /api/diagrams/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagramInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Diagrams
+      operationId: deleteApiDiagramsId
+      summary: DELETE /api/diagrams/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/diagrams/{id}/graph:
+    get:
+      tags:
+      - Diagrams
+      operationId: getApiDiagramsIdGraph
+      summary: GET /api/diagrams/{id}/graph
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagramGraph'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/diagrams/{id}/nodes:
+    put:
+      tags:
+      - Diagrams
+      operationId: putApiDiagramsIdNodes
+      summary: PUT /api/diagrams/{id}/nodes
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DiagramNode'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/diagrams/{id}/edges:
+    put:
+      tags:
+      - Diagrams
+      operationId: putApiDiagramsIdEdges
+      summary: PUT /api/diagrams/{id}/edges
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DiagramEdge'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/environments:
+    get:
+      tags:
+      - Enviroments
+      operationId: getApiEnvironments
+      summary: GET /api/environments
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Enviroments
+      operationId: postApiEnvironments
+      summary: POST /api/environments
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/environments/{id}:
+    get:
+      tags:
+      - Enviroments
+      operationId: getApiEnvironmentsId
+      summary: GET /api/environments/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Enviroments
+      operationId: putApiEnvironmentsId
+      summary: PUT /api/environments/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/groups:
+    get:
+      tags:
+      - Groups
+      operationId: getApiGroups
+      summary: GET /api/groups
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Groups
+      operationId: postApiGroups
+      summary: POST /api/groups
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/groups/{id}:
+    get:
+      tags:
+      - Groups
+      operationId: getApiGroupsId
+      summary: GET /api/groups/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Groups
+      operationId: putApiGroupsId
+      summary: PUT /api/groups/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Groups
+      operationId: deleteApiGroupsId
+      summary: DELETE /api/groups/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/menus:
+    get:
+      tags:
+      - Menus
+      operationId: getApiMenus
+      summary: GET /api/menus
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Menu'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Menus
+      operationId: postApiMenus
+      summary: POST /api/menus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/menus/{id}:
+    get:
+      tags:
+      - Menus
+      operationId: getApiMenusId
+      summary: GET /api/menus/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Menus
+      operationId: putApiMenusId
+      summary: PUT /api/menus/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Menus
+      operationId: deleteApiMenusId
+      summary: DELETE /api/menus/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/projects:
+    get:
+      tags:
+      - Projects
+      operationId: getApiProjects
+      summary: GET /api/projects
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Projects
+      operationId: postApiProjects
+      summary: POST /api/projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/projects/{id}:
+    get:
+      tags:
+      - Projects
+      operationId: getApiProjectsId
+      summary: GET /api/projects/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Projects
+      operationId: putApiProjectsId
+      summary: PUT /api/projects/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Projects
+      operationId: deleteApiProjectsId
+      summary: DELETE /api/projects/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/projects/{id}/applications:
+    get:
+      tags:
+      - Projects
+      operationId: getApiProjectsIdApplications
+      summary: GET /api/projects/{id}/applications
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Projects
+      operationId: postApiProjectsIdApplications
+      summary: POST /api/projects/{id}/applications
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationLink'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/projects/{id}/applications/{applicationId}:
+    delete:
+      tags:
+      - Projects
+      operationId: deleteApiProjectsIdApplicationsApplicationid
+      summary: DELETE /api/projects/{id}/applications/{applicationId}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: applicationId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environment-group-roles:
+    get:
+      tags:
+      - ProviderEnvironmentGroupRoles
+      operationId: getApiProviderEnvironmentGroupRoles
+      summary: GET /api/provider-environment-group-roles
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ProviderEnvironmentGroupRoles
+      operationId: postApiProviderEnvironmentGroupRoles
+      summary: POST /api/provider-environment-group-roles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderEnvironmentGroupRoleInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderEnvironmentGroupRole'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environment-group-roles/{id}:
+    get:
+      tags:
+      - ProviderEnvironmentGroupRoles
+      operationId: getApiProviderEnvironmentGroupRolesId
+      summary: GET /api/provider-environment-group-roles/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderEnvironmentGroupRole'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ProviderEnvironmentGroupRoles
+      operationId: putApiProviderEnvironmentGroupRolesId
+      summary: PUT /api/provider-environment-group-roles/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderEnvironmentGroupRoleInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ProviderEnvironmentGroupRoles
+      operationId: deleteApiProviderEnvironmentGroupRolesId
+      summary: DELETE /api/provider-environment-group-roles/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environments/{providerEnvironmentId}/group-roles:
+    get:
+      tags:
+      - ProviderEnvironments
+      operationId: getApiProviderEnvironmentsProviderenvironmentidGroupRoles
+      summary: GET /api/provider-environments/{providerEnvironmentId}/group-roles
+      parameters:
+      - name: providerEnvironmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProviderEnvironmentGroupRole'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ProviderEnvironments
+      operationId: postApiProviderEnvironmentsProviderenvironmentidGroupRoles
+      summary: POST /api/provider-environments/{providerEnvironmentId}/group-roles
+      parameters:
+      - name: providerEnvironmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderEnvironmentInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderEnvironmentGroupRole'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environments/{providerEnvironmentId}/group-roles/{groupRoleId}:
+    delete:
+      tags:
+      - ProviderEnvironments
+      operationId: deleteApiProviderEnvironmentsProviderenvironmentidGroupRolesGrouproleid
+      summary: DELETE /api/provider-environments/{providerEnvironmentId}/group-roles/{groupRoleId}
+      parameters:
+      - name: providerEnvironmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: groupRoleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environments:
+    get:
+      tags:
+      - ProviderEnvironments
+      operationId: getApiProviderEnvironments
+      summary: GET /api/provider-environments
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ProviderEnvironments
+      operationId: postApiProviderEnvironments
+      summary: POST /api/provider-environments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderEnvironmentInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderEnvironment'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environments/{id}:
+    get:
+      tags:
+      - ProviderEnvironments
+      operationId: getApiProviderEnvironmentsId
+      summary: GET /api/provider-environments/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderEnvironment'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ProviderEnvironments
+      operationId: putApiProviderEnvironmentsId
+      summary: PUT /api/provider-environments/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderEnvironmentInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ProviderEnvironments
+      operationId: deleteApiProviderEnvironmentsId
+      summary: DELETE /api/provider-environments/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/providers:
+    get:
+      tags:
+      - Providers
+      operationId: getApiProviders
+      summary: GET /api/providers
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Providers
+      operationId: postApiProviders
+      summary: POST /api/providers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provider'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/providers/{id}:
+    get:
+      tags:
+      - Providers
+      operationId: getApiProvidersId
+      summary: GET /api/providers/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provider'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Providers
+      operationId: putApiProvidersId
+      summary: PUT /api/providers/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Providers
+      operationId: deleteApiProvidersId
+      summary: DELETE /api/providers/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/proxy-connections:
+    get:
+      tags:
+      - ProxyConnections
+      operationId: getApiProxyConnections
+      summary: GET /api/proxy-connections
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ProxyConnections
+      operationId: postApiProxyConnections
+      summary: POST /api/proxy-connections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyConnectionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyConnection'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/proxy-connections/{id}:
+    get:
+      tags:
+      - ProxyConnections
+      operationId: getApiProxyConnectionsId
+      summary: GET /api/proxy-connections/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyConnection'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ProxyConnections
+      operationId: putApiProxyConnectionsId
+      summary: PUT /api/proxy-connections/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyConnectionInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ProxyConnections
+      operationId: deleteApiProxyConnectionsId
+      summary: DELETE /api/proxy-connections/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/proxy-connections/{id}/routes:
+    get:
+      tags:
+      - ProxyConnections
+      operationId: getApiProxyConnectionsIdRoutes
+      summary: GET /api/proxy-connections/{id}/routes
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyRoute'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ProxyConnections
+      operationId: postApiProxyConnectionsIdRoutes
+      summary: POST /api/proxy-connections/{id}/routes
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyRouteInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyRoute'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/proxy-routes:
+    get:
+      tags:
+      - ProxyRoutes
+      operationId: getApiProxyRoutes
+      summary: GET /api/proxy-routes
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ProxyRoutes
+      operationId: postApiProxyRoutes
+      summary: POST /api/proxy-routes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyRouteInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyRoute'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/proxy-routes/{id}:
+    get:
+      tags:
+      - ProxyRoutes
+      operationId: getApiProxyRoutesId
+      summary: GET /api/proxy-routes/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyRoute'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ProxyRoutes
+      operationId: putApiProxyRoutesId
+      summary: PUT /api/proxy-routes/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyRouteInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ProxyRoutes
+      operationId: deleteApiProxyRoutesId
+      summary: DELETE /api/proxy-routes/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/reachability-tests:
+    get:
+      tags:
+      - ReachabilityTests
+      operationId: getApiReachabilityTests
+      summary: GET /api/reachability-tests
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReachabilityTest'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ReachabilityTests
+      operationId: postApiReachabilityTests
+      summary: POST /api/reachability-tests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReachabilityTestInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReachabilityTest'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/reachability-tests/{id}:
+    put:
+      tags:
+      - ReachabilityTests
+      operationId: putApiReachabilityTestsId
+      summary: PUT /api/reachability-tests/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReachabilityTestInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ReachabilityTests
+      operationId: deleteApiReachabilityTestsId
+      summary: DELETE /api/reachability-tests/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}/reachability-tests:
+    get:
+      tags:
+      - Servers
+      operationId: getApiServersIdReachabilityTests
+      summary: GET /api/servers/{id}/reachability-tests
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReachabilityTest'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Servers
+      operationId: postApiServersIdReachabilityTests
+      summary: POST /api/servers/{id}/reachability-tests
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReachabilityTestInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReachabilityTest'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}/reachability-tests/run:
+    post:
+      tags:
+      - Servers
+      operationId: postApiServersIdReachabilityTestsRun
+      summary: POST /api/servers/{id}/reachability-tests/run
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReachabilityResult'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/provider-environments/{id}/reachability-tests/run:
+    post:
+      tags:
+      - ProviderEnvironments
+      operationId: postApiProviderEnvironmentsIdReachabilityTestsRun
+      summary: POST /api/provider-environments/{id}/reachability-tests/run
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReachabilityResult'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/roles:
+    get:
+      tags:
+      - Roles
+      operationId: getApiRoles
+      summary: GET /api/roles
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Roles
+      operationId: postApiRoles
+      summary: POST /api/roles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/roles/{id}:
+    get:
+      tags:
+      - Roles
+      operationId: getApiRolesId
+      summary: GET /api/roles/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Roles
+      operationId: putApiRolesId
+      summary: PUT /api/roles/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Roles
+      operationId: deleteApiRolesId
+      summary: DELETE /api/roles/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/server-access/me:
+    get:
+      tags:
+      - ServerAccess
+      operationId: getApiServerAccessMe
+      summary: GET /api/server-access/me
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerAccess'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/command-executions:
+    get:
+      tags:
+      - CommandExecutions
+      operationId: getApiCommandExecutions
+      summary: GET /api/command-executions
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: serverId
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/socket/servers/{id}/console:
+    get:
+      tags:
+      - socket
+      operationId: getApiSocketServersIdConsole
+      summary: GET /api/socket/servers/{id}/console
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '101':
+          description: Switching Protocols
+        default:
+          $ref: '#/components/responses/Problem'
+      x-websocket: true
+  /api/server-applications:
+    get:
+      tags:
+      - ServerApplications
+      operationId: getApiServerApplications
+      summary: GET /api/server-applications
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ServerApplications
+      operationId: postApiServerApplications
+      summary: POST /api/server-applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerApplicationInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerApplication'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/server-applications/{id}:
+    get:
+      tags:
+      - ServerApplications
+      operationId: getApiServerApplicationsId
+      summary: GET /api/server-applications/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerApplication'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ServerApplications
+      operationId: putApiServerApplicationsId
+      summary: PUT /api/server-applications/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerApplicationInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ServerApplications
+      operationId: deleteApiServerApplicationsId
+      summary: DELETE /api/server-applications/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}/applications:
+    get:
+      tags:
+      - Servers
+      operationId: getApiServersIdApplications
+      summary: GET /api/servers/{id}/applications
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServerApplication'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Servers
+      operationId: postApiServersIdApplications
+      summary: POST /api/servers/{id}/applications
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerApplicationInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerApplication'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/server-credentials:
+    get:
+      tags:
+      - ServerCredentials
+      operationId: getApiServerCredentials
+      summary: GET /api/server-credentials
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - ServerCredentials
+      operationId: postApiServerCredentials
+      summary: POST /api/server-credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerCredentialInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerCredential'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/server-credentials/{id}:
+    get:
+      tags:
+      - ServerCredentials
+      operationId: getApiServerCredentialsId
+      summary: GET /api/server-credentials/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerCredential'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - ServerCredentials
+      operationId: putApiServerCredentialsId
+      summary: PUT /api/server-credentials/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerCredentialInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - ServerCredentials
+      operationId: deleteApiServerCredentialsId
+      summary: DELETE /api/server-credentials/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}/ssh:
+    put:
+      tags:
+      - Servers
+      operationId: putApiServersIdSsh
+      summary: PUT /api/servers/{id}/ssh
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerSshInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}/host-key:
+    delete:
+      tags:
+      - Servers
+      operationId: deleteApiServersIdHostKey
+      summary: DELETE /api/servers/{id}/host-key
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers:
+    get:
+      tags:
+      - Servers
+      operationId: getApiServers
+      summary: GET /api/servers
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: applicationId
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: environmentId
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: hasIncomingProxy
+        in: query
+        schema:
+          type: boolean
+      - name: isOutgoingProxy
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Servers
+      operationId: postApiServers
+      summary: POST /api/servers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}:
+    get:
+      tags:
+      - Servers
+      operationId: getApiServersId
+      summary: GET /api/servers/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Servers
+      operationId: putApiServersId
+      summary: PUT /api/servers/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Servers
+      operationId: deleteApiServersId
+      summary: DELETE /api/servers/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/servers/{id}/provider-environment/{providerEnvironmentId}:
+    put:
+      tags:
+      - Servers
+      operationId: putApiServersIdProviderEnvironmentProviderenvironmentid
+      summary: PUT /api/servers/{id}/provider-environment/{providerEnvironmentId}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: providerEnvironmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/topology:
+    get:
+      tags:
+      - Topology
+      operationId: getApiTopology
+      summary: GET /api/topology
+      parameters:
+      - name: providerId
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: environmentId
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: projectId
+        in: query
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topology'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/topology/nodes/{nodeType}/{id}/delete-preview:
+    get:
+      tags:
+      - Topology
+      operationId: getApiTopologyNodesNodetypeIdDeletePreview
+      summary: GET /api/topology/nodes/{nodeType}/{id}/delete-preview
+      parameters:
+      - name: nodeType
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - Provider
+          - ProviderEnvironment
+          - Server
+          - ServerApplication
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePreview'
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/topology/nodes/{nodeType}/{id}:
+    delete:
+      tags:
+      - Topology
+      operationId: deleteApiTopologyNodesNodetypeId
+      summary: DELETE /api/topology/nodes/{nodeType}/{id}
+      parameters:
+      - name: nodeType
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - Provider
+          - ProviderEnvironment
+          - Server
+          - ServerApplication
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/users:
+    get:
+      tags:
+      - Users
+      operationId: getApiUsers
+      summary: GET /api/users
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginated'
+        default:
+          $ref: '#/components/responses/Problem'
+    post:
+      tags:
+      - Users
+      operationId: postApiUsers
+      summary: POST /api/users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+  /api/users/{id}:
+    get:
+      tags:
+      - Users
+      operationId: getApiUsersId
+      summary: GET /api/users/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/Problem'
+    put:
+      tags:
+      - Users
+      operationId: putApiUsersId
+      summary: PUT /api/users/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+    delete:
+      tags:
+      - Users
+      operationId: deleteApiUsersId
+      summary: DELETE /api/users/{id}
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '204':
+          description: No content
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-infraorgit_session
+    csrfToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+  responses:
+    Problem:
+      description: Errore RFC 7807
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        code:
+          type: string
+        traceId:
+          type: string
+      required:
+      - title
+      - status
+    Paginated:
+      type: object
+      properties:
+        items:
+          type: array
+          items: {}
+        total:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+      required:
+      - items
+      - total
+      - page
+      - pageSize
+      description: Lista paginata; items è tipizzato per risorsa nella fase di implementazione.
+    Provider:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+    ProviderInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+      required:
+      - name
+    EnvironmentDefinition:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 250
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+      - description
+    EnvironmentDefinitionInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 250
+      required:
+      - name
+      - description
+    ProviderEnvironment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        providerId:
+          type: integer
+          format: int32
+        providerName:
+          type: string
+          readOnly: true
+        environmentId:
+          type: integer
+          format: int32
+        environmentName:
+          type: string
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        serverCount:
+          type: integer
+          format: int32
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - providerId
+      - environmentId
+    ProviderEnvironmentInput:
+      type: object
+      properties:
+        providerId:
+          type: integer
+          format: int32
+        environmentId:
+          type: integer
+          format: int32
+      required:
+      - providerId
+      - environmentId
+    Server:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        providerEnvironmentId:
+          type: integer
+          format: int32
+        providerEnvironmentLabel:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        ipAddress:
+          type: string
+          maxLength: 200
+        hostname:
+          type: string
+          maxLength: 200
+        sshPort:
+          type: integer
+          format: int32
+        credentialId:
+          type: integer
+          nullable: true
+          format: int32
+        credentialName:
+          type: string
+          nullable: true
+          readOnly: true
+        hasHostKey:
+          type: boolean
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - providerEnvironmentId
+      - name
+      - ipAddress
+      - hostname
+    ServerInput:
+      type: object
+      properties:
+        providerEnvironmentId:
+          type: integer
+          format: int32
+        name:
+          type: string
+          maxLength: 200
+        ipAddress:
+          type: string
+          maxLength: 200
+        hostname:
+          type: string
+          maxLength: 200
+        sshPort:
+          type: integer
+          format: int32
+      required:
+      - providerEnvironmentId
+      - name
+      - ipAddress
+      - hostname
+    ServerSshInput:
+      type: object
+      properties:
+        credentialId:
+          type: integer
+          nullable: true
+          format: int32
+        sshPort:
+          type: integer
+          format: int32
+      required:
+      - sshPort
+    ServerApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        serverId:
+          type: integer
+          format: int32
+        serverName:
+          type: string
+          nullable: true
+          readOnly: true
+        applicationVersionId:
+          type: integer
+          format: int32
+        applicationId:
+          type: integer
+          format: int32
+          readOnly: true
+        applicationName:
+          type: string
+          readOnly: true
+        versionNumber:
+          type: string
+          readOnly: true
+        exposedPort:
+          type: integer
+          format: int32
+        proxyRouteId:
+          type: integer
+          nullable: true
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - serverId
+      - applicationVersionId
+      - exposedPort
+    ServerApplicationInput:
+      type: object
+      properties:
+        serverId:
+          type: integer
+          format: int32
+        applicationVersionId:
+          type: integer
+          format: int32
+        exposedPort:
+          type: integer
+          format: int32
+        proxyRouteId:
+          type: integer
+          nullable: true
+          format: int32
+      required:
+      - serverId
+      - applicationVersionId
+      - exposedPort
+    Application:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 200
+        basePath:
+          type: string
+          maxLength: 50
+        listeningOnPort:
+          type: integer
+          format: int32
+        versionCount:
+          type: integer
+          format: int32
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+      - description
+      - basePath
+      - listeningOnPort
+    ApplicationInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 200
+        basePath:
+          type: string
+          maxLength: 50
+        listeningOnPort:
+          type: integer
+          format: int32
+      required:
+      - name
+      - description
+      - basePath
+      - listeningOnPort
+    ApplicationVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        applicationId:
+          type: integer
+          format: int32
+        applicationName:
+          type: string
+          readOnly: true
+        versionNumber:
+          type: string
+          maxLength: 25
+        apiCount:
+          type: integer
+          format: int32
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - applicationId
+      - versionNumber
+    ApplicationVersionInput:
+      type: object
+      properties:
+        applicationId:
+          type: integer
+          format: int32
+        versionNumber:
+          type: string
+          maxLength: 25
+      required:
+      - applicationId
+      - versionNumber
+    RequestType:
+      type: string
+      enum:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    ApplicationVersionApi:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        applicationVersionId:
+          type: integer
+          format: int32
+        url:
+          type: string
+          maxLength: 200
+        requestType:
+          $ref: '#/components/schemas/RequestType'
+        description:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          nullable: true
+        queryParamCount:
+          type: integer
+          format: int32
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - applicationVersionId
+      - url
+      - requestType
+      - description
+    ApplicationVersionApiInput:
+      type: object
+      properties:
+        applicationVersionId:
+          type: integer
+          format: int32
+        url:
+          type: string
+          maxLength: 200
+        requestType:
+          $ref: '#/components/schemas/RequestType'
+        description:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          nullable: true
+      required:
+      - applicationVersionId
+      - url
+      - requestType
+      - description
+    QueryParamType:
+      type: string
+      enum:
+      - Int
+      - String
+      - Bool
+      - DateTime
+      - Double
+      - Decimal
+    ApplicationApiQueryParam:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        applicationApiId:
+          type: integer
+          format: int32
+        name:
+          type: string
+          maxLength: 200
+        paramType:
+          $ref: '#/components/schemas/QueryParamType'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - applicationApiId
+      - name
+      - paramType
+    ApplicationApiQueryParamInput:
+      type: object
+      properties:
+        applicationApiId:
+          type: integer
+          format: int32
+        name:
+          type: string
+          maxLength: 200
+        paramType:
+          $ref: '#/components/schemas/QueryParamType'
+      required:
+      - applicationApiId
+      - name
+      - paramType
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        applicationCount:
+          type: integer
+          format: int32
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+    ProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+      required:
+      - name
+    ProxyDirection:
+      type: string
+      enum:
+      - Outgoing
+      - Incoming
+    ProxyConnection:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        sourceServerId:
+          type: integer
+          format: int32
+        sourceServerName:
+          type: string
+          nullable: true
+          readOnly: true
+        targetServerId:
+          type: integer
+          format: int32
+        targetServerName:
+          type: string
+          nullable: true
+          readOnly: true
+        direction:
+          $ref: '#/components/schemas/ProxyDirection'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        routeCount:
+          type: integer
+          format: int32
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - sourceServerId
+      - targetServerId
+      - direction
+    ProxyConnectionInput:
+      type: object
+      properties:
+        sourceServerId:
+          type: integer
+          format: int32
+        targetServerId:
+          type: integer
+          format: int32
+        direction:
+          $ref: '#/components/schemas/ProxyDirection'
+      required:
+      - sourceServerId
+      - targetServerId
+      - direction
+    ProxyRoute:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        proxyConnectionId:
+          type: integer
+          format: int32
+        route:
+          type: string
+          maxLength: 200
+        mappedTo:
+          type: string
+          nullable: true
+          maxLength: 50
+        targetServerApplicationId:
+          type: integer
+          nullable: true
+          format: int32
+        targetProxyConnectionId:
+          type: integer
+          nullable: true
+          format: int32
+        targetLabel:
+          type: string
+          nullable: true
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - proxyConnectionId
+      - route
+    ProxyRouteInput:
+      type: object
+      properties:
+        proxyConnectionId:
+          type: integer
+          format: int32
+        route:
+          type: string
+          maxLength: 200
+        mappedTo:
+          type: string
+          nullable: true
+          maxLength: 50
+        targetServerApplicationId:
+          type: integer
+          nullable: true
+          format: int32
+        targetProxyConnectionId:
+          type: integer
+          nullable: true
+          format: int32
+      required:
+      - proxyConnectionId
+      - route
+    DiagramScopeType:
+      type: string
+      enum:
+      - Provider
+      - ProviderEnvironment
+      - Project
+    DiagramNodeType:
+      type: string
+      enum:
+      - Provider
+      - ProviderEnvironment
+      - Server
+      - ServerApplication
+    DiagramScopeItem:
+      type: object
+      properties:
+        scopeType:
+          $ref: '#/components/schemas/DiagramScopeType'
+        entityId:
+          type: integer
+          format: int32
+      required:
+      - scopeType
+      - entityId
+    Diagram:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        isDefault:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+        scopeItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiagramScopeItem'
+      required:
+      - id
+      - name
+      - isDefault
+    DiagramInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        isDefault:
+          type: boolean
+        scopeItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiagramScopeItem'
+      required:
+      - name
+    DiagramNode:
+      type: object
+      properties:
+        nodeType:
+          $ref: '#/components/schemas/DiagramNodeType'
+        entityId:
+          type: integer
+          format: int32
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        width:
+          type: number
+          nullable: true
+          format: double
+        height:
+          type: number
+          nullable: true
+          format: double
+        collapsed:
+          type: boolean
+      required:
+      - nodeType
+      - entityId
+      - x
+      - y
+      - collapsed
+    DiagramEdge:
+      type: object
+      properties:
+        proxyConnectionId:
+          type: integer
+          format: int32
+        targetNodeType:
+          $ref: '#/components/schemas/DiagramNodeType'
+        targetEntityId:
+          type: integer
+          format: int32
+        sourceHandle:
+          type: string
+          nullable: true
+          maxLength: 50
+        targetHandle:
+          type: string
+          nullable: true
+          maxLength: 50
+        bendX:
+          type: number
+          nullable: true
+          format: double
+        bendY:
+          type: number
+          nullable: true
+          format: double
+      required:
+      - proxyConnectionId
+      - targetNodeType
+      - targetEntityId
+    TopologyProject:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+      required:
+      - id
+      - name
+    TopologyApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        applicationVersionId:
+          type: integer
+          format: int32
+        applicationName:
+          type: string
+        versionNumber:
+          type: string
+        exposedPort:
+          type: integer
+          format: int32
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProject'
+      required:
+      - id
+      - applicationVersionId
+      - applicationName
+      - versionNumber
+      - exposedPort
+    TopologyServer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        ipAddress:
+          type: string
+        hostname:
+          type: string
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyApplication'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProject'
+      required:
+      - id
+      - name
+      - ipAddress
+      - hostname
+    TopologyEnvironment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        environmentId:
+          type: integer
+          format: int32
+        environmentName:
+          type: string
+        servers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyServer'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProject'
+      required:
+      - id
+      - environmentId
+      - environmentName
+    TopologyProvider:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        environments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyEnvironment'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProject'
+      required:
+      - id
+      - name
+    TopologyProxyRoute:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        route:
+          type: string
+        mappedTo:
+          type: string
+          nullable: true
+        targetServerApplicationId:
+          type: integer
+          nullable: true
+          format: int32
+      required:
+      - id
+      - route
+    TopologyProxyConnection:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        sourceServerId:
+          type: integer
+          format: int32
+        targetServerId:
+          type: integer
+          format: int32
+        direction:
+          $ref: '#/components/schemas/ProxyDirection'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProject'
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProxyRoute'
+      required:
+      - id
+      - sourceServerId
+      - targetServerId
+      - direction
+    Topology:
+      type: object
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProvider'
+        proxyConnections:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopologyProxyConnection'
+      required:
+      - providers
+      - proxyConnections
+    DiagramGraph:
+      type: object
+      properties:
+        diagram:
+          $ref: '#/components/schemas/Diagram'
+        topology:
+          $ref: '#/components/schemas/Topology'
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiagramNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiagramEdge'
+      required:
+      - diagram
+      - topology
+      - nodes
+      - edges
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        usersCount:
+          type: integer
+          format: int32
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+    GroupInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+      required:
+      - name
+    RoleScope:
+      type: string
+      enum:
+      - System
+      - Environment
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        label:
+          type: string
+          maxLength: 100
+        scopeEnum:
+          $ref: '#/components/schemas/RoleScope'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+      - label
+      - scopeEnum
+    RoleInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        label:
+          type: string
+          maxLength: 100
+        scopeEnum:
+          $ref: '#/components/schemas/RoleScope'
+      required:
+      - name
+      - label
+      - scopeEnum
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        username:
+          type: string
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 100
+        surname:
+          type: string
+          maxLength: 100
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - username
+      - name
+      - surname
+    UserInput:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 100
+        surname:
+          type: string
+          maxLength: 100
+        groupIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        roleIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+      required:
+      - username
+      - name
+      - surname
+    Menu:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        path:
+          type: string
+          maxLength: 200
+        isActive:
+          type: boolean
+        hideBackButton:
+          type: boolean
+        isVisible:
+          type: boolean
+        order:
+          type: integer
+          nullable: true
+          format: int32
+        parentId:
+          type: integer
+          nullable: true
+          format: int32
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Menu'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+      - path
+    MenuInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        path:
+          type: string
+          maxLength: 200
+        isActive:
+          type: boolean
+        hideBackButton:
+          type: boolean
+        isVisible:
+          type: boolean
+        order:
+          type: integer
+          nullable: true
+          format: int32
+        parentId:
+          type: integer
+          nullable: true
+          format: int32
+        roleIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+      required:
+      - name
+      - path
+    ProviderEnvironmentGroupRole:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        providerEnvironmentId:
+          type: integer
+          format: int32
+        group:
+          $ref: '#/components/schemas/Group'
+        role:
+          $ref: '#/components/schemas/Role'
+        providerEnvironmentLabel:
+          type: string
+          nullable: true
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - providerEnvironmentId
+      - group
+      - role
+    ProviderEnvironmentGroupRoleInput:
+      type: object
+      properties:
+        providerEnvironmentId:
+          type: integer
+          format: int32
+        groupId:
+          type: integer
+          format: int32
+        roleId:
+          type: integer
+          format: int32
+      required:
+      - providerEnvironmentId
+      - groupId
+      - roleId
+    CredentialAuthType:
+      type: string
+      enum:
+      - Password
+      - PrivateKey
+    ServerCredential:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        username:
+          type: string
+          maxLength: 200
+        authType:
+          $ref: '#/components/schemas/CredentialAuthType'
+        hasSecret:
+          type: boolean
+          readOnly: true
+        serversCount:
+          type: integer
+          format: int32
+          readOnly: true
+        needsReauth:
+          type: boolean
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+      - username
+      - authType
+    ServerCredentialInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        username:
+          type: string
+          maxLength: 200
+        authType:
+          $ref: '#/components/schemas/CredentialAuthType'
+        secret:
+          type: string
+          nullable: true
+        passphrase:
+          type: string
+          nullable: true
+      required:
+      - name
+      - username
+      - authType
+    CommandTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 500
+        script:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - name
+      - description
+      - script
+    CommandTemplateInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 500
+        script:
+          type: string
+      required:
+      - name
+      - script
+    ApplicationAction:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        applicationId:
+          type: integer
+          format: int32
+        label:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          format: int32
+        commandTemplateId:
+          type: integer
+          nullable: true
+          format: int32
+        commandTemplateName:
+          type: string
+          nullable: true
+          readOnly: true
+        customScript:
+          type: string
+          nullable: true
+        parameterValues:
+          type: object
+          additionalProperties:
+            type: string
+        requiresConfirmation:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - applicationId
+      - label
+      - order
+      - requiresConfirmation
+    ApplicationActionInput:
+      type: object
+      properties:
+        applicationId:
+          type: integer
+          nullable: true
+          format: int32
+        label:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          format: int32
+        commandTemplateId:
+          type: integer
+          nullable: true
+          format: int32
+        customScript:
+          type: string
+          nullable: true
+        parameterValues:
+          type: object
+          additionalProperties:
+            type: string
+        requiresConfirmation:
+          type: boolean
+      required:
+      - label
+      - order
+      - requiresConfirmation
+    ReachabilityTest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        serverId:
+          type: integer
+          nullable: true
+          format: int32
+        hostname:
+          type: string
+          maxLength: 200
+        port:
+          type: integer
+          format: int32
+        description:
+          type: string
+          maxLength: 200
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        version:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+      - id
+      - hostname
+      - port
+      - description
+    ReachabilityTestInput:
+      type: object
+      properties:
+        serverId:
+          type: integer
+          nullable: true
+          format: int32
+        hostname:
+          type: string
+          maxLength: 200
+        port:
+          type: integer
+          format: int32
+        description:
+          type: string
+          maxLength: 200
+      required:
+      - hostname
+      - port
+    CommandExecutionKind:
+      type: string
+      enum:
+      - Action
+      - Reachability
+      - Console
+    CommandExecution:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        username:
+          type: string
+          maxLength: 100
+        serverId:
+          type: integer
+          format: int32
+        serverName:
+          type: string
+          maxLength: 200
+        kind:
+          $ref: '#/components/schemas/CommandExecutionKind'
+        label:
+          type: string
+          maxLength: 200
+        script:
+          type: string
+        exitCode:
+          type: integer
+          nullable: true
+          format: int32
+        output:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          nullable: true
+          format: date-time
+      required:
+      - id
+      - username
+      - serverId
+      - serverName
+      - kind
+      - label
+      - script
+      - output
+      - startedAt
+    ServerAccess:
+      type: object
+      properties:
+        isSystemAdmin:
+          type: boolean
+        adminEnvironmentIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        operatorEnvironmentIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+      required:
+      - isSystemAdmin
+      - adminEnvironmentIds
+      - operatorEnvironmentIds
+    Session:
+      type: object
+      properties:
+        expiresIn:
+          type: integer
+          format: int32
+        refreshExpiresIn:
+          type: integer
+          format: int32
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - expiresIn
+      - refreshExpiresIn
+      - user
+    CommandResult:
+      type: object
+      properties:
+        exitCode:
+          type: integer
+          nullable: true
+          format: int32
+        output:
+          type: string
+      required:
+      - output
+    ReachabilityResult:
+      type: object
+      properties:
+        serverId:
+          type: integer
+          format: int32
+        serverName:
+          type: string
+        hostname:
+          type: string
+          nullable: true
+        port:
+          type: integer
+          nullable: true
+          format: int32
+        reachable:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+      required:
+      - serverId
+      - serverName
+      - reachable
+    DeletePreview:
+      type: object
+      properties:
+        environments:
+          type: integer
+          format: int32
+        servers:
+          type: array
+          items:
+            type: string
+        applications:
+          type: array
+          items:
+            type: string
+        proxyConnections:
+          type: integer
+          format: int32
+        proxyRoutes:
+          type: integer
+          format: int32
+        routesLosingTarget:
+          type: integer
+          format: int32
+        groupRoles:
+          type: integer
+          format: int32
+      required:
+      - environments
+      - servers
+      - applications
+      - proxyConnections
+      - proxyRoutes
+      - routesLosingTarget
+      - groupRoles
+    ProjectLink:
+      type: object
+      properties:
+        projectId:
+          type: integer
+          format: int32
+      required:
+      - projectId
+    ApplicationLink:
+      type: object
+      properties:
+        applicationId:
+          type: integer
+          format: int32
+      required:
+      - applicationId

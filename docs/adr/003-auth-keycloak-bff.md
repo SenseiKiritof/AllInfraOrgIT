@@ -5,7 +5,7 @@
 
 ## Contesto
 
-L'originale gestisce `state` e PKCE nel backend, salva i token in cookie HttpOnly e con `SameSite` obbliga tutto in HTTP in locale. Serve un flusso standard, testabile, con sessione server-side e nessun token leggibile da JavaScript.
+L'originale gestisce `state` e PKCE nel backend e salva i token in cookie HttpOnly con `SameSite=Strict`; manca però un token CSRF esplicito e la sessione resta un JWT nel browser, non una sessione server-side. Serve un flusso standard, testabile, con sessione server-side e nessun token leggibile da JavaScript.
 
 ## Decisione
 
@@ -26,3 +26,7 @@ L'originale gestisce `state` e PKCE nel backend, salva i token in cookie HttpOnl
 - L'API è stateful per le sessioni: serve uno store condiviso se si scala oltre una replica (decisione in Fase 2).
 - Test E2E con Keycloak reale obbligatori.
 - CSP più semplice: il browser non parla mai direttamente con Keycloak per le API.
+
+## Verifica Fase 1
+
+Il codice legacy conferma `state`/PKCE generati dal backend e token in cookie HttpOnly (`AuthCookies`), con `SameSite=Strict`. Non c'è CSRF token e non c'è sessione server-side: il BFF resta una modifica reale, ma il salto è più piccolo di quanto stimato nel piano.

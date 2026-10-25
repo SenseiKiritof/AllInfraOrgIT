@@ -28,3 +28,7 @@ La v1 deve sostituire l'originale senza perdere inventario, catalogo, diagrammi,
 - La vecchia `CredentialKey` serve solo durante l'import: mai stamparla, mai salvarla nei nuovi repo.
 - Serve un export affidabile dei dati di topologia, inclusi quelli fuori git.
 - Rehearsal e report di validazione obbligatori prima del cutover (Fase 7).
+
+## Verifica Fase 1
+
+Lo schema legacy ha 26 tabelle di dominio più 4 join; il mapping completo, gli enum, i campi nuovi e l'ordine di import sono in `docs/migration/legacy-mapping.md`. Restano aperti l'export approvato di `the legacy export`, la mappatura utenti Keycloak e la redazione dell'audit legacy.
