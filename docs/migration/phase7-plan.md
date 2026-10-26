@@ -2,9 +2,21 @@
 
 Analisi del 2026-10-26 sul nuovo schema e sullo schema legacy (`../InfraOrgITDocker/legacy/01-schema.sql`, sole definizioni). Nessun dato reale letto o copiato.
 
+## Stato implementazione
+
+`tools/LegacyImport` è ora presente:
+
+- input JSON legacy-shaped, mapping in `ImportPlans.cs`, report JSON, `--apply` transazionale per tabella;
+- ID preservati e skip delle chiavi esistenti; join con chiave composta;
+- due fasi per `Menus.ParentId` e `ServerApplications.ProxyRouteId`;
+- credenziali ricifrate con chiave vecchia/nuova o `NeedsReauth`, audit redatto;
+- `make legacy-dry-run` e test su MySQL Testcontainers.
+
+Restano da fare i punti 2–14 e l'adattatore che legge il MySQL legacy (oggi la sorgente è una fixture JSON sanificata).
+
 ## Blocchi da chiudere prima dell'importer
 
-1. **`tools/LegacyImport`** non esiste: console .NET 10 indipendente da API/migration, con `--dry-run`, `--classes`, `--batch-size`, `--report`, `--fresh` esplicito.
+1. ~~`tools/LegacyImport` non esiste~~: implementato per fixture JSON; manca l'adattatore MySQL legacy e `--classes`/`--batch-size`/`--fresh`.
 2. **Fixture sanificate** per tutte le classi: oggi solo riferimento+catalogo (`Legacy/Fixtures/legacy-reference-catalog.json`); mancano inventario, credenziali, proxy, diagrammi, audit.
 3. **Preflight duplicati**: il nuovo schema ha unique che il legacy non aveva (username, nomi provider/ambiente/applicazione/progetto, versione per applicazione, route per connessione, nodi/edge per chiave, PEGR, `ServerApplications.ProxyRouteId`). Decisione per ogni collisione: merge, rename o reject bloccante.
 4. **Orfani e default legacy**: `ProviderEnvironmentId=0`, `ProxyRoutes.ProxyConnectionId=0`, FK orfane, `ReachabilityTests.Port` fuori range, proxy con source=target. Preflight bloccante.

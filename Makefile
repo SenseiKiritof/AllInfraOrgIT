@@ -1,6 +1,6 @@
 COMPOSE ?= docker compose -f ../infraorgit-docker/compose.yaml
 
-.PHONY: dev infra down config reset api web migrate seed test e2e ci release
+.PHONY: dev infra down config reset api web migrate seed test e2e ci legacy-dry-run release
 
 dev:
 	./scripts/dev.sh
@@ -44,6 +44,11 @@ test:
 
 e2e:
 	yarn --cwd ../infraorgit-web playwright test
+
+legacy-dry-run:
+	dotnet run --project ../infraorgit/tools/LegacyImport -- \
+		--input ../infraorgit/tools/LegacyImport/fixtures/rehearsal.json \
+		--report /tmp/opencode/legacy-dry-run.json
 
 ci: config
 	dotnet build ../infraorgit/InfraOrgIt.slnx -warnaserror
