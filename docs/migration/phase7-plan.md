@@ -6,11 +6,12 @@ Analisi del 2026-10-26 sul nuovo schema e sullo schema legacy (`../InfraOrgITDoc
 
 `tools/LegacyImport` è ora presente:
 
-- input JSON legacy-shaped, mapping in `ImportPlans.cs`, report JSON, `--apply` transazionale per tabella;
-- ID preservati e skip delle chiavi esistenti; join con chiave composta;
-- due fasi per `Menus.ParentId` e `ServerApplications.ProxyRouteId`;
-- credenziali ricifrate con chiave vecchia/nuova o `NeedsReauth`, audit redatto;
-- `make legacy-dry-run` e test su MySQL Testcontainers.
+- input JSON legacy-shaped, mapping in `ImportPlans.cs`, report JSON, `--apply` atomico in una sola transazione;
+- ID preservati; una riga esistente viene saltata solo se la chiave naturale coincide, altrimenti collisione bloccante e rollback;
+- due fasi per `Menus.ParentId` e `ServerApplications.ProxyRouteId`, nella stessa transazione;
+- credenziali ricifrate con chiave vecchia/nuova e `--new-key-version`; `NeedsReauth` richiede `--allow-reauth`;
+- audit redatto, dry-run con verifica collisioni sul target se `LEGACY_IMPORT_CONNECTION` è impostata;
+- segreti solo da env (mai argv); `make legacy-dry-run` e 6 test importer su MySQL Testcontainers.
 
 Restano da fare i punti 2–14 e l'adattatore che legge il MySQL legacy (oggi la sorgente è una fixture JSON sanificata).
 
@@ -18,7 +19,7 @@ Restano da fare i punti 2–14 e l'adattatore che legge il MySQL legacy (oggi la
 
 1. ~~`tools/LegacyImport` non esiste~~: implementato per fixture JSON; manca l'adattatore MySQL legacy e `--classes`/`--batch-size`/`--fresh`.
 2. **Fixture sanificate** per tutte le classi: oggi solo riferimento+catalogo (`Legacy/Fixtures/legacy-reference-catalog.json`); mancano inventario, credenziali, proxy, diagrammi, audit.
-3. **Preflight duplicati**: il nuovo schema ha unique che il legacy non aveva (username, nomi provider/ambiente/applicazione/progetto, versione per applicazione, route per connessione, nodi/edge per chiave, PEGR, `ServerApplications.ProxyRouteId`). Decisione per ogni collisione: merge, rename o reject bloccante.
+3. **Preflight duplicati**: il nuovo schema ha unique che il legacy non aveva (username, nomi provider/ambiente/applicazione/progetto, versione per applicazione, route per connessione, nodi/edge per chiave, PEGR, `ServerApplications.ProxyRouteId`). Il preflight controlla gli unique dentro la fixture; le collisioni con righe già nel target (incluse le anagrafiche seed) sono bloccanti in apply e, con la connessione, anche in dry-run.
 4. **Orfani e default legacy**: `ProviderEnvironmentId=0`, `ProxyRoutes.ProxyConnectionId=0`, FK orfane, `ReachabilityTests.Port` fuori range, proxy con source=target. Preflight bloccante.
 5. **Ciclo `ServerApplications.ProxyRouteId` ↔ `ProxyRoutes.TargetServerApplicationId`**: import a due fasi (deploy senza link → route → update link), senza disattivare FK se possibile.
 6. **`sub` Keycloak**: il nuovo `User` non ha `ExternalId`; import per username e report dei non matchati. Aggiungere la colonna in Fase 7 se serve stabilità.
@@ -29,7 +30,7 @@ Restano da fare i punti 2–14 e l'adattatore che legge il MySQL legacy (oggi la
 
 ## Ordine di import
 
-1. Riferimento: `EnvironmentDefinitions`, `Providers`, `ProviderEnvironments`; upsert di `Roles`, `Menus` sui seed esistenti; `MenuRole` in merge.
+1. Riferimento: `EnvironmentDefinitions`, `Providers`, `ProviderEnvironments`; `Roles`, `Menus` saltati solo se la chiave naturale coincide, altrimenti collisione bloccante; `MenuRole` in merge.
 2. Identità: `Users`, `Groups`, `GroupUser`, `RoleUser`, `MenuRole`, `ProviderEnvironmentGroupRoles`.
 3. Catalogo: `Projects`, `Applications`, `ApplicationVersions`, `ApplicationVersionApis`, `ApplicationApiQueryParams`, `ApplicationProject`, `CommandTemplates`, `ApplicationActions`.
 4. Inventario: `ServerCredentials`, `Servers`, `ProxyConnections`, `ServerApplications` (link nullo), `ProxyRoutes`, update link, `ReachabilityTests`.

@@ -48,7 +48,7 @@ e2e:
 legacy-dry-run:
 	dotnet run --project ../infraorgit/tools/LegacyImport -- \
 		--input ../infraorgit/tools/LegacyImport/fixtures/rehearsal.json \
-		--report /tmp/opencode/legacy-dry-run.json
+		--report /tmp/legacy-dry-run.json
 
 ci: config
 	dotnet build ../infraorgit/InfraOrgIt.slnx -warnaserror
