@@ -1717,6 +1717,26 @@ paths:
       security:
       - sessionCookie: []
         csrfToken: []
+  /api/menus/all:
+    get:
+      tags:
+      - Menus
+      operationId: getApiMenusAll
+      summary: GET /api/menus/all
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Menu'
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+      - sessionCookie: []
+        csrfToken: []
   /api/menus/{id}:
     get:
       tags:
@@ -2174,7 +2194,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProviderEnvironmentInput'
+              $ref: '#/components/schemas/ProviderEnvironmentGroupRoleNestedInput'
       responses:
         '200':
           description: OK
@@ -5225,6 +5245,12 @@ components:
           type: integer
           nullable: true
           format: int32
+        roleIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+          readOnly: true
         children:
           type: array
           items:
@@ -5286,14 +5312,20 @@ components:
         providerEnvironmentId:
           type: integer
           format: int32
-        group:
-          $ref: '#/components/schemas/Group'
-        role:
-          $ref: '#/components/schemas/Role'
         providerEnvironmentLabel:
           type: string
           nullable: true
           readOnly: true
+        groupId:
+          type: integer
+          format: int32
+        groupName:
+          type: string
+        roleId:
+          type: integer
+          format: int32
+        roleName:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -5309,8 +5341,22 @@ components:
       required:
       - id
       - providerEnvironmentId
-      - group
-      - role
+      - groupId
+      - groupName
+      - roleId
+      - roleName
+    ProviderEnvironmentGroupRoleNestedInput:
+      type: object
+      properties:
+        groupId:
+          type: integer
+          format: int32
+        roleId:
+          type: integer
+          format: int32
+      required:
+      - groupId
+      - roleId
     ProviderEnvironmentGroupRoleInput:
       type: object
       properties:
