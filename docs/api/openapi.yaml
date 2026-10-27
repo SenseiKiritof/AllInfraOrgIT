@@ -5057,11 +5057,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DiagramEdge'
+        canWrite:
+          type: boolean
+          readOnly: true
       required:
       - diagram
       - topology
       - nodes
       - edges
+      - canWrite
     Group:
       type: object
       properties:
