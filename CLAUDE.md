@@ -7,6 +7,7 @@ Meta repository of the InfraOrgIT workspace. Usage guide and layout in `README.m
 ## What lives here
 
 - `docs/adr/`: every architectural decision, one entry per ADR, explicit status.
+- `.opencode/`: project OpenCode documentation; personal configuration lives in `~/.config/opencode/`.
 - `versions.lock`: application repo SHAs and images; update only on verified releases.
 - `tools/graphify/workspace.json`: local configuration, never committed; the example is.
 - `Makefile` and `scripts/`: orchestration and development environment.
