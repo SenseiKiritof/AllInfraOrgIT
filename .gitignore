@@ -6,3 +6,6 @@ tools/graphify/workspace.json
 backups/
 __pycache__/
 .DS_Store
+
+# OpenCode locale (regole, skill, plugin personali)
+.opencode/
