@@ -31,6 +31,6 @@ Il contratto eseguibile è generato dal backend in `../../InfraOrgITApi/openapi/
 
 ## Stato
 
-Fase 8 completata sul perimetro tecnico — 2026-10-27; release non eseguita. Documenti allineati al codice legacy `../InfraOrgIt` e al backlog `backlog.md`. D1–D10 chiuse; D7 = B (tightening per ambiente). Fase 2 ha implementato auth BFF, identity e shell; Fase 3 inventario/catalogo, Fase 4 topologia/diagrammi, Fase 5 gestione remota, Fase 6 admin/RBAC; Fase 7 importer e dump legacy fittizio; Fase 8 hardening, deploy, osservabilità, backup e load test. Checklist in `domain/*` e `operations/*`; il rehearsal su dati legacy reali e la release eseguibile restano aperti.
+Fase 8 completata sul perimetro tecnico — 2026-10-27; release non eseguita. Documenti allineati al repo legacy `InfraOrgIt` (esterno al workspace) e al backlog `backlog.md`. D1–D10 chiuse; D7 = B (tightening per ambiente). Fase 2 ha implementato auth BFF, identity e shell; Fase 3 inventario/catalogo, Fase 4 topologia/diagrammi, Fase 5 gestione remota, Fase 6 admin/RBAC; Fase 7 importer e dump legacy fittizio; Fase 8 hardening, deploy, osservabilità, backup e load test. Checklist in `domain/*` e `operations/*`; il rehearsal su dati legacy reali e la release eseguibile restano aperti.
 
 Nessun codice applicativo è stato copiato: i documenti descrivono il dominio e le scelte, non il codice sorgente.
