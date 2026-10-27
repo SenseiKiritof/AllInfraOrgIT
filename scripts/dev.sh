@@ -3,18 +3,23 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 META_ROOT="$(cd "$HERE/.." && pwd)"
-DOCKER_DIR="$META_ROOT/../infraorgit-docker"
-
-cd "$DOCKER_DIR"
-docker compose up -d --wait mysql mysql-keycloak keycloak
+DOCKER_DIR="$META_ROOT/../InfraOrgITDocker"
 
 # shellcheck disable=SC1091
 source "$META_ROOT/scripts/env.sh"
+
+cd "$DOCKER_DIR"
+docker compose up -d --wait mysql mysql-keycloak keycloak
 cd "$META_ROOT"
 
-dotnet run --project "$META_ROOT/../infraorgit/src/InfraOrgIt.Api" --no-launch-profile &
+dotnet tool restore >/dev/null
+dotnet tool run dotnet-ef database update \
+  --project "$META_ROOT/../InfraOrgITApi/src/InfraOrgIt.Api" \
+  --startup-project "$META_ROOT/../InfraOrgITApi/src/InfraOrgIt.Api" >/dev/null
+
+dotnet run --project "$META_ROOT/../InfraOrgITApi/src/InfraOrgIt.Api" --no-launch-profile &
 api_pid=$!
-yarn --cwd "$META_ROOT/../infraorgit-web" dev &
+yarn --cwd "$META_ROOT/../InfraOrgITWeb" dev &
 web_pid=$!
 
 cleanup() {
@@ -23,4 +28,5 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-wait -n "$api_pid" "$web_pid"
+# bash 3.2 (macOS) non ha `wait -n`: si esce al primo dei due processi che termina.
+while kill -0 "$api_pid" 2>/dev/null && kill -0 "$web_pid" 2>/dev/null; do sleep 1; done

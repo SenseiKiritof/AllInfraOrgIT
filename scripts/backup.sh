@@ -5,7 +5,7 @@ umask 077
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 META_ROOT="$(cd "$HERE/.." && pwd)"
-DOCKER_DIR="$META_ROOT/../infraorgit-docker"
+DOCKER_DIR="$META_ROOT/../InfraOrgITDocker"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 DIR="${BACKUP_DIR:-$META_ROOT/backups/$STAMP}"
 

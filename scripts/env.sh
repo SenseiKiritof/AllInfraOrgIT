@@ -4,7 +4,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 META_ROOT="$(cd "$HERE/.." && pwd)"
-DOCKER_DIR="$META_ROOT/../infraorgit-docker"
+DOCKER_DIR="$META_ROOT/../InfraOrgITDocker"
 
 if [ ! -f "$DOCKER_DIR/.env" ]; then
   cp "$DOCKER_DIR/.env.example" "$DOCKER_DIR/.env"

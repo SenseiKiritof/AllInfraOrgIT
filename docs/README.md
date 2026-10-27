@@ -22,14 +22,15 @@ Indice dei documenti di Fase 1.
 | `api/route-inventory.md` | inventario completo delle route legacy e nuova route |
 | `api/openapi.yaml` | draft OpenAPI 3.0.3 del contratto v1 |
 | `operations/first-push.md` | creazione repo, primo push, protezione `main`, segreti CI |
+| `backlog.md` | lavori aperti: icone, header di dettaglio, bug grafici, rinomina workspace, immagini Docker |
 | `adr/` | ADR 001–008 |
 
 L'OpenAPI copre 148 operazioni: le 20 route legacy `/Paginated` sono fuse nelle liste con `page`/`pageSize` e il refresh token non è esposto (avviene lato server). Le 168 operazioni HTTP legacy + il WebSocket sono tutte mappate in `api/route-inventory.md`.
 
-Il contratto eseguibile è generato dal backend in `../../infraorgit/openapi/InfraOrgIt.Api.json` (OpenAPI 3.1.1, 148 operazioni) e la CI fallisce se è driftato; `api/openapi.yaml` resta il draft di dominio della Fase 1.
+Il contratto eseguibile è generato dal backend in `../../InfraOrgITApi/openapi/InfraOrgIt.Api.json` (OpenAPI 3.1.1, 148 operazioni) e la CI fallisce se è driftato; `api/openapi.yaml` resta il draft di dominio della Fase 1.
 
 ## Stato
 
-Fase 8 completata sul perimetro tecnico — 2026-10-27; release non eseguita. Documenti allineati al codice legacy `../InfraOrgIT` e al piano `../../PLAN.md`. D1–D10 chiuse; D7 = B (tightening per ambiente). Fase 2 ha implementato auth BFF, identity e shell; Fase 3 inventario/catalogo, Fase 4 topologia/diagrammi, Fase 5 gestione remota, Fase 6 admin/RBAC; Fase 7 importer e dump legacy fittizio; Fase 8 hardening, deploy, osservabilità, backup e load test. Checklist in `domain/*` e `operations/*`; il rehearsal su dati legacy reali e la release eseguibile restano aperti.
+Fase 8 completata sul perimetro tecnico — 2026-10-27; release non eseguita. Documenti allineati al codice legacy `../InfraOrgIt` e al backlog `backlog.md`. D1–D10 chiuse; D7 = B (tightening per ambiente). Fase 2 ha implementato auth BFF, identity e shell; Fase 3 inventario/catalogo, Fase 4 topologia/diagrammi, Fase 5 gestione remota, Fase 6 admin/RBAC; Fase 7 importer e dump legacy fittizio; Fase 8 hardening, deploy, osservabilità, backup e load test. Checklist in `domain/*` e `operations/*`; il rehearsal su dati legacy reali e la release eseguibile restano aperti.
 
 Nessun codice applicativo è stato copiato: i documenti descrivono il dominio e le scelte, non il codice sorgente.

@@ -2,7 +2,7 @@
 
 `AGENTS.md` è un symlink a questo file, letto da opencode e dagli altri agenti: modifica solo `CLAUDE.md`.
 
-Repo meta. Le regole di workspace sono in `../AGENTS.md`; il piano in `../PLAN.md`.
+Repo meta del workspace InfraOrgIT. Guida d'uso e struttura in `README.md`; lavori aperti in `docs/backlog.md`.
 
 ## Cosa vive qui
 
@@ -10,6 +10,7 @@ Repo meta. Le regole di workspace sono in `../AGENTS.md`; il piano in `../PLAN.m
 - `versions.lock`: SHA dei repo applicativi; aggiornarlo solo a release verificate.
 - `tools/graphify/workspace.json`: configurazione locale, mai committata; l'esempio sì.
 - `Makefile` e `scripts/`: orchestrazione e ambiente di sviluppo.
+- `.opencode/`: regole, skill e plugin OpenCode (vedi `.opencode/README.md`).
 - `.config/dotnet-tools.json`: versione locale di `dotnet-ef`.
 
 ## Regole

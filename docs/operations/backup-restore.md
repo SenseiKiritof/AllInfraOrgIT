@@ -25,8 +25,8 @@ Operazione distruttiva: sovrascrive entrambi i database.
 1. Ferma i servizi che scrivono:
 
    ```bash
-   docker compose -f ../infraorgit-docker/compose.yaml \
-     -f ../infraorgit-docker/compose.full.yaml --profile full stop api caddy keycloak
+   docker compose -f ../InfraOrgITDocker/compose.yaml \
+     -f ../InfraOrgITDocker/compose.full.yaml --profile full stop api caddy keycloak
    ```
 
 2. Ripristina:

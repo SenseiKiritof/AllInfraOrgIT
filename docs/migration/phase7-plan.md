@@ -21,7 +21,7 @@ Restano da fare i punti 3–14 sui dati rappresentativi e il rehearsal con dump 
 ## Blocchi da chiudere prima dell'importer
 
 1. ~~`tools/LegacyImport` non esiste~~: implementato per fixture JSON e per MySQL legacy; mancano `--classes`/`--batch-size`/`--fresh`.
-2. **Fixture sanificate** per tutte le classi: il dump fittizio in `infraorgit-docker/legacy/` copre tutti i tipi di entità con dati inventati; mancano ancora i valori e i duplicati del export legacy sanificato.
+2. **Fixture sanificate** per tutte le classi: il dump fittizio in `InfraOrgITDocker/legacy/` copre tutti i tipi di entità con dati inventati; mancano ancora i valori e i duplicati del export legacy sanificato.
 3. **Preflight duplicati**: il nuovo schema ha unique che il legacy non aveva (username, nomi provider/ambiente/applicazione/progetto, versione per applicazione, route per connessione, nodi/edge per chiave, PEGR, `ServerApplications.ProxyRouteId`). Il preflight controlla gli unique dentro la fixture; le collisioni con righe già nel target (incluse le anagrafiche seed) sono bloccanti in apply e, con la connessione, anche in dry-run.
 4. **Orfani e default legacy**: `ProviderEnvironmentId=0`, `ProxyRoutes.ProxyConnectionId=0`, FK orfane, `ReachabilityTests.Port` fuori range, proxy con source=target. Preflight bloccante.
 5. **Ciclo `ServerApplications.ProxyRouteId` ↔ `ProxyRoutes.TargetServerApplicationId`**: import a due fasi (deploy senza link → route → update link), senza disattivare FK se possibile.

@@ -8,9 +8,9 @@ Private, stesso owner per tutti e quattro:
 
 ```bash
 gh repo create <owner>/AllInfraOrgIT --private
-gh repo create <owner>/infraorgit --private
-gh repo create <owner>/infraorgit-web --private
-gh repo create <owner>/infraorgit-docker --private
+gh repo create <owner>/InfraOrgITApi --private
+gh repo create <owner>/InfraOrgITWeb --private
+gh repo create <owner>/InfraOrgITDocker --private
 ```
 
 In alternativa crearli vuoti dalla UI, senza README, licenza o `.gitignore`.
@@ -20,7 +20,7 @@ In alternativa crearli vuoti dalla UI, senza README, licenza o `.gitignore`.
 Dalla root del workspace:
 
 ```bash
-for r in AllInfraOrgIT infraorgit infraorgit-web infraorgit-docker; do
+for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
   git -C "$r" remote add origin "git@github.com:<owner>/$r.git"
   git -C "$r" push -u origin main
   git -C "$r" push --tags
@@ -34,7 +34,7 @@ Il push deve includere solo file versionati: nessun `.env`, nessun dump, nessun 
 Con `gh` autenticato, per ogni repo:
 
 ```bash
-for r in AllInfraOrgIT infraorgit infraorgit-web infraorgit-docker; do
+for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
   gh api -X PUT "repos/<owner>/$r/branches/main/protection" \
     -f required_status_checks.strict=true \
     -f required_status_checks.contexts[]='build-test' \

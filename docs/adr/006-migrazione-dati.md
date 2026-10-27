@@ -11,7 +11,7 @@ La v1 deve sostituire l'originale senza perdere inventario, catalogo, diagrammi,
 ## Decisione
 
 - Snapshot read-only del MySQL legacy e dump sanificato per i test; nessun dato reale nei repo.
-- Importer standalone in `infraorgit/tools/LegacyImport`: legge MySQL legacy, scrive MySQL nuovo, preserva gli ID, produce un report.
+- Importer standalone in `InfraOrgITApi/tools/LegacyImport`: legge MySQL legacy, scrive MySQL nuovo, preserva gli ID, produce un report.
 - Ordine: riferimento → identità → catalogo → inventario → diagrammi → audit; transazione per classe, ripetibile e idempotente.
 - Validazione: conteggi per tabella, FK orfane, unique, render dei diagrammi, checksum dei campi chiave; errori bloccanti nel report.
 - Credenziali: decifrare con la vecchia `ServerAccess:CredentialKey`, ricifrare con la nuova; se la chiave manca, marcare `needs_reauth`. Mai loggare il plaintext.

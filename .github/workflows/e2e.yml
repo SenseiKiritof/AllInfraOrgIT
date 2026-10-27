@@ -20,20 +20,20 @@ jobs:
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/infraorgit
-          path: infraorgit
+          repository: ${{ github.repository_owner }}/InfraOrgITApi
+          path: InfraOrgITApi
           token: ${{ secrets.REPO_TOKEN || github.token }}
       - name: Checkout frontend
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/infraorgit-web
-          path: infraorgit-web
+          repository: ${{ github.repository_owner }}/InfraOrgITWeb
+          path: InfraOrgITWeb
           token: ${{ secrets.REPO_TOKEN || github.token }}
       - name: Checkout docker
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/infraorgit-docker
-          path: infraorgit-docker
+          repository: ${{ github.repository_owner }}/InfraOrgITDocker
+          path: InfraOrgITDocker
           token: ${{ secrets.REPO_TOKEN || github.token }}
 
       - uses: actions/setup-dotnet@v4
@@ -46,8 +46,8 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g yarn@1.22.22
-          yarn --cwd infraorgit-web install --frozen-lockfile
-          yarn --cwd infraorgit-web playwright install --with-deps chromium
+          yarn --cwd InfraOrgITWeb install --frozen-lockfile
+          yarn --cwd InfraOrgITWeb playwright install --with-deps chromium
 
       - name: Start stack
         run: |
@@ -70,4 +70,4 @@ jobs:
         if: always()
         run: |
           kill "$(cat /tmp/dev.pid)" 2>/dev/null || true
-          docker compose -f infraorgit-docker/compose.yaml down -v
+          docker compose -f InfraOrgITDocker/compose.yaml down -v

@@ -1,9 +1,9 @@
 {
   "root": "/path/to/Progetti",
   "repos": [
-    "InfraOrgIT/infraorgit",
-    "InfraOrgIT/infraorgit-web",
-    "InfraOrgIT/infraorgit-docker"
+    "InfraOrgIT/InfraOrgITApi",
+    "InfraOrgIT/InfraOrgITWeb",
+    "InfraOrgIT/InfraOrgITDocker"
   ],
   "profiles": [
     "dotnet",
@@ -29,7 +29,7 @@
   ],
   "http": {
     "default_targets": {
-      "InfraOrgIT/infraorgit-web": "InfraOrgIT/infraorgit"
+      "InfraOrgIT/InfraOrgITWeb": "InfraOrgIT/InfraOrgITApi"
     },
     "file_targets": {}
   },

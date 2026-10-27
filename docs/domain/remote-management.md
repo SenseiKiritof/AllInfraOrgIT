@@ -6,7 +6,7 @@ Fase 5, 2026-10-26. Riferimento funzionale: `../InfraOrgIT` in sola lettura. Le 
 
 - `ServerCredentials` conserva password o chiave privata **cifrate con AES-GCM**; il client riceve solo `hasSecret`, mai ciphertext o plaintext.
 - Layout: `base64(nonce|tag|ciphertext)`, nonce 12 byte, tag 16 byte. Chiave di 32 byte per versione in `ServerAccess:CredentialKeys:<n>`; `ServerAccess:CurrentKeyVersion` sceglie la chiave di cifratura. La riga conserva `KeyVersion`, quindi una rotazione decrypta le righe vecchie.
-- In sviluppo `scripts/env.sh` genera una chiave e la salva in `infraorgit-docker/.env` (ignorato). In produzione la chiave arriva da secret manager.
+- In sviluppo `scripts/env.sh` genera una chiave e la salva in `InfraOrgITDocker/.env` (ignorato). In produzione la chiave arriva da secret manager.
 - Una chiave privata viene validata con SSH.NET prima del salvataggio; una password no.
 - In modifica un segreto vuoto lascia invariato quello salvato; cambiare `AuthType` richiede il segreto.
 - Una credenziale assegnata a server non si elimina (409). Assegnazione SSH e reset host key sono `SystemAdmin`.

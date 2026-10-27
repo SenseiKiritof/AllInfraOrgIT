@@ -7,7 +7,7 @@ META_ROOT="$(cd "$HERE/.." && pwd)"
 ROOT="$(cd "$META_ROOT/.." && pwd)"
 VERSION="${VERSION:-}"
 TAG="v$VERSION"
-REPOS=(infraorgit infraorgit-web infraorgit-docker)
+REPOS=(InfraOrgITApi InfraOrgITWeb InfraOrgITDocker)
 
 if [[ ! "$VERSION" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
   echo "VERSION mancante o non valida (atteso 0.MINOR.PATCH)." >&2
