@@ -12,13 +12,16 @@ Analisi del 2026-10-26 sul nuovo schema e sullo schema legacy (`../InfraOrgITDoc
 - credenziali ricifrate con chiave vecchia/nuova e `--new-key-version`; `NeedsReauth` richiede `--allow-reauth`;
 - audit redatto, dry-run con verifica collisioni sul target se `LEGACY_IMPORT_CONNECTION` è impostata;
 - segreti solo da env (mai argv); `make legacy-dry-run` e 6 test importer su MySQL Testcontainers.
+- adattatore MySQL di sola lettura (`LEGACY_SOURCE_CONNECTION`): legge le tabelle di `ImportPlans` e produce le stesse righe JSON della fixture;
+- dump legacy fittizio in Docker (`mysql-legacy`, profilo `legacy`) con schema ridotto e tutti i tipi di dato: una macchina, un proxy, un servizio, un diagramma e un'esecuzione;
+- test di integrazione sorgente MySQL → target: apply, ricifratura credenziali, idempotenza, redazione audit.
 
-Restano da fare i punti 2–14 e l'adattatore che legge il MySQL legacy (oggi la sorgente è una fixture JSON sanificata).
+Restano da fare i punti 3–14 sui dati rappresentativi e il rehearsal con dump sanificato: il dump fittizio valida l'adapter, non le collisioni del legacy.
 
 ## Blocchi da chiudere prima dell'importer
 
-1. ~~`tools/LegacyImport` non esiste~~: implementato per fixture JSON; manca l'adattatore MySQL legacy e `--classes`/`--batch-size`/`--fresh`.
-2. **Fixture sanificate** per tutte le classi: oggi solo riferimento+catalogo (`Legacy/Fixtures/legacy-reference-catalog.json`); mancano inventario, credenziali, proxy, diagrammi, audit.
+1. ~~`tools/LegacyImport` non esiste~~: implementato per fixture JSON e per MySQL legacy; mancano `--classes`/`--batch-size`/`--fresh`.
+2. **Fixture sanificate** per tutte le classi: il dump fittizio in `infraorgit-docker/legacy/` copre tutti i tipi di entità con dati inventati; mancano ancora i valori e i duplicati del export legacy sanificato.
 3. **Preflight duplicati**: il nuovo schema ha unique che il legacy non aveva (username, nomi provider/ambiente/applicazione/progetto, versione per applicazione, route per connessione, nodi/edge per chiave, PEGR, `ServerApplications.ProxyRouteId`). Il preflight controlla gli unique dentro la fixture; le collisioni con righe già nel target (incluse le anagrafiche seed) sono bloccanti in apply e, con la connessione, anche in dry-run.
 4. **Orfani e default legacy**: `ProviderEnvironmentId=0`, `ProxyRoutes.ProxyConnectionId=0`, FK orfane, `ReachabilityTests.Port` fuori range, proxy con source=target. Preflight bloccante.
 5. **Ciclo `ServerApplications.ProxyRouteId` ↔ `ProxyRoutes.TargetServerApplicationId`**: import a due fasi (deploy senza link → route → update link), senza disattivare FK se possibile.
@@ -65,6 +68,8 @@ Join dopo i padri; self-FK (`Menus.ParentId`, `ProxyRoutes.TargetProxyConnection
 ## Cutover
 
 Il legacy non ha `UpdatedAt` sulla maggior parte delle tabelle: un “delta import” affidabile non è possibile. Durante il freeze serve re-import completo idempotente o CDC/binlog. Rollback = checkout del `versions.lock` precedente e ripristino del DB pre-cutover.
+
+Il runbook firmato resta da scrivere: lo schema fittizio non prova tempi di freeze, volumi o rollback su dati rappresentativi.
 
 ## Rischi
 
