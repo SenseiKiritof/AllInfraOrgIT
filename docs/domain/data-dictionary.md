@@ -129,6 +129,7 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | CredentialId | int | yes | FK `ServerCredentials.Id` added in Phase 5 |
 | SshPort | int | no | default 22 |
 | HostKeyFingerprint | varchar(100) | yes | SHA256 TOFU |
+| JumpServerId | int | yes | FK `Servers.Id` restrict; optional SSH jump host |
 | audit | | | |
 
 ### ServerCredentials

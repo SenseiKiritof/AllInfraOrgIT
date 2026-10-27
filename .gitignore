@@ -6,3 +6,6 @@ tools/graphify/workspace.json
 backups/
 __pycache__/
 .DS_Store
+
+# Personal OpenCode configuration (not versioned)
+.opencode/

@@ -19,6 +19,7 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 - maximum output 1 MB (`MaxOutputBytes`), the audit keeps the last 64 KB (`MaxAuditOutputBytes`);
 - **host key TOFU**: on first connection the SHA256 fingerprint is saved on the server; if it changes, the connection is rejected with 409 `host_key_mismatch` and the audit records the attempt. Reset is `SystemAdmin` only;
 - errors do not contain secrets.
+- **jump host**: `Servers.JumpServerId` points to another server used as an SSH proxy. `SshConnector` opens the jump session, forwards a local port to the target `host:port`, then connects with the target credential; the tunnel and the jump session are disposed with the target session. Chains are allowed and protected against cycles (422 `jump_cycle`), the API rejects self-reference and cycles on write, and a server used as a jump host cannot be deleted (409).
 
 ## Templating and actions
 
