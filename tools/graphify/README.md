@@ -1,16 +1,16 @@
 # graphify
 
-Configurazione del workspace multi-repo.
+Multi-repo workspace configuration.
 
-- `workspace.example.json`: modello versionato; `root` è un placeholder.
-- `workspace.json`: copia locale, ignorata da git. Impostare `root` sulla cartella che contiene `InfraOrgIT`.
-- `graphify-out/` è ignorato.
+- `workspace.example.json`: versioned model; `root` is a placeholder.
+- `workspace.json`: local copy, git-ignored. Set `root` to the folder that contains `InfraOrgIT`.
+- `graphify-out/` is ignored.
 
-Uso:
+Usage:
 
 ```bash
 cp tools/graphify/workspace.example.json tools/graphify/workspace.json
-# modificare "root"
+# edit "root"
 ```
 
-La toolchain graphify si installa nell'ambiente (Fase 1); il repo versiona solo la configurazione.
+The graphify toolchain is installed in the environment (Phase 1); the repository versions the configuration only.

@@ -1,77 +1,77 @@
-# Inventario — checklist di parità (Fase 3)
+# Inventory — parity checklist (Phase 3)
 
-Verifica del 2026-10-25 sulla base di `docs/domain/data-dictionary.md`, `docs/security/permissions.md` e `docs/ux/pages.md`. Il riferimento è `../InfraOrgIT` in sola lettura.
+Verification of 2026-10-25 based on `docs/domain/data-dictionary.md`, `docs/security/permissions.md` and `docs/ux/pages.md`. The reference is the legacy system, read-only.
 
-## Endpoint implementati
+## Implemented endpoints
 
-| Area | Route | Lettura | Scrittura | Test |
+| Area | Route | Read | Write | Test |
 |---|---|---|---|---|
-| Provider | `GET/POST /api/providers`, `GET/PUT/DELETE /api/providers/{id}` | autenticati | `SystemAdmin` | integrazione, dry-run, E2E |
-| Ambienti | `GET/POST /api/environments`, `GET/PUT /api/environments/{id}` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Provider × ambiente | `GET/POST /api/provider-environments`, `GET/PUT/DELETE /api/provider-environments/{id}` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Ruoli per ambiente | `GET/POST /api/provider-environments/{id}/group-roles` (lista paginata), `DELETE …/{groupRoleId}` | autenticati | `SystemAdmin` | integrazione |
-| Server | `GET/POST /api/servers`, `GET/PUT/DELETE /api/servers/{id}` | autenticati | `ServerAdmin` sugli ambienti coinvolti | integrazione, E2E |
-| Move server | `PUT /api/servers/{id}/provider-environment/{providerEnvironmentId}` | — | `ServerAdmin` su source e target; `SystemAdmin` se il server ha una credenziale | integrazione |
-| Server application | `GET/POST /api/servers/{id}/applications`, CRUD `/api/server-applications` | autenticati | `ServerAdmin` sull'ambiente del server (entrambi se cambia server) | integrazione, E2E |
-| Applicazioni | `GET/POST /api/applications`, `GET/PUT/DELETE /api/applications/{id}` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Versioni | CRUD `/api/application-versions`, `GET/POST /api/applications/{id}/versions` (lista paginata) | autenticati | `SystemAdmin` | integrazione, E2E |
-| API applicazione | CRUD `/api/application-version-apis`, `GET/POST /api/application-versions/{id}/apis` (lista paginata) | autenticati | `SystemAdmin` | integrazione, E2E |
-| Query param | CRUD `/api/application-api-query-params`, `GET/POST /api/application-version-apis/{id}/query-params` (lista paginata) | autenticati | `SystemAdmin` | integrazione |
-| Progetti | CRUD `/api/projects` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Link applicazione ↔ progetto | `GET/POST/DELETE /api/projects/{id}/applications`, `GET/POST/DELETE /api/applications/{id}/projects` | autenticati | `SystemAdmin` | integrazione, E2E |
-| Server access | `GET /api/server-access/me` | autenticati | — | integrazione |
+| Provider | `GET/POST /api/providers`, `GET/PUT/DELETE /api/providers/{id}` | authenticated | `SystemAdmin` | integration, dry-run, E2E |
+| Environments | `GET/POST /api/environments`, `GET/PUT /api/environments/{id}` | authenticated | `SystemAdmin` | integration, E2E |
+| Provider × environment | `GET/POST /api/provider-environments`, `GET/PUT/DELETE /api/provider-environments/{id}` | authenticated | `SystemAdmin` | integration, E2E |
+| Roles per environment | `GET/POST /api/provider-environments/{id}/group-roles` (paginated list), `DELETE …/{groupRoleId}` | authenticated | `SystemAdmin` | integration |
+| Server | `GET/POST /api/servers`, `GET/PUT/DELETE /api/servers/{id}` | authenticated | ServerAdmin on the environments involved | integration, E2E |
+| Move server | `PUT /api/servers/{id}/provider-environment/{providerEnvironmentId}` | — | ServerAdmin on source and target; SystemAdmin if the server has a credential | integration |
+| Server application | `GET/POST /api/servers/{id}/applications`, CRUD `/api/server-applications` | authenticated | ServerAdmin on the server's environment (both if the server changes) | integration, E2E |
+| Applications | `GET/POST /api/applications`, `GET/PUT/DELETE /api/applications/{id}` | authenticated | `SystemAdmin` | integration, E2E |
+| Versions | CRUD `/api/application-versions`, `GET/POST /api/applications/{id}/versions` (paginated list) | authenticated | `SystemAdmin` | integration, E2E |
+| Application API | CRUD `/api/application-version-apis`, `GET/POST /api/application-versions/{id}/apis` (paginated list) | authenticated | `SystemAdmin` | integration, E2E |
+| Query param | CRUD `/api/application-api-query-params`, `GET/POST /api/application-version-apis/{id}/query-params` (paginated list) | authenticated | `SystemAdmin` | integration |
+| Projects | CRUD `/api/projects` | authenticated | `SystemAdmin` | integration, E2E |
+| Application ↔ project link | `GET/POST/DELETE /api/projects/{id}/applications`, `GET/POST/DELETE /api/applications/{id}/projects` | authenticated | `SystemAdmin` | integration, E2E |
+| Server access | `GET /api/server-access/me` | authenticated | — | integration |
 
-Liste paginate `{items,total,page,pageSize}` con `page`, `pageSize` (max 200), `q`, `sort` dove ha senso. Errori RFC 7807 con `code` stabile; 422 per validazione, 404 per risorsa assente, 403 per ruolo mancante, 409 per vincoli.
+Paginated lists `{items,total,page,pageSize}` with `page`, `pageSize` (max 200), `q`, `sort` where it makes sense. RFC 7807 errors with a stable `code`; 422 for validation, 404 for a missing resource, 403 for a missing role, 409 for constraints.
 
-## Pagine frontend
+## Frontend pages
 
 `/providers`, `/providers/{id}`, `/environments`, `/environments/{id}`, `/servers`, `/servers/{id}`, `/applications`, `/applications/{id}`, `/projects`, `/projects/{id}`.
 
-- Tabelle con ricerca e CRUD; azioni nascoste senza permesso (API resta la fonte di verità).
-- Dettaglio server: anagrafica, applicazioni deployate con deploy/rimozione.
-- Dettaglio applicazione: versioni, API per versione, query param per API, progetti collegati.
-- Dettaglio ambiente: anagrafica e collegamento provider.
-- Dettaglio provider/progetto: anagrafica e collegamenti.
+- Tables with search and CRUD; actions hidden without permission (the API remains the source of truth).
+- Server detail: master data, deployed applications with deploy/removal.
+- Application detail: versions, APIs per version, query params per API, linked projects.
+- Environment detail: master data and provider link.
+- Provider/project detail: master data and links.
 
-## Scostamenti consapevoli dal legacy
+## Deliberate deviations from the legacy
 
-1. **Delete senza cascata distruttiva.** Il legacy cancellava il sottoalbero dalla topologia; qui i padri con figli rispondono 409 con il conteggio. Le join `ApplicationProject` sono le uniche con `ON DELETE CASCADE`. Motivazione: evitare cancellazioni involontarie di server o catalogo; l'anteprima impatti arriva con la topologia (Fase 4).
-2. **Nessuna delete ambiente.** Parità con il legacy; il target la valuta solo con anteprima impatti.
-3. **Credenziali e proxy non ancora collegati.** `Servers.CredentialId` e `ServerApplications.ProxyRouteId` esistono come colonne senza FK: le entità arrivano in Fase 5 e Fase 4. `credentialName` è sempre `null`.
-4. **`ProxyRouteId` accettato dalla Fase 4** e validato: un id inesistente risponde 404; la FK è attiva e la delete della route azzera il link sul deploy.
-5. **Assegnazione ruoli per ambiente senza UI.** L'API nested `group-roles` esiste ed è usata dai test e dall'ambiente di sviluppo; la pagina admin arriva in Fase 6.
-6. **Nessun endpoint di delete preview.** Il 409 riporta il conteggio delle dipendenze; la preview strutturata è nella Fase 4.
-7. **Ordinamento limitato** ai campi esposti (`id`, `name`, `version`, `provider`, `environment`, `url`, `server`, `application`). Il legacy ordinava lato client.
-8. **`SystemAdmin` non basta per i server.** Coerente con D7 = B: serve `ServerAdmin` sull'ambiente, salvo le eccezioni credenziali che richiedono `SystemAdmin`.
-9. **Cambio coppia provider/ambiente bloccato con dati collegati.** Se la coppia ha server o assegnazioni di ruolo, PUT risponde 409: altrimenti sposterebbe server e permessi senza i controlli di `ServerAdmin`.
+1. **Deletes without destructive cascade.** The legacy deleted the subtree from the topology; here parents with children return 409 with the count. The `ApplicationProject` joins are the only ones with `ON DELETE CASCADE`. Rationale: avoid accidental deletion of servers or catalog entries; the impact preview arrives with topology (Phase 4).
+2. **No environment delete.** Parity with the legacy; the target only considers it with an impact preview.
+3. **Credentials and proxy not linked yet.** `Servers.CredentialId` and `ServerApplications.ProxyRouteId` exist as columns without FK: the entities arrive in Phase 5 and Phase 4. `credentialName` is always `null`.
+4. **`ProxyRouteId` accepted from Phase 4** and validated: a non-existent id returns 404; the FK is active and deleting the route clears the link on the deploy.
+5. **Role assignment per environment without UI.** The nested `group-roles` API exists and is used by tests and the dev environment; the admin page arrives in Phase 6.
+6. **No delete-preview endpoint.** The 409 reports the dependency count; the structured preview is in Phase 4.
+7. **Sorting limited** to exposed fields (`id`, `name`, `version`, `provider`, `environment`, `url`, `server`, `application`). The legacy sorted client-side.
+8. **`SystemAdmin` is not enough for servers.** Consistent with D7 = B: `ServerAdmin` is required on the environment, except for credential exceptions that require `SystemAdmin`.
+9. **Changing the provider/environment pair blocked with linked data.** If the pair has servers or role assignments, PUT returns 409: otherwise it would move servers and permissions without the `ServerAdmin` checks.
 
-## Differenze dati
+## Data differences
 
-- `EnvironmentDefinition` sostituisce `Environments`; `ProviderEnvironment` è la coppia. Route `/api/environments`, nessun alias `Enviroments`.
-- Enum `RequestType` e `QueryParamType` come stringhe, con check constraint sul DB.
-- `Version` come token di concorrenza; update concorrenti → 409 `concurrent_update`.
-- `CreatedAt`/`UpdatedAt` UTC su ogni entità con PK.
+- `EnvironmentDefinition` replaces `Environments`; `ProviderEnvironment` is the pair. Route `/api/environments`, no `Enviroments` alias.
+- `RequestType` and `QueryParamType` enums as strings, with a check constraint on the DB.
+- `Version` as concurrency token; concurrent updates → 409 `concurrent_update`.
+- UTC `CreatedAt`/`UpdatedAt` on every entity with a PK.
 
-## Dry-run di import (fixture legacy-shaped)
+## Import dry-run (legacy-shaped fixture)
 
-`Legacy_dry_run_maps_reference_and_catalog_fixture` carica `tests/InfraOrgIt.IntegrationTests/Legacy/Fixtures/legacy-reference-catalog.json`: una fixture sanificata con la **forma delle tabelle legacy** (ID espliciti, enum interi) per riferimento e catalogo. La fixture viene validata (unicità, FK, porte, lunghezze), mappata verso le entità nuove e inserita nel DB di test. Il test verifica:
+`Legacy_dry_run_maps_reference_and_catalog_fixture` loads `tests/InfraOrgIt.IntegrationTests/Legacy/Fixtures/legacy-reference-catalog.json`: a sanitized fixture with the **shape of the legacy tables** (explicit IDs, integer enums) for reference and catalog. The fixture is validated (uniqueness, FK, ports, lengths), mapped to the new entities and inserted into the test DB. The test verifies:
 
-- ID preservati (9101, 9001, 9401, 9501, 9601);
-- enum legacy mappati (0 → `GET`, 4 → `DELETE`, 2 → `Bool`);
-- letture API coerenti per provider, coppie provider/ambiente, versioni, API con query param e link progetto;
-- delete del provider bloccata con 409.
+- IDs preserved (9101, 9001, 9401, 9501, 9601);
+- legacy enums mapped (0 → `GET`, 4 → `DELETE`, 2 → `Bool`);
+- consistent API reads for provider, provider/environment pairs, versions, APIs with query params and project links;
+- provider delete blocked with 409.
 
-`Legacy_fixture_rejects_orphan_foreign_keys` verifica che una coppia provider/ambiente orfana venga rifiutata prima dell'inserimento.
+`Legacy_fixture_rejects_orphan_foreign_keys` verifies that an orphan provider/environment pair is rejected before insertion.
 
-Il dry-run **con dati legacy reali resta in Fase 7**: richiede un dump sanificato e l'importatore .NET. Il seed di riferimento versionato contiene solo anagrafiche di base; il catalogo reale è in `the legacy export`, vietato perché contiene dati locali.
+The dry-run **with representative legacy data remains in Phase 7**: it requires a sanitized dump and the .NET importer. The committed reference seed contains only base master data; the full catalog is kept outside the repository.
 
-## Copertura test Fase 3
+## Phase 3 test coverage
 
-- `InventoryApiTests` (13 test di integrazione, MySQL Testcontainers): RBAC scritture, CRUD provider, catalogo completo con update di versione/API/query param, server con ruolo d'ambiente, deploy e delete bloccata, proxy route rifiutata, filtro non valido, cambio coppia bloccato, link progetto, dry-run.
-- `EntitySection.test.tsx`: tabella, creazione, azioni nascoste senza permesso.
-- `inventory.test.ts`: `saveEntity` crea sulla collezione e aggiorna sull'elemento (`/api/providers/{id}`).
-- Playwright: provider creato e modificato → ambiente collegato → applicazione con versione e API create e modificate → progetto collegato.
+- `InventoryApiTests` (13 integration tests, MySQL Testcontainers): write RBAC, provider CRUD, full catalog with version/API/query param updates, server with environment role, deploy and blocked delete, rejected proxy route, invalid filter, blocked pair change, project link, dry-run.
+- `EntitySection.test.tsx`: table, creation, actions hidden without permission.
+- `inventory.test.ts`: `saveEntity` creates on the collection and updates on the item (`/api/providers/{id}`).
+- Playwright: provider created and updated → environment linked → application with version and APIs created and updated → project linked.
 
-## Fuori perimetro Fase 3
+## Out of scope for Phase 3
 
-Credenziali SSH e host key (Fase 5), proxy e topologia (Fase 4), diagrammi (Fase 4), azioni applicazione e reachability (Fase 5), gestione utenti/gruppi/ruoli/menu (Fase 6), import legacy reale (Fase 7).
+SSH credentials and host key (Phase 5), proxy and topology (Phase 4), diagrams (Phase 4), application actions and reachability (Phase 5), users/groups/roles/menu management (Phase 6), real legacy import (Phase 7).

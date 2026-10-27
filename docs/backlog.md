@@ -1,29 +1,29 @@
 # Backlog
 
-Aperto il 2026-10-27. Ogni voce è un lavoro non ancora fatto: spuntare solo a verifica completata.
+Opened on 2026-10-27. Each item is work not done yet: tick only after its verification passes.
 
 ## Frontend — `InfraOrgITWeb`
 
-- [x] **Icone sulle voci di menu**
-  `@heroicons/react` + mapping `path → icona` in `src/lib/icons.ts` (fallback per path sconosciuti, route di dettaglio mappate sulla lista). Test in `src/lib/icons.test.ts`.
+- [x] **Menu item icons**
+  `@heroicons/react` + `path → icon` mapping in `src/lib/icons.ts` (fallback for unknown paths, detail routes mapped to their list). Tests in `src/lib/icons.test.ts`.
 
-- [x] **Icone utente e tema nell'header**
-  Toggle tema con `SunIcon`/`MoonIcon`, utente in `details` con `UserCircleIcon` e logout con `ArrowRightOnRectangleIcon`.
+- [x] **User and theme icons in the header**
+  Theme toggle with `SunIcon`/`MoonIcon`, user in a `details` element with `UserCircleIcon` and logout with `ArrowRightOnRectangleIcon`.
 
-- [x] **Header di dettaglio: indietro + fullscreen**
-  In `Shell`: pulsante “Indietro” verso la lista quando il path è `/<sezione>/<id>` e toggle fullscreen (`documentElement.requestFullscreen`, stato sincronizzato su `fullscreenchange`).
-  Resta da valutare: usare `HideBackButton` del menu al posto del match sul path, se in futuro servono eccezioni.
+- [x] **Detail header: back + fullscreen**
+  In `Shell`: “Back” button to the list when the path is `/<section>/<id>` and fullscreen toggle (`documentElement.requestFullscreen`, state synced on `fullscreenchange`).
+  Still to evaluate: use the menu `HideBackButton` instead of path matching, if exceptions are needed later.
 
-- [x] **Bug grafici pagina Servers**
-  Sidebar resa scrollabile (`min-h-0 overflow-y-auto`) e shell con `overflow-hidden`; tabelle già dentro `overflow-x-auto`. L'overlay residuo dello screenshot non è riproducibile dopo il refresh: se ricompare, annotare route e stato del menu.
+- [x] **Servers page UI bugs**
+  Sidebar made scrollable (`min-h-0 overflow-y-auto`) and shell `overflow-hidden`; tables already inside `overflow-x-auto`. The residual overlay from the screenshot is not reproducible after refresh: if it comes back, note the route and menu state.
 
 ## Workspace
 
-- [x] **Rinominare il workspace e i sottorepo**
-  `AllInfraOrgIT`, `InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker` (niente prefisso `DS`, niente punti). Aggiornati `Makefile`, `scripts/`, workflow, `versions.lock`, docs, README e remote GitHub. Le copie legacy sono state rinominate `legacy copy` e `legacy Docker copy`.
-  Compose project `infraorgit`, immagini `infraorgit-api`/`infraorgit-web`.
+- [x] **Rename workspace and subrepositories**
+  `AllInfraOrgIT`, `InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker` (no legacy prefix, no dots). Updated `Makefile`, `scripts/`, workflows, `versions.lock`, docs, README and GitHub remotes. Legacy copies were archived outside the workspace.
+  Compose project `infraorgit`, images `infraorgit-api`/`infraorgit-web` (Docker names must be lowercase).
 
-- [ ] **Validare le immagini Docker al primo tag**
-  Implementati `InfraOrgITWeb/Dockerfile` + `Caddyfile`, label/versione nell'immagine API, workflow `docker.yml` in `InfraOrgITApi` e `InfraOrgITWeb` (GHCR, tag `X.Y.Z`, `X.Y`, `sha`, `latest`).
-  Manca: primo tag `v*`, verifica workflow e push, digest delle immagini in `versions.lock`, uso dell'immagine pubblicata nel compose di release.
-  Verifica: `gh run list` verde, `docker pull` delle due immagini, `APP_VERSION`/`VITE_APP_VERSION` visibili a runtime.
+- [ ] **Validate the Docker images on the first tag**
+  Implemented `InfraOrgITWeb/Dockerfile` + `Caddyfile`, image version labels for the API, `docker.yml` workflows in `InfraOrgITApi` and `InfraOrgITWeb` (GHCR, tags `X.Y.Z`, `X.Y`, `sha`, `latest`).
+  Missing: first `v*` tag, workflow and push verification, image digests in `versions.lock`, published image usage in the release compose.
+  Verification: `gh run list` green, `docker pull` both images, `APP_VERSION`/`VITE_APP_VERSION` visible at runtime.

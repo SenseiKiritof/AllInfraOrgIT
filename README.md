@@ -1,18 +1,17 @@
 # AllInfraOrgIT
 
-Workspace di InfraOrgIT: repo meta con decisioni architetturali, configurazione condivisa, orchestrazione e lock di release.
+InfraOrgIT workspace: meta repository with architecture decisions, shared configuration, orchestration and release lock.
 
-## Repo del workspace
+## Workspace repositories
 
-| Repo | Contenuto |
+| Repository | Content |
 |---|---|
-| `AllInfraOrgIT` | questo repo: docs, ADR, `Makefile`, `scripts/`, `versions.lock` |
-| `InfraOrgITApi` | backend .NET 10: API, migration EF, importer legacy |
-| `InfraOrgITWeb` | frontend React + Vite |
+| `AllInfraOrgIT` | this repo: docs, ADRs, `Makefile`, `scripts/`, `versions.lock` |
+| `InfraOrgITApi` | .NET 10 backend: API, EF migrations, legacy importer |
+| `InfraOrgITWeb` | React + Vite frontend |
 | `InfraOrgITDocker` | Docker Compose, Caddy, Keycloak |
-| `InfraOrgIt`, `legacy copy`, `legacy Docker copy`, `infra-org-it-fe` | copie del progetto legacy, solo riferimento |
 
-Le quattro directory del workspace stanno sullo stesso livello:
+The four directories live side by side:
 
 ```
 workspace/
@@ -22,26 +21,26 @@ workspace/
   InfraOrgITDocker/
 ```
 
-## Stato
+## Status
 
-Fase 8 completata sul perimetro tecnico — 2026-10-27; release non eseguita. Backend, frontend, admin/RBAC, gestione remota e importer legacy (sorgente MySQL o fixture JSON) sono operativi; il dump legacy fittizio gira in Docker. Profilo `full` con API, migrazioni, Keycloak production e Caddy; `make ci` e 5 E2E verdi. Restano il rehearsal su dati rappresentativi e l'esecuzione di `make release`.
+Phase 8 completed on the technical perimeter — 2026-10-27; no release executed yet. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the fake legacy dump runs in Docker. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. Still open: rehearsal on a representative dataset and running `make release`.
 
-## Contenuto
+## Contents
 
-| Percorso | Scopo |
+| Path | Purpose |
 |---|---|
-| `docs/` | ERD, data dictionary, permessi, UX, mapping legacy, OpenAPI |
-| `docs/adr/` | ADR 001–008 e template |
-| `docs/backlog.md` | lavori aperti e loro verifica |
-| `.opencode/` | regole, skill e plugin OpenCode del workspace |
-| `scripts/` | `dev.sh` e `env.sh` per lo sviluppo locale |
-| `tools/graphify/` | configurazione del workspace graphify |
-| `Makefile` | orchestrazione di infra, API, web, test e migrazioni |
-| `versions.lock` | commit SHA e immagini dei repo applicativi per release riproducibili |
+| `docs/` | ERD, data dictionary, permissions, UX, legacy mapping, OpenAPI |
+| `docs/adr/` | ADRs 001–008 and template |
+| `docs/backlog.md` | open work and its verification |
+| `.opencode/` | OpenCode rules, skills and plugins for the workspace |
+| `scripts/` | `dev.sh` and `env.sh` for local development |
+| `tools/graphify/` | graphify workspace configuration |
+| `Makefile` | orchestration for infra, API, web, tests and migrations |
+| `versions.lock` | commit SHAs and images of the application repos for reproducible releases |
 
-## Avvio rapido
+## Quick start
 
-Prerequisiti: Docker con Compose v2, .NET SDK 10, Node 24, Yarn 1, `make`.
+Prerequisites: Docker with Compose v2, .NET SDK 10, Node 24, Yarn 1, `make`.
 
 ```bash
 git clone https://github.com/SenseiKiritof/AllInfraOrgIT.git
@@ -52,36 +51,36 @@ cp InfraOrgITDocker/.env.example InfraOrgITDocker/.env
 make dev
 ```
 
-`make dev` crea `.env` se manca, avvia MySQL/Keycloak, applica le migration EF e lancia API e Vite. Le credenziali di sviluppo sono in `InfraOrgITDocker/.env`.
+`make dev` creates `.env` when missing, starts MySQL/Keycloak, applies EF migrations and starts API and Vite. Development credentials live in `InfraOrgITDocker/.env`.
 
-## Comandi
+## Commands
 
 ```bash
-make dev      # infra + migration + API :5298 + Vite :3000; crea .env se manca
-make full     # build frontend + API container, job migrazioni, Keycloak production e Caddy
+make dev      # infra + migrations + API :5298 + Vite :3000; creates .env when missing
+make full     # frontend build + API container, migration job, Keycloak production and Caddy
 make test     # xunit + Testcontainers MySQL + Vitest
-make ci       # stessi gate dei workflow, in locale
-make openapi  # rigenera openapi/InfraOrgIt.Api.json dal backend
-make backup   # dump MySQL applicativo + Keycloak in backups/<UTC>
-make restore  # solo con CONFIRM_RESTORE=yes BACKUP_DIR=...; sovrascrive i DB
-make load-test # carico mirato su liste, topologia e save
-make legacy-dry-run  # dry-run importer su fixture JSON
-make legacy-rehearsal # dry-run importer contro il MySQL legacy fittizio (profilo legacy)
-make migrate  # dotnet-ef dal manifest locale
-make e2e      # Playwright; richiede make dev attivo
-make e2e-full # Playwright contro il profilo full (Caddy/HTTPS)
-make config   # valida il Compose
-make reset    # rimuove i volumi: serve dopo modifiche a realm/client Keycloak
+make ci       # same gates as the workflows, locally
+make openapi  # regenerate openapi/InfraOrgIt.Api.json from the backend
+make backup   # MySQL application + Keycloak dump into backups/<UTC>
+make restore  # only with CONFIRM_RESTORE=yes BACKUP_DIR=...; overwrites the DBs
+make load-test # targeted load on lists, topology and saves
+make legacy-dry-run  # importer dry-run on JSON fixtures
+make legacy-rehearsal # importer dry-run against the fake legacy MySQL (legacy profile)
+make migrate  # dotnet-ef from the local manifest
+make e2e      # Playwright; requires make dev running
+make e2e-full # Playwright against the full profile (Caddy/HTTPS)
+make config   # validate the Compose file
+make reset    # removes volumes: needed after Keycloak realm/client changes
 make down
 ```
 
-`make e2e` usa `http://localhost:3000`; `make e2e-full` usa `https://localhost` e richiede il profilo `full` attivo.
+`make e2e` uses `http://localhost:3000`; `make e2e-full` uses `https://localhost` and requires the `full` profile.
 
-## Release e pubblicazione
+## Release and publishing
 
-`make release VERSION=0.8.0` esegue i gate, aggiorna `versions.lock` e crea i tag locali `v0.8.0`; il push resta manuale (`git push` e `git push --tags` per ogni repo). Procedura in `docs/operations/release.md`.
+`make release VERSION=0.8.0` runs the gates, updates `versions.lock` and creates local `v0.8.0` tags; pushing stays manual (`git push` and `git push --tags` in each repo). Procedure in `docs/operations/release.md`.
 
-I tag `v*` avviano `.github/workflows/docker.yml` di `InfraOrgITApi` e `InfraOrgITWeb`: build dell'immagine, tag con la versione dell'applicazione e push su GHCR.
+`v*` tags trigger `.github/workflows/docker.yml` in `InfraOrgITApi` and `InfraOrgITWeb`: image build, application version tag and push to GHCR.
 
 ```bash
 docker pull ghcr.io/senseikiritof/infraorgit-api:0.8.0
@@ -89,10 +88,10 @@ docker pull ghcr.io/senseikiritof/infraorgit-web:0.8.0
 docker run --rm -p 8080:80 ghcr.io/senseikiritof/infraorgit-web:0.8.0
 ```
 
-Tag pubblicati: `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest`. Il numero di versione è baked nell'immagine (`org.opencontainers.image.version`, `APP_VERSION` dell'API, `VITE_APP_VERSION` della web).
+Published tags: `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest`. The version number is baked into the image (`org.opencontainers.image.version`, `APP_VERSION` for the API, `VITE_APP_VERSION` for the web app).
 
-`versions.lock` fissa i commit di backend, frontend e docker. Una release è il checkout di quei commit; il rollback è il lock precedente.
+`versions.lock` pins backend, frontend and docker commits. A release is the checkout of those commits; rollback is the previous lock.
 
-## Regole
+## Rules
 
-Vedi `AGENTS.md`. Nessun segreto, nessun dato reale, nessun artefatto del legacy.
+See `AGENTS.md`. No secrets, no production data, no legacy artifacts.

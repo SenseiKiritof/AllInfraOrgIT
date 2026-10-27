@@ -1,81 +1,81 @@
-# ERD di dominio
+# Domain ERD
 
-Modello verificato sul legacy il 2026-10-25: 26 entità, 4 tabelle di join, `__EFMigrationsHistory` esclusa.
+Model verified against the legacy on 2026-10-25: 26 entities, 4 join tables, `__EFMigrationsHistory` excluded.
 
 ```mermaid
 erDiagram
-  USER ||--o{ GROUP_USER : "membro"
-  GROUP ||--o{ GROUP_USER : "contiene"
-  USER ||--o{ ROLE_USER : "ha"
-  ROLE ||--o{ ROLE_USER : "assegnato"
-  ROLE ||--o{ MENU_ROLE : "vede"
-  MENU ||--o{ MENU_ROLE : "visibile a"
-  MENU ||--o| MENU : "padre"
+  USER ||--o{ GROUP_USER : "member"
+  GROUP ||--o{ GROUP_USER : "contains"
+  USER ||--o{ ROLE_USER : "has"
+  ROLE ||--o{ ROLE_USER : "assigned"
+  ROLE ||--o{ MENU_ROLE : "sees"
+  MENU ||--o{ MENU_ROLE : "visible to"
+  MENU ||--o| MENU : "parent"
 
-  PROVIDER ||--o{ PROVIDER_ENVIRONMENT : "offre"
+  PROVIDER ||--o{ PROVIDER_ENVIRONMENT : "offers"
   ENVIRONMENT_DEFINITION ||--o{ PROVIDER_ENVIRONMENT : "in"
-  PROVIDER_ENVIRONMENT ||--o{ SERVER : "contiene"
-  PROVIDER_ENVIRONMENT ||--o{ PROVIDER_ENVIRONMENT_GROUP_ROLE : "concede"
-  GROUP ||--o{ PROVIDER_ENVIRONMENT_GROUP_ROLE : "riceve"
-  ROLE ||--o{ PROVIDER_ENVIRONMENT_GROUP_ROLE : "ruolo"
+  PROVIDER_ENVIRONMENT ||--o{ SERVER : "contains"
+  PROVIDER_ENVIRONMENT ||--o{ PROVIDER_ENVIRONMENT_GROUP_ROLE : "grants"
+  GROUP ||--o{ PROVIDER_ENVIRONMENT_GROUP_ROLE : "receives"
+  ROLE ||--o{ PROVIDER_ENVIRONMENT_GROUP_ROLE : "role"
 
-  SERVER ||--o{ SERVER_APPLICATION : "ospita"
-  APPLICATION_VERSION ||--o{ SERVER_APPLICATION : "deployata"
-  APPLICATION ||--o{ APPLICATION_VERSION : "versioni"
-  APPLICATION_VERSION ||--o{ APPLICATION_VERSION_API : "espone"
-  APPLICATION_VERSION_API ||--o{ APPLICATION_API_QUERY_PARAM : "parametri"
-  APPLICATION }o--o{ PROJECT : "progetti"
+  SERVER ||--o{ SERVER_APPLICATION : "hosts"
+  APPLICATION_VERSION ||--o{ SERVER_APPLICATION : "deployed"
+  APPLICATION ||--o{ APPLICATION_VERSION : "versions"
+  APPLICATION_VERSION ||--o{ APPLICATION_VERSION_API : "exposes"
+  APPLICATION_VERSION_API ||--o{ APPLICATION_API_QUERY_PARAM : "parameters"
+  APPLICATION }o--o{ PROJECT : "projects"
 
   SERVER ||--o{ PROXY_CONNECTION : "source"
   SERVER ||--o{ PROXY_CONNECTION : "target"
-  PROXY_CONNECTION ||--o{ PROXY_ROUTE : "trasporta"
-  PROXY_ROUTE }o--o| SERVER_APPLICATION : "target applicazione"
-  PROXY_ROUTE }o--o| PROXY_CONNECTION : "inoltra"
+  PROXY_CONNECTION ||--o{ PROXY_ROUTE : "carries"
+  PROXY_ROUTE }o--o| SERVER_APPLICATION : "application target"
+  PROXY_ROUTE }o--o| PROXY_CONNECTION : "forwards"
   SERVER_APPLICATION }o--o| PROXY_ROUTE : "route"
 
   DIAGRAM ||--o{ DIAGRAM_SCOPE_ITEM : "scope"
-  DIAGRAM ||--o{ DIAGRAM_NODE : "nodi"
+  DIAGRAM ||--o{ DIAGRAM_NODE : "nodes"
   DIAGRAM ||--o{ DIAGRAM_EDGE : "edge"
 
-  APPLICATION ||--o{ APPLICATION_ACTION : "azioni"
+  APPLICATION ||--o{ APPLICATION_ACTION : "actions"
   COMMAND_TEMPLATE ||--o{ APPLICATION_ACTION : "template"
   SERVER ||--o{ REACHABILITY_TEST : "test"
-  SERVER_CREDENTIAL ||--o{ SERVER : "usata da"
+  SERVER_CREDENTIAL ||--o{ SERVER : "used by"
   SERVER ||--o{ COMMAND_EXECUTION : "audit (no FK)"
 ```
 
-## Aggregati
+## Aggregates
 
-| Aggregato | Radice | Contenuto |
+| Aggregate | Root | Content |
 |---|---|---|
-| Inventario | `Provider`, `EnvironmentDefinition` | `ProviderEnvironment`, `Server` |
-| Catalogo | `Application` | `ApplicationVersion`, `ApplicationVersionApi`, `ApplicationApiQueryParam` |
-| Progetti | `Project` | associazione M-N con `Application` |
-| Topologia | `ProxyConnection` | `ProxyRoute`, target applicazione o connessione |
-| Diagrammi | `Diagram` | `DiagramScopeItem`, `DiagramNode`, `DiagramEdge` |
-| Amministrazione | `User`, `Group`, `Role`, `Menu` | join e `ProviderEnvironmentGroupRole` |
-| Gestione remota | `ServerCredential`, `CommandTemplate`, `ApplicationAction`, `ReachabilityTest` | `CommandExecution` (audit) |
+| Inventory | `Provider`, `EnvironmentDefinition` | `ProviderEnvironment`, `Server` |
+| Catalog | `Application` | `ApplicationVersion`, `ApplicationVersionApi`, `ApplicationApiQueryParam` |
+| Projects | `Project` | M-N association with `Application` |
+| Topology | `ProxyConnection` | `ProxyRoute`, target application or connection |
+| Diagrams | `Diagram` | `DiagramScopeItem`, `DiagramNode`, `DiagramEdge` |
+| Administration | `User`, `Group`, `Role`, `Menu` | joins and `ProviderEnvironmentGroupRole` |
+| Remote management | `ServerCredential`, `CommandTemplate`, `ApplicationAction`, `ReachabilityTest` | `CommandExecution` (audit) |
 
-## Invarianti
+## Invariants
 
-1. `ProviderEnvironment` è la coppia provider × ambiente. Lo scope `ProviderEnvironment` di un diagramma porta l'`EnvironmentDefinition.Id`, **non** il `ProviderEnvironment.Id` (verificato in `DiagramsService.BuildScopedTopologyAsync`).
+1. `ProviderEnvironment` is the provider × environment pair. The `ProviderEnvironment` scope of a diagram carries the `EnvironmentDefinition.Id`, **not** the `ProviderEnvironment.Id` (verified in `DiagramsService.BuildScopedTopologyAsync`).
 2. `ProxyConnection.Direction`:
-   - `Outgoing`: il source usa il target come proxy.
-   - `Incoming`: il source è proxy per il target.
-3. `ProxyRoute` punta a una `ServerApplication` **oppure** a un'altra `ProxyConnection`; entrambi i target sono opzionali.
-4. `ServerApplication.ProxyRouteId` e `ProxyRoute.TargetServerApplicationId` formano un riferimento circolare nullable: l'import e le delete devono azzerare i riferimenti esterni prima di rimuovere le righe.
-5. `ServerCredential` è condivisa da più server. Il segreto è cifrato, versionato e non serializzato.
-6. `CommandExecution` non ha FK verso `Server`: lo storico sopravvive alla cancellazione del server.
-7. `DiagramNode`/`DiagramEdge`/`DiagramScopeItem` hanno `EntityId` polimorfico senza FK. La validazione avviene nel servizio, non nel DB.
-8. `Diagram.IsDefault` è un invariante applicativo: al massimo un diagramma default. MySQL non ha indici unici parziali; l'app lo garantisce in transazione.
-9. `SystemAdmin` non implica `ServerAdmin`/`ServerOperator`: sono scope diversi.
-10. Gli ID legacy sono preservati nell'import, perché i diagrammi li referenziano.
+   - `Outgoing`: the source uses the target as a proxy.
+   - `Incoming`: the source is a proxy for the target.
+3. `ProxyRoute` points to a `ServerApplication` **or** to another `ProxyConnection`; both targets are optional.
+4. `ServerApplication.ProxyRouteId` and `ProxyRoute.TargetServerApplicationId` form a nullable circular reference: import and deletes must clear external references before removing the rows.
+5. `ServerCredential` is shared by multiple servers. The secret is encrypted, versioned and never serialized.
+6. `CommandExecution` has no FK to `Server`: the history survives server deletion.
+7. `DiagramNode`/`DiagramEdge`/`DiagramScopeItem` have a polymorphic `EntityId` with no FK. Validation happens in the service, not in the DB.
+8. `Diagram.IsDefault` is an application invariant: at most one default diagram. MySQL has no partial unique indexes; the app enforces it in a transaction.
+9. `SystemAdmin` does not imply `ServerAdmin`/`ServerOperator`: they are different scopes.
+10. Legacy IDs are preserved during import, because diagrams reference them.
 
-## Differenze rispetto al legacy
+## Differences from the legacy
 
-- `EnvironmentEntity` diventa `EnvironmentDefinition`; tabella `EnvironmentDefinitions`.
-- Ogni tabella di dominio con PK propria riceve `CreatedAt`, `UpdatedAt`, `Version` (eccetto `CommandExecutions`).
-- `ServerCredentials` riceve `KeyVersion` e `NeedsReauth`.
-- Gli enum numerici (`QueryParamTypeEnum`, `RequestTypeEnum`, `RoleScopeEnum`) diventano stringhe.
-- `ApplicationActions.ParameterValues` passa da `longtext` JSON a colonna `JSON`.
-- I nomi di tabella/colonna restano PascalCase, come il legacy, per ridurre il mapping dell'importer.
+- `EnvironmentEntity` becomes `EnvironmentDefinition`; table `EnvironmentDefinitions`.
+- Every domain table with its own PK gets `CreatedAt`, `UpdatedAt`, `Version` (except `CommandExecutions`).
+- `ServerCredentials` gets `KeyVersion` and `NeedsReauth`.
+- Numeric enums (`QueryParamTypeEnum`, `RequestTypeEnum`, `RoleScopeEnum`) become strings.
+- `ApplicationActions.ParameterValues` moves from `longtext` JSON to a `JSON` column.
+- Table/column names stay PascalCase, as in the legacy, to reduce importer mapping.

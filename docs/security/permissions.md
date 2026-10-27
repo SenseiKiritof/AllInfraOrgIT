@@ -1,103 +1,103 @@
-# Matrice permessi
+# Permissions matrix
 
-Verificata sul backend legacy il 2026-10-25 (`MinimalApis/*`, `ServerAccessService`, `SystemAdminWriteFilter`, `Services/*`).
+Verified against the legacy backend on 2026-10-25 (`MinimalApis/*`, `ServerAccessService`, `SystemAdminWriteFilter`, `Services/*`).
 
-## Ruoli
+## Roles
 
-| Ruolo | Scope | Dove vive |
+| Role | Scope | Where it lives |
 |---|---|---|
-| `SystemAdmin` | sistema | `Users.Roles` |
-| `ServerAdmin` | `ProviderEnvironment` | `ProviderEnvironmentGroupRoles` via gruppo utente |
-| `ServerOperator` | `ProviderEnvironment` | `ProviderEnvironmentGroupRoles` via gruppo utente |
+| `SystemAdmin` | system | `Users.Roles` |
+| `ServerAdmin` | `ProviderEnvironment` | `ProviderEnvironmentGroupRoles` via user group |
+| `ServerOperator` | `ProviderEnvironment` | `ProviderEnvironmentGroupRoles` via user group |
 
-`SystemAdmin` **non** implica `ServerAdmin`/`ServerOperator`. Un `ServerAdmin` è anche operatore sul proprio ambiente (`OperatorEnvironmentIds` include gli admin).
+`SystemAdmin` **does not** imply `ServerAdmin`/`ServerOperator`. A `ServerAdmin` is also an operator on their own environment (`OperatorEnvironmentIds` includes admins).
 
-## Autenticazione
+## Authentication
 
-- Tutte le route `/api/*` richiedono un token, tranne `Auth/Login`, `Auth/Token`, `Auth/RefreshToken`, `Auth/Logout`.
-- Il token arriva da cookie HttpOnly; la console WebSocket accetta anche `access_token` in query string (solo `/api/socket`).
-- La console controlla `Origin` contro `FeConn.Host`.
-- Non esiste un token CSRF esplicito: le mutazioni si affidano a `SameSite=Strict` e al content-type JSON.
+- All `/api/*` routes require a token, except `Auth/Login`, `Auth/Token`, `Auth/RefreshToken`, `Auth/Logout`.
+- The token comes from an HttpOnly cookie; the WebSocket console also accepts `access_token` in the query string (`/api/socket` only).
+- The console checks `Origin` against `FeConn.Host`.
+- There is no explicit CSRF token: mutations rely on `SameSite=Strict` and the JSON content type.
 
-## Matrice effettiva (legacy)
+## Effective matrix (legacy)
 
-| Area / route | Lettura | Scrittura | Note verificate |
+| Area / route | Read | Write | Verified notes |
 |---|---|---|---|
-| Providers, Enviroments, ProviderEnvironments | autenticati | **autenticati** | nessun filtro; `Enviroments` è il typo legacy |
-| Servers | autenticati | **autenticati** | `PUT /Servers/{id}` richiede SystemAdmin solo se il server ha una credenziale e cambia IP/hostname/ambiente; `MoveServer` idem |
-| ServerApplications, ProxyConnections, ProxyRoutes, Projects | autenticati | **autenticati** | nessun filtro |
-| Applications, ApplicationVersions, ApplicationVersionApis, ApplicationApiQueryParams | autenticati | **autenticati** | nessun filtro |
-| Diagrams | autenticati | **autenticati** | nessun filtro; `IsDefault` unico gestito dal servizio |
-| Topology (`GET`, delete nodo, delete preview) | autenticati | **autenticati** | la delete cancella il sottoalbero: superficie distruttiva aperta |
-| Users, Groups, Roles, Menus, ProviderEnvironmentGroupRoles | autenticati | `SystemAdmin` | `SystemAdminWriteFilter` su POST/PUT/DELETE |
-| ServerCredentials (incluse `/Servers/{id}/Ssh`, `/HostKey`) | `SystemAdmin` | `SystemAdmin` | letture e scritture protette |
-| CommandTemplates | `SystemAdmin` | `SystemAdmin` | letture e scritture protette |
-| ApplicationActions config (`GET/POST` per applicazione, `PUT/DELETE`) | `SystemAdmin` | `SystemAdmin` | gli operatori non vedono script/parametri |
-| ApplicationActions deploy (`GET` bottoni, `POST .../Run`) | `ServerOperator` | `ServerOperator` | `ServerAdmin` incluso |
-| ReachabilityTests globali (`/ReachabilityTests`) | `SystemAdmin` | `SystemAdmin` | la run è solo per server o ambiente |
-| ReachabilityTests per server | `ServerOperator` | `ServerAdmin` | `GET` e run = Operator; CRUD = Admin |
-| Reachability run per ambiente | — | `ServerOperator` | `POST /ProviderEnvironments/{id}/ReachabilityTests/Run` |
-| CommandExecutions (audit) | `SystemAdmin` | — | filtro e paginazione lato server |
-| ServerAccess (`/ServerAccess/Me`) | autenticati | — | restituisce ambienti admin/operator |
-| Console SSH (`/socket/Servers/{id}/Console`) | `ServerAdmin` | — | Origin obbligatoria; nessun `SystemAdmin` implicito |
-| Auth/CurrentUser | autenticati | — | |
+| Providers, Enviroments, ProviderEnvironments | authenticated | **authenticated** | no filter; `Enviroments` is the legacy typo |
+| Servers | authenticated | **authenticated** | `PUT /Servers/{id}` requires SystemAdmin only if the server has a credential and the IP/hostname/environment changes; `MoveServer` likewise |
+| ServerApplications, ProxyConnections, ProxyRoutes, Projects | authenticated | **authenticated** | no filter |
+| Applications, ApplicationVersions, ApplicationVersionApis, ApplicationApiQueryParams | authenticated | **authenticated** | no filter |
+| Diagrams | authenticated | **authenticated** | no filter; unique `IsDefault` handled by the service |
+| Topology (`GET`, node delete, delete preview) | authenticated | **authenticated** | the delete removes the subtree: destructive surface left open |
+| Users, Groups, Roles, Menus, ProviderEnvironmentGroupRoles | authenticated | `SystemAdmin` | `SystemAdminWriteFilter` on POST/PUT/DELETE |
+| ServerCredentials (including `/Servers/{id}/Ssh`, `/HostKey`) | `SystemAdmin` | `SystemAdmin` | reads and writes protected |
+| CommandTemplates | `SystemAdmin` | `SystemAdmin` | reads and writes protected |
+| ApplicationActions config (`GET/POST` per application, `PUT/DELETE`) | `SystemAdmin` | `SystemAdmin` | operators do not see scripts/parameters |
+| ApplicationActions deploy (`GET` buttons, `POST .../Run`) | `ServerOperator` | `ServerOperator` | `ServerAdmin` included |
+| Global ReachabilityTests (`/ReachabilityTests`) | `SystemAdmin` | `SystemAdmin` | the run is only per server or environment |
+| ReachabilityTests per server | `ServerOperator` | `ServerAdmin` | `GET` and run = Operator; CRUD = Admin |
+| Reachability run per environment | — | `ServerOperator` | `POST /ProviderEnvironments/{id}/ReachabilityTests/Run` |
+| CommandExecutions (audit) | `SystemAdmin` | — | server-side filter and pagination |
+| ServerAccess (`/ServerAccess/Me`) | authenticated | — | returns admin/operator environments |
+| SSH console (`/socket/Servers/{id}/Console`) | `ServerAdmin` | — | Origin required; no implicit `SystemAdmin` |
+| Auth/CurrentUser | authenticated | — | |
 
-## Gap verificati
+## Verified gaps
 
-1. **Scritture inventario aperte a ogni autenticato.** Un utente senza ruoli può creare/modificare/eliminare provider, ambienti, server, applicazioni, progetti, proxy e diagrammi. Può anche cancellare un sottoalbero dalla topologia (`DELETE /Topology/Nodes/...`). È il gap più ampio.
-2. **Menu non filtrato dal ruolo.** `MenusService.GetMenus` restituisce tutte le voci e non carica `Menu.Roles`; la tabella `MenuRole` non ha effetto sul menu. La UI mostra le pagine admin a tutti (le scritture poi falliscono).
-3. **Nessuna delete ambiente.** `EnviromentsApi` espone GET/POST/PUT, non DELETE; il nuovo CRUD dovrà decidere se aggiungerla con anteprima impatti.
-4. **CSRF implicito.** Non c'è un token CSRF; `SameSite=Strict` protegge, ma la difesa non è esplicita e non è testata.
-5. **Audit incompleto sulle scritture inventario.** Non c'è audit per create/update/delete di inventario e diagrammi; solo le esecuzioni remote sono registrate.
+1. **Inventory writes open to every authenticated user.** A user without roles can create/modify/delete providers, environments, servers, applications, projects, proxies and diagrams. They can also delete a subtree from the topology (`DELETE /Topology/Nodes/...`). This is the widest gap.
+2. **Menu not filtered by role.** `MenusService.GetMenus` returns all entries and does not load `Menu.Roles`; the `MenuRole` table has no effect on the menu. The UI shows admin pages to everyone (writes then fail).
+3. **No environment delete.** `EnviromentsApi` exposes GET/POST/PUT, not DELETE; the new CRUD will have to decide whether to add it with an impact preview.
+4. **Implicit CSRF.** There is no CSRF token; `SameSite=Strict` protects, but the defense is not explicit and is not tested.
+5. **Incomplete audit on inventory writes.** There is no audit for create/update/delete of inventory and diagrams; only remote executions are recorded.
 
-## Target v1 — D7 = B (deciso 2026-10-25)
+## Target v1 — D7 = B (decided 2026-10-25)
 
-Tightening per ambiente. Le letture restano aperte a ogni autenticato; cambiano le scritture.
+Tightening per environment. Reads remain open to every authenticated user; writes change.
 
-Regole generali:
+General rules:
 
-- **Anagrafiche globali** → `SystemAdmin`.
-- **Risorse legate a uno o più ambienti** → `ServerAdmin` su **tutti** gli ambienti coinvolti. `SystemAdmin` da solo non basta: la separazione dei ruoli per ambiente resta.
-- Se un'operazione tocca entità in ambienti diversi (proxy source→target, deploy con route, move di un server), servono i ruoli su tutti gli ambienti coinvolti.
-- **Eccezione credenziali**: assegnazione SSH, reset host key e cambio indirizzo/ambiente di un server con credenziale restano `SystemAdmin`, come nell'originale; non richiedono `ServerAdmin`.
-- La UI nasconde le azioni non consentite; l'API resta la fonte di verità (403, non 404, per risorse esistenti).
-- **Menu filtrato** da `MenuRole` e **CSRF esplicito** su tutte le mutazioni, oltre a `Origin` e `SameSite`.
+- **Global master data** → `SystemAdmin`.
+- **Resources tied to one or more environments** → `ServerAdmin` on **all** environments involved. `SystemAdmin` alone is not enough: role separation per environment stays.
+- If an operation touches entities in different environments (proxy source→target, deploy with route, move of a server), the roles are required on all environments involved.
+- **Credentials exception**: SSH assignment, host key reset and address/environment change of a server with a credential remain `SystemAdmin`, as in the original; they do not require `ServerAdmin`.
+- The UI hides actions that are not allowed; the API remains the source of truth (403, not 404, for existing resources).
+- **Menu filtered** by `MenuRole` and **explicit CSRF** on all mutations, in addition to `Origin` and `SameSite`.
 
-### Matrice target
+### Target matrix
 
-| Operazione | Ruolo richiesto |
+| Operation | Required role |
 |---|---|
 | CRUD Providers, EnvironmentDefinitions, ProviderEnvironments | `SystemAdmin` |
 | CRUD Applications, ApplicationVersions, ApplicationVersionApis, ApplicationApiQueryParams, Projects | `SystemAdmin` |
 | CRUD Users, Groups, Roles, Menus, ProviderEnvironmentGroupRoles | `SystemAdmin` |
-| CRUD ServerCredentials; assegnazione SSH; reset host key | `SystemAdmin` |
-| CRUD CommandTemplates; config ApplicationActions | `SystemAdmin` |
-| ReachabilityTests globali (CRUD e run) | `SystemAdmin` |
-| Lettura CommandExecutions (audit) | `SystemAdmin` |
-| Creazione/modifica/delete Server | `ServerAdmin` sull'ambiente del server |
-| Move Server tra ambienti | `ServerAdmin` su source e target; `SystemAdmin` se il server ha una credenziale |
-| Cambio IP/hostname di un server con credenziale | `SystemAdmin` |
-| CRUD ServerApplications | `ServerAdmin` sull'ambiente del server; se la route target è in un altro ambiente, `ServerAdmin` anche lì |
-| CRUD ProxyConnections | `ServerAdmin` sugli ambienti di source e target |
-| CRUD ProxyRoutes | `ServerAdmin` sugli ambienti della connessione e del target (ServerApplication o ProxyConnection) |
-| CRUD Diagrammi e salvataggio nodi/edge, diagramma default o globale | `SystemAdmin` |
-| CRUD Diagrammi con soli scope `ProviderEnvironment` | `ServerAdmin` su tutti gli ambienti in scope |
-| Cambio scope di un diagramma | unione vecchi/nuovi scope; se compare `Provider`, `Project` o default → `SystemAdmin` |
-| Delete nodo Topology `Provider` o `ProviderEnvironment` | `SystemAdmin` |
-| Delete nodo Topology `Server` o `ServerApplication` | `ServerAdmin` su tutti gli ambienti toccati dalla cascata |
-| Console SSH | `ServerAdmin` sull'ambiente del server |
-| Run ApplicationActions e reachability per server/ambiente | `ServerOperator` sull'ambiente |
-| CRUD ReachabilityTests per server | `ServerAdmin` sull'ambiente del server |
-| Tutte le letture | autenticato |
-| `/auth/login`, `/auth/callback` | anonimo |
+| CRUD ServerCredentials; SSH assignment; host key reset | `SystemAdmin` |
+| CRUD CommandTemplates; ApplicationActions config | `SystemAdmin` |
+| Global ReachabilityTests (CRUD and run) | `SystemAdmin` |
+| Read CommandExecutions (audit) | `SystemAdmin` |
+| Server create/edit/delete | `ServerAdmin` on the server's environment |
+| Move Server between environments | `ServerAdmin` on source and target; `SystemAdmin` if the server has a credential |
+| IP/hostname change of a server with a credential | `SystemAdmin` |
+| CRUD ServerApplications | `ServerAdmin` on the server's environment; if the target route is in another environment, `ServerAdmin` there too |
+| CRUD ProxyConnections | `ServerAdmin` on the source and target environments |
+| CRUD ProxyRoutes | `ServerAdmin` on the environments of the connection and of the target (ServerApplication or ProxyConnection) |
+| CRUD Diagrams and node/edge save, default or global diagram | `SystemAdmin` |
+| CRUD Diagrams with only `ProviderEnvironment` scopes | `ServerAdmin` on all environments in scope |
+| Diagram scope change | union of old/new scopes; if `Provider`, `Project` or default appears → `SystemAdmin` |
+| Delete Topology node `Provider` or `ProviderEnvironment` | `SystemAdmin` |
+| Delete Topology node `Server` or `ServerApplication` | `ServerAdmin` on all environments touched by the cascade |
+| SSH console | `ServerAdmin` on the server's environment |
+| Run ApplicationActions and reachability per server/environment | `ServerOperator` on the environment |
+| CRUD ReachabilityTests per server | `ServerAdmin` on the server's environment |
+| All reads | authenticated |
+| `/auth/login`, `/auth/callback` | anonymous |
 
-`SystemAdmin` non implica `ServerAdmin`/`ServerOperator`: per un server o una console serve comunque il ruolo d'ambiente. Un `ServerAdmin` è anche operatore sul proprio ambiente.
+`SystemAdmin` does not imply `ServerAdmin`/`ServerOperator`: for a server or a console the environment role is still required. A `ServerAdmin` is also an operator on their own environment.
 
-## Test da scrivere in Fase 2–6
+## Tests to write in Phase 2–6
 
-- `SystemAdmin` senza ruoli ambiente: CRUD provider ok; creazione server 403; console 403; run 403.
-- `ServerAdmin` su ambiente A: CRUD server A ok; CRUD provider 403; server B 403; proxy A→B 403 se non è admin anche su B; diagramma con scope A ok; diagramma con scope B 403; diagramma Provider 403.
-- `ServerOperator` su A: run A ok; console A 403; CRUD server A 403; CRUD reachability A 403.
-- Utente autenticato senza ruoli: letture ok; ogni scrittura 403.
-- Menu: ogni ruolo vede solo le voci assegnate.
-- CSRF: mutazione senza token → 403; `Origin` estranea → 403.
+- `SystemAdmin` without environment roles: provider CRUD ok; server creation 403; console 403; run 403.
+- `ServerAdmin` on environment A: server CRUD A ok; provider CRUD 403; server B 403; proxy A→B 403 if not admin on B too; diagram with scope A ok; diagram with scope B 403; Provider diagram 403.
+- `ServerOperator` on A: run A ok; console A 403; server CRUD A 403; reachability CRUD A 403.
+- Authenticated user without roles: reads ok; every write 403.
+- Menu: each role sees only assigned entries.
+- CSRF: mutation without token → 403; foreign `Origin` → 403.

@@ -2,8 +2,8 @@ openapi: 3.0.3
 info:
   title: InfraOrgIT API
   version: 0.1.0-draft
-  description: 'Draft Fase 1. Route target v1 derivate dall''inventario legacy; schema dei payload da rifinire per slice. Autenticazione BFF: cookie di sessione HttpOnly; mutazioni con CSRF token e Origin
-    valido. RBAC D7 = B: anagrafiche globali a SystemAdmin; server, deploy, proxy e diagrammi con scope ambiente a ServerAdmin su tutti gli ambienti coinvolti.'
+  description: 'Draft Phase 1. Target v1 routes derived from the legacy inventory; payload schemas to be refined per slice. BFF authentication: HttpOnly session cookie; mutations require a CSRF token and a valid Origin.
+    RBAC D7 = B: global master data to SystemAdmin; servers, deployments, proxies and diagrams with environment scope to ServerAdmin on every environment involved.'
 servers:
 - url: https://{host}
   variables:
@@ -3981,7 +3981,7 @@ components:
       name: X-CSRF-Token
   responses:
     Problem:
-      description: Errore RFC 7807
+      description: RFC 7807 error
       content:
         application/problem+json:
           schema:
@@ -4026,7 +4026,7 @@ components:
       - total
       - page
       - pageSize
-      description: Lista paginata; items è tipizzato per risorsa nella fase di implementazione.
+      description: Paginated list; items is typed per resource during implementation.
     Provider:
       type: object
       properties:
@@ -4319,7 +4319,7 @@ components:
           type: integer
           nullable: true
           format: int32
-          description: Route proxy esistente; un id sconosciuto restituisce 404.
+          description: Existing proxy route; an unknown id returns 404.
       required:
       - serverId
       - applicationVersionId

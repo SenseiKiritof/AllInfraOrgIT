@@ -1,17 +1,17 @@
 # Release
 
-Procedura locale per taggare una versione `v0.MINOR.PATCH`. Nessun push automatico.
+Local procedure to tag a `v0.MINOR.PATCH` version. No automatic push.
 
-## Precondizioni
+## Preconditions
 
-- Working tree pulito e branch `main` nei quattro repo (`InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker`, `AllInfraOrgIT`).
-- Gate verdi: `make ci` (build `-warnaserror`, unit/integration, Biome, tsc, Vitest, build frontend, `jq versions.lock`, OpenAPI generato e senza drift).
-- Stack attivo per `make e2e` (o `E2E_BASE_URL`); `SKIP_E2E=1` solo per prove locali.
-- OpenAPI rigenerato e committato (`make openapi`, nessun diff).
-- Backup pre-deploy eseguito (`make backup`) e restore provato.
-- Fase 7: il rehearsal su dump legacy reale resta un blocco noto; la release sintetica non copre il cutover reale.
+- Clean working tree and `main` branch in the four repos (`InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker`, `AllInfraOrgIT`).
+- Green gates: `make ci` (build `-warnaserror`, unit/integration, Biome, tsc, Vitest, frontend build, `jq versions.lock`, generated OpenAPI without drift).
+- Stack running for `make e2e` (or `E2E_BASE_URL`); `SKIP_E2E=1` only for local tests.
+- OpenAPI regenerated and committed (`make openapi`, no diff).
+- Pre-deploy backup executed (`make backup`) and restore tested.
+- Phase 7: the rehearsal on a real legacy dump remains a known blocker; the synthetic release does not cover the real cutover.
 
-## Comando
+## Command
 
 ```bash
 cd AllInfraOrgIT
@@ -20,16 +20,16 @@ make release VERSION=0.8.0
 
 `scripts/release.sh`:
 
-1. rifiuta versioni non `0.x.y`, branch diverso da `main`, working tree sporco e tag già esistenti;
-2. esegue `make ci` e `make e2e` (`SKIP_GATES=1`/`SKIP_E2E=1` solo per prova);
-3. scrive `versions.lock` con `generatedAt` e gli SHA correnti dei tre repo applicativi;
-4. commit `:bookmark: release v0.8.0` nel meta repo;
-5. crea il tag annotato `v0.8.0` nei tre repo e nel meta repo;
-6. stampa i comandi di push, da eseguire a mano.
+1. rejects versions not `0.x.y`, branch other than `main`, dirty working tree and already existing tags;
+2. runs `make ci` and `make e2e` (`SKIP_GATES=1`/`SKIP_E2E=1` only for testing);
+3. writes `versions.lock` with `generatedAt` and the current SHAs of the three application repos;
+4. commits `:bookmark: release v0.8.0` in the meta repo;
+5. creates the annotated tag `v0.8.0` in the three repos and in the meta repo;
+6. prints the push commands, to be run by hand.
 
-## Push e deploy
+## Push and deploy
 
-I tag locali non sono una release pubblica. Dopo verifica:
+Local tags are not a public release. After verification:
 
 ```bash
 git -C InfraOrgITApi push origin main --follow-tags
@@ -38,23 +38,23 @@ git -C InfraOrgITDocker push origin main --follow-tags
 git -C AllInfraOrgIT push origin main --follow-tags
 ```
 
-Il deploy parte da `versions.lock`: checkout degli SHA, build immagini con `API_TAG=0.8.0`, `make full`, job `migrate`, smoke test (login, inventario, diagramma, health/ready).
+The deploy starts from `versions.lock`: checkout of the SHAs, image build with `API_TAG=0.8.0`, `make full`, `migrate` job, smoke test (login, inventory, diagram, health/ready).
 
-## Immagini pubblicate
+## Published images
 
-I tag `v*` avviano `.github/workflows/docker.yml` di `InfraOrgITApi` e `InfraOrgITWeb` e pubblicano su GHCR:
+The `v*` tags start `.github/workflows/docker.yml` of `InfraOrgITApi` and `InfraOrgITWeb` and publish to GHCR:
 
 - `ghcr.io/senseikiritof/infraorgit-api:0.8.0` (`0.8`, `sha-<commit>`, `latest`)
-- `ghcr.io/senseikiritof/infraorgit-web:0.8.0` (stessi tag)
+- `ghcr.io/senseikiritof/infraorgit-web:0.8.0` (same tags)
 
-Prima del deploy verificare `gh run list --workflow docker.yml` nei due repo e il pull delle immagini. Su host senza build locale usare `API_TAG=0.8.0` con `image:` del Compose al posto del `build:`.
+Before deploying, check `gh run list --workflow docker.yml` in both repos and the image pull. On a host without a local build, use `API_TAG=0.8.0` with the Compose `image:` instead of `build:`.
 
 ## Rollback
 
-- Ripristina il backup pre-deploy (`CONFIRM_RESTORE=yes make restore BACKUP_DIR=...`).
-- Checkout di `versions.lock` del tag precedente e nuovo deploy.
-- Keycloak: le sessioni SSO possono decadere; gli utenti restano.
+- Restore the pre-deploy backup (`CONFIRM_RESTORE=yes make restore BACKUP_DIR=...`).
+- Checkout of the previous tag's `versions.lock` and new deploy.
+- Keycloak: SSO sessions may expire; users remain.
 
-## Stato 2026-10-27
+## Status 2026-10-27
 
-`make release` implementato e guardie verificate (versione invalida → exit 2, working tree sporco → exit 1). Release non eseguita: i repo hanno modifiche non committate e la Fase 7 reale è ancora aperta.
+`make release` implemented and guards verified (invalid version → exit 2, dirty working tree → exit 1). Release not executed: the repos have uncommitted changes and the real Phase 7 is still open.

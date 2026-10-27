@@ -1,21 +1,21 @@
-# ADR-NNN — Titolo
+# ADR-NNN — Title
 
-- Stato: proposta | accettata | respinta | sostituita da ADR-NNN
-- Data: YYYY-MM-DD
-- Decisione: D-N (se collegata al piano)
+- Status: proposed | accepted | rejected | superseded by ADR-NNN
+- Date: YYYY-MM-DD
+- Decision: D-N (if linked to the plan)
 
-## Contesto
+## Context
 
-Problema, vincoli e forze in gioco.
+Problem, constraints and forces at play.
 
-## Decisione
+## Decision
 
-Cosa si decide, in modo verificabile.
+What is decided, in a verifiable way.
 
-## Alternative considerate
+## Alternatives considered
 
-- **Alternativa**: perché è stata scartata.
+- **Alternative**: why it was rejected.
 
-## Conseguenze
+## Consequences
 
-Effetti positivi, costi, rischi e lavoro successivo.
+Positive effects, costs, risks and follow-up work.

@@ -1,10 +1,10 @@
-# Load test mirati
+# Targeted load tests
 
-Script `scripts/loadtest.py` (solo stdlib) misura latenza e throughput su liste, topologia e una mutazione create/delete. Non è un test di saturazione: usa un carico piccolo e deterministico.
+Script `scripts/loadtest.py` (stdlib only) measures latency and throughput on lists, topology and a create/delete mutation. It is not a saturation test: it uses a small, deterministic load.
 
-## Prerequisiti
+## Prerequisites
 
-Stack `full` attivo (`make full`) e un utente SystemAdmin. La sessione carica i ruoli al login: il ruolo va assegnato prima del login.
+`full` stack running (`make full`) and a SystemAdmin user. The session loads roles at login: the role must be assigned before login.
 
 ```bash
 docker compose -f ../InfraOrgITDocker/compose.yaml \
@@ -16,22 +16,22 @@ docker compose -f ../InfraOrgITDocker/compose.yaml \
     SELECT 3,Id FROM Users WHERE Username=\"admin\";"'
 ```
 
-## Esecuzione
+## Run
 
 ```bash
 cd AllInfraOrgIT
-INSECURE_TLS=1 make load-test   # localhost con certificato self-signed
+INSECURE_TLS=1 make load-test   # localhost with self-signed certificate
 REQUESTS=100 CONCURRENCY=10 INSECURE_TLS=1 make load-test
-BASE_URL=https://altro-host LOADTEST_USER=... LOADTEST_PASSWORD=... make load-test
+BASE_URL=https://other-host LOADTEST_USER=... LOADTEST_PASSWORD=... make load-test
 ```
 
-Variabili: `REQUESTS` (default 30), `CONCURRENCY` (5), `MAX_AVG_MS` (1000), `INSECURE_TLS=1` per certificati self-signed. La verifica TLS non è disattivata di default.
+Variables: `REQUESTS` (default 30), `CONCURRENCY` (5), `MAX_AVG_MS` (1000), `INSECURE_TLS=1` for self-signed certificates. TLS verification is not disabled by default.
 
-Endpoint: `GET /api/menus`, `GET /api/providers`, `GET /api/topology`, `POST /api/providers`, `DELETE /api/providers/{id}`. Il login passa da Keycloak e il primo accesso al realm può rispondere 503 durante il bootstrap: lo script riprova.
+Endpoints: `GET /api/menus`, `GET /api/providers`, `GET /api/topology`, `POST /api/providers`, `DELETE /api/providers/{id}`. The login goes through Keycloak and the first access to the realm may answer 503 during bootstrap: the script retries.
 
-## Risultato 2026-10-27
+## Result 2026-10-27
 
-Stack isolato (`ds-loadtest`), 12 richieste per endpoint, concorrenza 4:
+Isolated stack (`ds-loadtest`), 12 requests per endpoint, concurrency 4:
 
 | Endpoint | ok | avg | p95 | max |
 |---|---|---|---|---|
@@ -41,10 +41,10 @@ Stack isolato (`ds-loadtest`), 12 richieste per endpoint, concorrenza 4:
 | POST /api/providers | 5 | 15 ms | 51 ms | 51 ms |
 | DELETE /api/providers | 5 | 9 ms | 20 ms | 20 ms |
 
-Exit code 0 (nessun errore, media sotto 1000 ms).
+Exit code 0 (no errors, average below 1000 ms).
 
-## Limiti
+## Limits
 
-- Numeri su una singola macchina Docker, database vuoto: non rappresentano produzione né dati rappresentativi.
-- Il carico è breve e non alza la concorrenza fino al ginocchio; per capacità reale servono dataset rappresentativo e test più lunghi.
-- Ogni richiesta apre una nuova connessione TLS; il keep-alive non è misurato.
+- Numbers on a single Docker machine, empty database: they do not represent production or representative data.
+- The load is short and does not raise concurrency up to the knee; real capacity needs a representative dataset and longer tests.
+- Each request opens a new TLS connection; keep-alive is not measured.

@@ -1,52 +1,52 @@
-# Admin e RBAC completo
+# Admin and complete RBAC
 
-Fase 6, 2026-10-26. Riferimento: `docs/security/permissions.md` (D7 = B) e ADR-005.
+Phase 6, 2026-10-26. Reference: `docs/security/permissions.md` (D7 = B) and ADR-005.
 
-## Endpoint
+## Endpoints
 
-| Area | Route | Lettura | Scrittura |
+| Area | Route | Read | Write |
 |---|---|---|---|
-| Utenti | `GET/POST /api/users`, `GET/PUT/DELETE /api/users/{id}` | autenticati | `SystemAdmin` |
-| Gruppi | `GET/POST /api/groups`, `GET/PUT/DELETE /api/groups/{id}` | autenticati | `SystemAdmin` |
-| Ruoli | `GET/POST /api/roles`, `GET/PUT/DELETE /api/roles/{id}` (filtro `scopeEnum`) | autenticati | `SystemAdmin` |
-| Menu | `GET /api/menus` (albero filtrato), `GET /api/menus/all`, `GET/PUT/DELETE /api/menus/{id}`, `POST /api/menus` | autenticati (`/all` SystemAdmin) | `SystemAdmin` |
-| Assegnazioni ambiente | `GET/POST /api/provider-environment-group-roles`, `GET/PUT/DELETE /{id}`, nested `…/provider-environments/{id}/group-roles` | autenticati | `SystemAdmin` |
+| Users | `GET/POST /api/users`, `GET/PUT/DELETE /api/users/{id}` | authenticated | `SystemAdmin` |
+| Groups | `GET/POST /api/groups`, `GET/PUT/DELETE /api/groups/{id}` | authenticated | `SystemAdmin` |
+| Roles | `GET/POST /api/roles`, `GET/PUT/DELETE /api/roles/{id}` (filter `scopeEnum`) | authenticated | `SystemAdmin` |
+| Menu | `GET /api/menus` (filtered tree), `GET /api/menus/all`, `GET/PUT/DELETE /api/menus/{id}`, `POST /api/menus` | authenticated (`/all` SystemAdmin) | `SystemAdmin` |
+| Environment assignments | `GET/POST /api/provider-environment-group-roles`, `GET/PUT/DELETE /{id}`, nested `…/provider-environments/{id}/group-roles` | authenticated | `SystemAdmin` |
 
-Liste paginate `{items,total,page,pageSize}`; `q`, `sort`, filtri dove indicato. Errori 403/404/409/422 coerenti.
+Paginated lists `{items,total,page,pageSize}`; `q`, `sort`, filters where indicated. Consistent 403/404/409/422 errors.
 
-## Regole
+## Rules
 
-- Utenti: `username` unico, gruppi e ruoli risolti e validati; `PUT` sostituisce integralmente le assegnazioni.
-- **Protezioni nuove** (scostamenti dal legacy, motivati):
-  - non puoi eliminare il tuo utente (409);
-  - deve restare almeno un `SystemAdmin` (409);
-  - i ruoli `SystemAdmin`, `ServerAdmin`, `ServerOperator` non si eliminano e non cambiano nome o scope (409): il nome è usato dal RBAC;
-  - un ruolo assegnato a utenti, menu o ambienti non si elimina (409);
-  - un gruppo usato in assegnazioni ambiente non si elimina (409);
-  - un menu con figli non si elimina (409).
-- Menu: `parentId` validato (esistenza, self-parent, cicli); `roleIds` sincronizzati in create e update (il legacy non li aggiornava); nessun ruolo = visibile a tutti gli autenticati.
-- Menu filtrato: ruoli di sistema dalla sessione **più** `ServerAdmin`/`ServerOperator` calcolati dagli ambienti del gruppo. Un menu assegnato a un ruolo d'ambiente è visibile a chi ha quel ruolo.
-- Assegnazioni: solo ruoli con `ScopeEnum=Environment`; terna (`ProviderEnvironmentId`,`GroupId`,`RoleId`) unica → 409.
-- `SystemAdmin` non concede server/console/run: i ruoli d'ambiente restano separati (`EnvironmentAccessService`).
+- Users: unique `username`, groups and roles resolved and validated; `PUT` fully replaces assignments.
+- **New protections** (justified deviations from the legacy):
+  - you cannot delete your own user (409);
+  - at least one `SystemAdmin` must remain (409);
+  - the `SystemAdmin`, `ServerAdmin`, `ServerOperator` roles cannot be deleted and cannot change name or scope (409): the name is used by RBAC;
+  - a role assigned to users, menus or environments cannot be deleted (409);
+  - a group used in environment assignments cannot be deleted (409);
+  - a menu with children cannot be deleted (409).
+- Menu: `parentId` validated (existence, self-parent, cycles); `roleIds` synchronized on create and update (the legacy did not update them); no role = visible to all authenticated users.
+- Filtered menu: system roles from the session **plus** `ServerAdmin`/`ServerOperator` computed from the group's environments. A menu assigned to an environment role is visible to anyone holding that role.
+- Assignments: only roles with `ScopeEnum=Environment`; unique triple (`ProviderEnvironmentId`,`GroupId`,`RoleId`) → 409.
+- `SystemAdmin` does not grant server/console/run: environment roles stay separate (`EnvironmentAccessService`).
 
 ## Frontend
 
-- `/users`: CRUD con gruppi e ruoli a checkbox.
-- `/groups`: CRUD gruppo e conteggio utenti.
-- `/roles`: CRUD con scope e conteggi; i ruoli di sistema mostrano l'errore dell'API.
-- `/menu`: albero piatto con padre, ordine, visibilità/attivo, ruoli.
-- Dettaglio ambiente: sezione "Ruoli per ambiente" con gruppo + ruolo, create/delete.
+- `/users`: CRUD with groups and roles as checkboxes.
+- `/groups`: group CRUD and user count.
+- `/roles`: CRUD with scope and counts; system roles show the API error.
+- `/menu`: flat tree with parent, order, visibility/active, roles.
+- Environment detail: "Roles per environment" section with group + role, create/delete.
 
-## Test
+## Tests
 
-- Test di integrazione `Admin_identity_and_menu_crud_with_guards`: letture aperte/scritture 403, CRUD gruppo/ruolo/utente, protezione ruoli di sistema, menu padre/figlio, assegnazione ambiente, menu visibile a `ServerOperator` via gruppo, self-delete 409, cleanup.
-- `PageRequestTests`: `q` e `sort` letti dalle chiavi corrette (bug corretto in Fase 6).
-- E2E `admin.spec.ts`: crea gruppo, ruolo, utente con assegnazioni, menu; elimina.
-- Gate: 12 unit, 23 integrazione, 5 E2E, Vitest/Biome/tsc/build verdi.
+- Integration test `Admin_identity_and_menu_crud_with_guards`: reads open/writes 403, group/role/user CRUD, system role protection, parent/child menu, environment assignment, menu visible to `ServerOperator` via group, self-delete 409, cleanup.
+- `PageRequestTests`: `q` and `sort` read from the correct keys (bug fixed in Phase 6).
+- E2E `admin.spec.ts`: creates group, role, user with assignments, menu; deletes them.
+- Gate: 12 unit, 23 integration, 5 E2E, Vitest/Biome/tsc/build green.
 
-## Limiti noti
+## Known limits
 
-- I ruoli di sistema nella sessione sono uno snapshot del login/refresh: una revoca di `SystemAdmin` ha effetto al refresh della sessione. I ruoli d'ambiente sono letti a ogni richiesta.
-- Eliminare un utente non invalida subito le sue sessioni (lo store non ha remove-by-username): la sessione resta valida fino a scadenza/refresh. Da chiudere in Fase 8.
-- Import utenti e `sub` Keycloak: Fase 7.
-- Audit delle mutazioni admin non ancora registrato (Fase 8).
+- System roles in the session are a snapshot from login/refresh: revoking `SystemAdmin` takes effect at session refresh. Environment roles are read on every request.
+- Deleting a user does not immediately invalidate their sessions (the store has no remove-by-username): the session stays valid until expiry/refresh. To be closed in Phase 8.
+- User import and Keycloak `sub`: Phase 7.
+- Admin mutation audit not recorded yet (Phase 8).

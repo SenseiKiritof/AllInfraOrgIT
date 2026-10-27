@@ -1,68 +1,68 @@
-# Backup e restore
+# Backup and restore
 
-Copre i due database MySQL: applicativo `infraorgit` e Keycloak `keycloak`. I dump sono logici (`mysqldump --single-transaction`), non point-in-time.
+Covers the two MySQL databases: application `infraorgit` and Keycloak `keycloak`. Dumps are logical (`mysqldump --single-transaction`), not point-in-time.
 
 ## Backup
 
 ```bash
 cd AllInfraOrgIT
-make backup                       # crea backups/<UTC>/ con i due dump + manifest
-BACKUP_DIR=/percorso/backup make backup
+make backup                       # creates backups/<UTC>/ with the two dumps + manifest
+BACKUP_DIR=/path/to/backup make backup
 ```
 
-Contenuto: `infraorgit.sql.gz`, `keycloak.sql.gz`, `manifest.txt` (timestamp, progetto, immagini). Conservare fuori host e cifrato: i dump contengono dati applicativi e credenziali SSH cifrate.
+Contents: `infraorgit.sql.gz`, `keycloak.sql.gz`, `manifest.txt` (timestamp, project, images). Store off-host and encrypted: the dumps contain application data and encrypted SSH credentials.
 
-Fuori dal backup, e obbligatorie per leggere le credenziali SSH dopo un restore:
+Outside the backup, and mandatory to read SSH credentials after a restore:
 
-- `ServerAccess:CredentialKeys` e `ServerAccess:CurrentKeyVersion` (secret manager);
-- chiavi DataProtection (`api-dp-keys`): senza, le sessioni attive decadono al primo decrypt fallito, ma il login resta possibile;
-- `.env`/secret manager di produzione.
+- `ServerAccess:CredentialKeys` and `ServerAccess:CurrentKeyVersion` (secret manager);
+- DataProtection keys (`api-dp-keys`): without them, active sessions expire at the first failed decrypt, but login remains possible;
+- production `.env`/secret manager.
 
 ## Restore
 
-Operazione distruttiva: sovrascrive entrambi i database.
+Destructive operation: overwrites both databases.
 
-1. Ferma i servizi che scrivono:
+1. Stop the services that write:
 
    ```bash
    docker compose -f ../InfraOrgITDocker/compose.yaml \
      -f ../InfraOrgITDocker/compose.full.yaml --profile full stop api caddy keycloak
    ```
 
-2. Ripristina:
+2. Restore:
 
    ```bash
    cd AllInfraOrgIT
-   CONFIRM_RESTORE=yes BACKUP_DIR=/percorso/backup make restore
+   CONFIRM_RESTORE=yes BACKUP_DIR=/path/to/backup make restore
    ```
 
-   Lo script rifiuta l'esecuzione se `api`, `caddy` o `keycloak` sono ancora attivi, se i `.gz` non passano `gzip -t` o se manca `CONFIRM_RESTORE=yes`.
+   The script refuses to run if `api`, `caddy` or `keycloak` are still running, if the `.gz` files fail `gzip -t`, or if `CONFIRM_RESTORE=yes` is missing.
 
-3. Riavvia con il job migrazioni, che è idempotente:
+3. Restart with the migration job, which is idempotent:
 
    ```bash
    make full
    ```
 
-4. Verifica: `/health/ready` healthy, login Keycloak, una lista inventario, un diagramma, una credenziale senza `NeedsReauth` inatteso.
+4. Verify: `/health/ready` healthy, Keycloak login, an inventory list, a diagram, a credential without an unexpected `NeedsReauth`.
 
-## Prova di restore
+## Restore test
 
-Eseguita il 2026-10-27 su progetto Compose isolato (`COMPOSE_PROJECT_NAME=ds-backuptest`, volumi dedicati):
+Performed on 2026-10-27 on an isolated Compose project (`COMPOSE_PROJECT_NAME=ds-backuptest`, dedicated volumes):
 
-1. stack pulito con MySQL, MySQL Keycloak e Keycloak;
-2. tabella `probe` con una riga, dump con `make backup` (exit 0, due `.sql.gz` validi, manifest, permessi `600` e directory `700`);
-3. restore senza `CONFIRM_RESTORE` bloccato (exit 1);
-4. restore con conferma bloccato perché `keycloak` era ancora attivo (exit 1);
-5. `DROP TABLE probe`, stop di `keycloak`, restore con conferma (exit 0);
-6. `probe` tornata con 1 riga; `keycloak.REALM` con 2 righe.
+1. clean stack with MySQL, Keycloak MySQL and Keycloak;
+2. `probe` table with one row, dump with `make backup` (exit 0, two valid `.sql.gz`, manifest, `600` permissions and `700` directory);
+3. restore without `CONFIRM_RESTORE` blocked (exit 1);
+4. restore with confirmation blocked because `keycloak` was still running (exit 1);
+5. `DROP TABLE probe`, stop `keycloak`, restore with confirmation (exit 0);
+6. `probe` back with 1 row; `keycloak.REALM` with 2 rows.
 
-## Migrazioni in deploy
+## Migrations in deploy
 
-Il servizio `migrate` esegue `InfraOrgIt.Api migrate` e termina prima dell'API. In produzione non si applicano migrazioni all'avvio dell'API. Rollback applicativo: ripristino di questo backup più checkout del `versions.lock` precedente.
+The `migrate` service runs `InfraOrgIt.Api migrate` and exits before the API. In production, migrations are not applied at API startup. Application rollback: restore of this backup plus checkout of the previous `versions.lock`.
 
-## Limiti
+## Limits
 
-- Dump logico: il restore non ripristina binlog né transazioni in corso; fermare i writer prima.
-- Database grandi: il dump occupa spazio e tempo proporzionali; verificare spazio su host e container.
-- Keycloak: dopo il restore le sessioni SSO possono essere invalide; gli utenti restano.
+- Logical dump: the restore does not restore binlog or in-flight transactions; stop the writers first.
+- Large databases: the dump takes space and time proportional to size; check free space on host and containers.
+- Keycloak: after the restore, SSO sessions may be invalid; users remain.

@@ -1,30 +1,30 @@
-# ADR-004 — Deploy single host con Docker Compose e Caddy
+# ADR-004 — Single-host deployment with Docker Compose and Caddy
 
-- Stato: accettata
-- Data: 2026-10-25
-- Decisione: D4
+- Status: accepted
+- Date: 2026-10-25
+- Decision: D4
 
-## Contesto
+## Context
 
-Applicazione interna su singolo host Linux. Servono HTTPS e un solo origin per SPA e API: cookie di sessione first-party e niente CORS. Un reverse proxy aziendale esiste solo se l'host è dietro di esso.
+Self-hosted application on a single Linux host. HTTPS is needed, and a single origin for SPA and API: first-party session cookies and no CORS. A existing reverse proxy exists only if the host sits behind it.
 
-## Decisione
+## Decision
 
-- Docker Compose su singolo host; niente Kubernetes in v1.
-- Caddy al bordo: serve `dist/` della SPA, fa reverse proxy di `/api/*` e `/auth/*` verso l'API e gestisce TLS automatico (ACME o CA interna per la LAN).
-- Stesso origin per SPA e API. In sviluppo niente Caddy: Vite :3000 con proxy verso l'API :5298.
-- Keycloak sullo stesso host tramite Caddy (sottodominio o path prefix) in Fase 8, insieme alla configurazione di produzione.
-- `versions.lock` per release e rollback.
+- Docker Compose on a single host; no Kubernetes in v1.
+- Caddy at the edge: serves the SPA `dist/`, reverse-proxies `/api/*` and `/auth/*` to the API and handles automatic TLS (ACME or private CA for the LAN).
+- Same origin for SPA and API. In development no Caddy: Vite on :3000 with a proxy to the API on :5298.
+- Keycloak on the same host through Caddy (subdomain or path prefix) in Phase 8, together with the production configuration.
+- `versions.lock` for releases and rollback.
 
-## Alternative considerate
+## Alternatives considered
 
-- **API serve la SPA** (`UseStaticFiles` + Kestrel): meno container, ma certificato e frontend accoppiati al deploy dell'API.
-- **nginx/Traefik**: più configurazione per il TLS automatico.
-- **Reverse proxy esistente**: Caddy rimosso; cambia solo il bordo.
-- **Kubernetes/cloud**: fuori perimetro v1.
+- **API serves the SPA** (`UseStaticFiles` + Kestrel): fewer containers, but certificate and frontend coupled to the API deployment.
+- **nginx/Traefik**: more configuration for automatic TLS.
+- **Existing reverse proxy**: Caddy removed; only the edge changes.
+- **Kubernetes/cloud**: out of scope for v1.
 
-## Conseguenze
+## Consequences
 
-- Un container in più e un dominio/DNS per i certificati.
-- Caddyfile e Compose validati in CI.
-- In produzione Keycloak passa da `start-dev` a `start`, con hostname e proxy headers.
+- One more container and a domain/DNS for the certificates.
+- Caddyfile and Compose validated in CI.
+- In production Keycloak moves from `start-dev` to `start`, with hostname and proxy headers.

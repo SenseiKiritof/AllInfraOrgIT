@@ -1,77 +1,77 @@
-# Gestione remota e audit
+# Remote management and audit
 
-Fase 5, 2026-10-26. Riferimento funzionale: `../InfraOrgIT` in sola lettura. Le regole di permesso sono in `docs/security/permissions.md` (D7 = B).
+Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The permission rules are in `docs/security/permissions.md` (D7 = B).
 
-## Credenziali SSH
+## SSH credentials
 
-- `ServerCredentials` conserva password o chiave privata **cifrate con AES-GCM**; il client riceve solo `hasSecret`, mai ciphertext o plaintext.
-- Layout: `base64(nonce|tag|ciphertext)`, nonce 12 byte, tag 16 byte. Chiave di 32 byte per versione in `ServerAccess:CredentialKeys:<n>`; `ServerAccess:CurrentKeyVersion` sceglie la chiave di cifratura. La riga conserva `KeyVersion`, quindi una rotazione decrypta le righe vecchie.
-- In sviluppo `scripts/env.sh` genera una chiave e la salva in `InfraOrgITDocker/.env` (ignorato). In produzione la chiave arriva da secret manager.
-- Una chiave privata viene validata con SSH.NET prima del salvataggio; una password no.
-- In modifica un segreto vuoto lascia invariato quello salvato; cambiare `AuthType` richiede il segreto.
-- Una credenziale assegnata a server non si elimina (409). Assegnazione SSH e reset host key sono `SystemAdmin`.
+- `ServerCredentials` stores a password or private key **encrypted with AES-GCM**; the client only receives `hasSecret`, never ciphertext or plaintext.
+- Layout: `base64(nonce|tag|ciphertext)`, 12-byte nonce, 16-byte tag. A 32-byte key per version in `ServerAccess:CredentialKeys:<n>`; `ServerAccess:CurrentKeyVersion` selects the encryption key. The row keeps `KeyVersion`, so a rotation decrypts the old rows.
+- In development `scripts/env.sh` generates a key and stores it in `InfraOrgITDocker/.env` (ignored). In production the key comes from a secret manager.
+- A private key is validated with SSH.NET before saving; a password is not.
+- On update an empty secret leaves the stored one unchanged; changing `AuthType` requires the secret.
+- A credential assigned to a server cannot be deleted (409). SSH assignment and host key reset are `SystemAdmin`.
 
 ## SSH
 
-`SshConnector` usa SSH.NET:
+`SshConnector` uses SSH.NET:
 
-- connessione 10 s; comando con timeout configurabile (`ServerAccess:CommandTimeoutMinutes`, 1–60, default 10);
-- output massimo 1 MB (`MaxOutputBytes`), l'audit conserva gli ultimi 64 KB (`MaxAuditOutputBytes`);
-- **host key TOFU**: alla prima connessione il fingerprint SHA256 viene salvato sul server; se cambia la connessione viene rifiutata con 409 `host_key_mismatch` e l'audit registra il tentativo. Il reset è solo `SystemAdmin`;
-- gli errori non contengono segreti.
+- 10 s connection; command with configurable timeout (`ServerAccess:CommandTimeoutMinutes`, 1–60, default 10);
+- maximum output 1 MB (`MaxOutputBytes`), the audit keeps the last 64 KB (`MaxAuditOutputBytes`);
+- **host key TOFU**: on first connection the SHA256 fingerprint is saved on the server; if it changes, the connection is rejected with 409 `host_key_mismatch` and the audit records the attempt. Reset is `SystemAdmin` only;
+- errors do not contain secrets.
 
-## Templating e azioni
+## Templating and actions
 
-- Placeholder `{{Name}}`; built-in: `ServerName`, `Hostname`, `IpAddress`, `ApplicationName`, `BasePath`, `Version`, `ExposedPort`.
-- I built-in vincono sui valori custom e vengono controllati sia al salvataggio sia all'esecuzione.
-- I valori sono racchiusi in apici singoli con escape di `'`; i caratteri attivi della shell (`$`, backtick, `\`, `"`, CR/LF) sono rifiutati nei valori dei placeholder usati, custom inclusi.
-- Un'azione ha un template **oppure** uno script custom (solo `SystemAdmin`), con `ParameterValues` JSON.
-- Configurazione azioni: `SystemAdmin`; elenco bottoni e run: `ServerOperator` sull'ambiente del deploy.
-- Il run riserva la riga di audit con `Idempotency-Key` **prima** di eseguire: un doppio invio riceve 409 e non esegue. Se il comando o la connessione falliscono, l'audit viene comunque completato con l'errore.
-- L'audit salva il template non renderizzato e nell'output sostituisce i valori custom con `***`.
+- `{{Name}}` placeholders; built-ins: `ServerName`, `Hostname`, `IpAddress`, `ApplicationName`, `BasePath`, `Version`, `ExposedPort`.
+- Built-ins take precedence over custom values and are checked both at save time and at execution time.
+- Values are wrapped in single quotes with `'` escaped; shell metacharacters (`$`, backtick, `\`, `"`, CR/LF) are rejected in the values of the placeholders used, custom ones included.
+- An action has a template **or** a custom script (`SystemAdmin` only), with JSON `ParameterValues`.
+- Action configuration: `SystemAdmin`; button list and run: `ServerOperator` on the deploy's environment.
+- The run reserves the audit row with `Idempotency-Key` **before** executing: a duplicate submission receives 409 and does not execute. If the command or the connection fails, the audit is still completed with the error.
+- The audit stores the unrendered template and replaces custom values with `***` in the output.
 
 ## Reachability
 
-- Test globali: CRUD `SystemAdmin`, eseguiti su ogni server. Test per server: CRUD `ServerAdmin`, lettura e run `ServerOperator`.
-- Hostname validato (`[A-Za-z0-9.:-]`), porta 1–65535; il comando usa `timeout 5 bash -c '</dev/tcp/host/port>'` sul server, con timeout SSH di 10 s.
-- Ogni server produce una riga di audit `Reachability` con l'esito aggregato.
+- Global tests: `SystemAdmin` CRUD, run on every server. Per-server tests: `ServerAdmin` CRUD, read and run `ServerOperator`.
+- Hostname validated (`[A-Za-z0-9.:-]`), port 1–65535; the command uses `timeout 5 bash -c '</dev/tcp/host/port>'` on the server, with a 10 s SSH timeout.
+- Each server produces a `Reachability` audit row with the aggregated outcome.
 
-## Esecuzioni e console
+## Executions and console
 
-- `GET /api/command-executions` (`SystemAdmin`): paginato, filtrabile per server, tipo e testo; script e output sono redatti.
-- Console WebSocket `/api/socket/servers/{id}/console`: cookie di sessione, **Origin** obbligatoria e ammessa, ruolo `ServerAdmin` sull'ambiente, durata massima 30 min. L'audit registra apertura/chiusura ed eventuale errore, mai i tasti digitati.
+- `GET /api/command-executions` (`SystemAdmin`): paginated, filterable by server, kind and text; script and output are redacted.
+- WebSocket console `/api/socket/servers/{id}/console`: session cookie, **Origin** required and allowed, `ServerAdmin` role on the environment, maximum duration 30 min. The audit records opening/closing and any error, never the keystrokes.
 
 ## Frontend
 
-- `/credentials`: CRUD credenziali, segreto write-only, indicatore "impostato".
-- `/commands`: CRUD template e conteggio placeholder.
-- `/reachability`: test globali.
-- `/executions`: registro con output espandibile.
-- Dettaglio server: credenziale/porta SSH, reset host key, test reachability con run, azioni dei deploy, console.
-- Dettaglio applicazione: configurazione azioni (template o script custom, parametri JSON, conferma).
+- `/credentials`: credential CRUD, write-only secret, "set" indicator.
+- `/commands`: template CRUD and placeholder count.
+- `/reachability`: global tests.
+- `/executions`: log with expandable output.
+- Server detail: SSH credential/port, host key reset, reachability test with run, deploy actions, console.
+- Application detail: action configuration (template or custom script, JSON parameters, confirmation).
 
-## Configurazione
+## Configuration
 
 ```text
 ServerAccess__CurrentKeyVersion=1
-ServerAccess__CredentialKeys__1=<base64 di 32 byte>
+ServerAccess__CredentialKeys__1=<32-byte base64>
 ServerAccess__CommandTimeoutMinutes=10
 ServerAccess__MaxOutputBytes=1048576
 ServerAccess__MaxAuditOutputBytes=65536
 ServerAccess__ConsoleMaxMinutes=30
 ```
 
-Le chiavi sono obbligatorie all'avvio: senza `CredentialKeys` l'API non parte.
+The keys are mandatory at startup: without `CredentialKeys` the API does not start.
 
-## Test
+## Tests
 
-- 11 unit: cifratura (round-trip, tamper, versione mancante), renderer (quote, placeholder mancanti, caratteri attivi), handler errori.
-- 22 integrazione: credenziali cifrate e mai restituite, assegnazione SSH, host key, azioni con audit redatto e idempotenza, reachability, console con Origin estranea, **SSH reale su container OpenSSH usa-e-getta** con TOFU e mismatch.
-- 4 E2E Playwright, inclusi credenziali, comandi, reachability, registro.
+- 11 unit: encryption (round-trip, tamper, missing version), renderer (quotes, missing placeholders, metacharacters), error handler.
+- 22 integration: encrypted credentials never returned, SSH assignment, host key, actions with redacted audit and idempotency, reachability, console with a foreign Origin, **real SSH against a disposable OpenSSH container** with TOFU and mismatch.
+- 4 Playwright E2E, including credentials, commands, reachability, log.
 
-## Limiti noti
+## Known limits
 
-- La console mostra il terminale senza emulazione ANSI completa (sequenze rimosse) e ha solo il limite di durata, non un idle timeout separato.
-- La rotazione delle chiavi si fa da configurazione, non da UI.
-- La reachability esegue i server in sequenza; un ambiente molto grande richiede una coda.
-- L'import delle credenziali legacy con la vecchia chiave resta in Fase 7; senza chiave si usa `NeedsReauth`.
+- The console shows the terminal without full ANSI emulation (sequences stripped) and only has the duration limit, not a separate idle timeout.
+- Key rotation is done from configuration, not from the UI.
+- Reachability runs servers sequentially; a very large environment needs a queue.
+- Importing legacy credentials with the old key remains in Phase 7; without a key, `NeedsReauth` is used.

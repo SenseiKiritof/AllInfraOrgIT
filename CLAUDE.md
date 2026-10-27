@@ -1,20 +1,20 @@
-# AllInfraOrgIT — guida per agenti
+# AllInfraOrgIT — agent guide
 
-`AGENTS.md` è un symlink a questo file, letto da opencode e dagli altri agenti: modifica solo `CLAUDE.md`.
+`AGENTS.md` is a symlink to this file, read by opencode and the other agents: edit `CLAUDE.md` only.
 
-Repo meta del workspace InfraOrgIT. Guida d'uso e struttura in `README.md`; lavori aperti in `docs/backlog.md`.
+Meta repository of the InfraOrgIT workspace. Usage guide and layout in `README.md`; open work in `docs/backlog.md`.
 
-## Cosa vive qui
+## What lives here
 
-- `docs/adr/`: ogni decisione architetturale, una voce per ADR, stato esplicito.
-- `versions.lock`: SHA dei repo applicativi; aggiornarlo solo a release verificate.
-- `tools/graphify/workspace.json`: configurazione locale, mai committata; l'esempio sì.
-- `Makefile` e `scripts/`: orchestrazione e ambiente di sviluppo.
-- `.opencode/`: regole, skill e plugin OpenCode (vedi `.opencode/README.md`).
-- `.config/dotnet-tools.json`: versione locale di `dotnet-ef`.
+- `docs/adr/`: every architectural decision, one entry per ADR, explicit status.
+- `versions.lock`: application repo SHAs and images; update only on verified releases.
+- `tools/graphify/workspace.json`: local configuration, never committed; the example is.
+- `Makefile` and `scripts/`: orchestration and development environment.
+- `.opencode/`: OpenCode rules, skills and plugins (see `.opencode/README.md`).
+- `.config/dotnet-tools.json`: local `dotnet-ef` version.
 
-## Regole
+## Rules
 
-- Un ADR nuovo non modifica uno accettato: lo sostituisce con `Stato: sostituita da ADR-NNN`.
-- Niente segreti, dump reali, path assoluti personali nei file versionati (`workspace.example.json` usa un placeholder).
-- I comandi documentati devono esistere: niente build/test inventati prima della Fase 2.
+- A new ADR never edits an accepted one: it supersedes it with `Status: superseded by ADR-NNN`.
+- No secrets, production dumps or personal absolute paths in versioned files (`workspace.example.json` uses a placeholder).
+- Documented commands must exist: no invented build/test before Phase 2.

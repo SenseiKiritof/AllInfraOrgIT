@@ -1,85 +1,85 @@
-# Topologia e diagrammi
+# Topology and diagrams
 
-Fase 4, 2026-10-26. Il riferimento funzionale è `../InfraOrgIT` (in sola lettura).
+Phase 4, 2026-10-26. The functional reference is the legacy system (read-only).
 
-## Entità
+## Entities
 
-| Tabella | Ruolo |
+| Table | Role |
 |---|---|
-| `ProxyConnections` | collegamento source → target con `Direction` (`Outgoing` = il source usa il target come proxy; `Incoming` = il source è proxy del target) |
-| `ProxyRoutes` | route di una connessione; target opzionale su una `ServerApplication` **oppure** su un'altra `ProxyConnection` |
-| `ServerApplications.ProxyRouteId` | link 1-1 opzionale fra deploy e route, FK `Restrict` |
-| `Diagrams` | diagramma; `IsDefault` unico gestito dall'applicazione |
-| `DiagramScopeItems` | filtri salvati: `Provider`, `ProviderEnvironment`, `Project` |
-| `DiagramNodes` | posizione e dimensione per nodo, chiave (`DiagramId`, `NodeType`, `EntityId`) |
-| `DiagramEdges` | ancore e bend per edge, chiave (`DiagramId`, `ProxyConnectionId`, `TargetNodeType`, `TargetEntityId`) |
+| `ProxyConnections` | source → target link with `Direction` (`Outgoing` = the source uses the target as a proxy; `Incoming` = the source is a proxy for the target) |
+| `ProxyRoutes` | route of a connection; optional target on a `ServerApplication` **or** on another `ProxyConnection` |
+| `ServerApplications.ProxyRouteId` | optional 1-1 link between deploy and route, FK `Restrict` |
+| `Diagrams` | diagram; single `IsDefault` enforced by the application |
+| `DiagramScopeItems` | saved filters: `Provider`, `ProviderEnvironment`, `Project` |
+| `DiagramNodes` | position and size per node, key (`DiagramId`, `NodeType`, `EntityId`) |
+| `DiagramEdges` | anchors and bends per edge, key (`DiagramId`, `ProxyConnectionId`, `TargetNodeType`, `TargetEntityId`) |
 
-### IDs: non confonderli
+### IDs: do not confuse them
 
-- `DiagramScopeItem` con `ScopeType=ProviderEnvironment` porta **`EnvironmentDefinition.Id`**. È il filtro "ambiente" della vista globale.
-- `DiagramNode` con `NodeType=ProviderEnvironment` porta **`ProviderEnvironment.Id`**.
-- `DiagramNode` `Provider`/`Server`/`ServerApplication` porta l'ID dell'entità omonima.
-- `TopologyEnvironmentDto.Id` è il `ProviderEnvironment.Id`; `EnvironmentId` è `EnvironmentDefinition.Id`.
+- `DiagramScopeItem` with `ScopeType=ProviderEnvironment` carries **`EnvironmentDefinition.Id`**. It is the "environment" filter of the global view.
+- `DiagramNode` with `NodeType=ProviderEnvironment` carries **`ProviderEnvironment.Id`**.
+- `DiagramNode` `Provider`/`Server`/`ServerApplication` carries the ID of the entity with the same name.
+- `TopologyEnvironmentDto.Id` is the `ProviderEnvironment.Id`; `EnvironmentId` is `EnvironmentDefinition.Id`.
 
-Questi IDs sono verificati dai test e non vanno cambiati: l'import legacy (Fase 7) li preserva.
+These IDs are verified by tests and must not change: the legacy import (Phase 7) preserves them.
 
-## Topologia
+## Topology
 
-`GET /api/topology?providerId=&environmentId=&projectId=` restituisce provider → ambienti → server → applicazioni, più le connessioni proxy con le route.
+`GET /api/topology?providerId=&environmentId=&projectId=` returns provider → environments → servers → applications, plus the proxy connections with their routes.
 
-- `environmentId` filtra su `EnvironmentDefinition.Id`.
-- `projectId` filtra i server con almeno un deploy di un'app del progetto e aggiunge i server collegati da proxy, così la vista progetto non perde proxy e WAF.
-- Provider e ambienti vuoti restano nella vista globale; con un filtro progetto restano solo i contenitori con server.
+- `environmentId` filters on `EnvironmentDefinition.Id`.
+- `projectId` filters servers with at least one deploy of an app in the project and adds the servers linked by proxy, so the project view does not lose proxies and WAFs.
+- Empty providers and environments stay in the global view; with a project filter only containers with servers remain.
 
-`TopologyService` è usato sia dall'endpoint sia dal grafo dei diagrammi.
+`TopologyService` is used both by the endpoint and by the diagram graph.
 
-## Diagrammi
+## Diagrams
 
-- `GET /api/diagrams`, `/{id}`, `/default`; CRUD su `/api/diagrams`.
-- `GET /api/diagrams/{id}/graph` restituisce diagramma, topologia filtrata dagli scope, nodi ed edge **in scope**. Nodi ed edge fuori scope restano salvati e tornano quando lo scope li include.
-- `PUT /api/diagrams/{id}/nodes` aggiorna/crea posizioni; ignora chiavi fuori scope.
-- `PUT /api/diagrams/{id}/edges` sostituisce gli edge in scope; deduplica per chiave logica, valida gli handle ≤ 50 caratteri.
-- `IsDefault` è unico: impostarlo azzera gli altri.
-- `GET /api/diagrams/default` restituisce la vista globale predefinita; 404 se non esiste.
+- `GET /api/diagrams`, `/{id}`, `/default`; CRUD on `/api/diagrams`.
+- `GET /api/diagrams/{id}/graph` returns the diagram, the topology filtered by the scopes, and the nodes and edges **in scope**. Nodes and edges outside the scope stay stored and come back when the scope includes them.
+- `PUT /api/diagrams/{id}/nodes` updates/creates positions; ignores keys outside the scope.
+- `PUT /api/diagrams/{id}/edges` replaces the edges in scope; deduplicates by logical key, validates handles ≤ 50 characters.
+- `IsDefault` is unique: setting it clears the others.
+- `GET /api/diagrams/default` returns the default global view; 404 if it does not exist.
 
-## Permessi (D7 = B)
+## Permissions (D7 = B)
 
-| Operazione | Ruolo |
+| Operation | Role |
 |---|---|
-| Letture topologia, diagrammi, proxy | autenticato |
-| Diagramma globale, predefinito, con scope `Provider` o `Project` | `SystemAdmin` |
-| Diagramma con soli scope `ProviderEnvironment` | `ServerAdmin` su **tutti** i `ProviderEnvironment` degli ambienti in scope |
-| Cambio scope | unione scope vecchi e nuovi |
-| Salvataggio nodi/edge | stesso permesso del diagramma |
-| Delete nodo `Provider`/`ProviderEnvironment` | `SystemAdmin` |
-| Delete nodo `Server`/`ServerApplication` | `ServerAdmin` sull'ambiente del server |
-| CRUD connessioni proxy | `ServerAdmin` sugli ambienti di source e target |
-| CRUD route proxy | `ServerAdmin` sugli ambienti della connessione e del target (applicazione o connessione) |
+| Topology, diagram, proxy reads | authenticated |
+| Global or default diagram, with `Provider` or `Project` scope | `SystemAdmin` |
+| Diagram with only `ProviderEnvironment` scopes | `ServerAdmin` on **all** the `ProviderEnvironment` entries of the environments in scope |
+| Scope change | union of old and new scopes |
+| Node/edge save | same permission as the diagram |
+| Deleting a `Provider`/`ProviderEnvironment` node | `SystemAdmin` |
+| Deleting a `Server`/`ServerApplication` node | `ServerAdmin` on the server's environment |
+| Proxy connection CRUD | `ServerAdmin` on the source and target environments |
+| Proxy route CRUD | `ServerAdmin` on the environments of the connection and of the target (application or connection) |
 
-`SystemAdmin` non sostituisce `ServerAdmin` per server e diagrammi d'ambiente.
+`SystemAdmin` does not replace `ServerAdmin` for servers and environment diagrams.
 
-## Delete topologia
+## Topology deletes
 
-`GET /api/topology/nodes/{nodeType}/{id}/delete-preview` riporta l'impatto: ambienti, server, applicazioni, connessioni, route, route che perdono il target, assegnazioni di ruolo.
+`GET /api/topology/nodes/{nodeType}/{id}/delete-preview` reports the impact: environments, servers, applications, connections, routes, routes that lose their target, role assignments.
 
-`DELETE /api/topology/nodes/{nodeType}/{id}` elimina il sottoalbero in transazione. Le route di proxy esterni che puntavano al sottoalbero restano senza target; i deploy collegati alle route rimosse perdono `ProxyRouteId`. Il catalogo (applicazioni, versioni, ambienti globali) non viene toccato.
+`DELETE /api/topology/nodes/{nodeType}/{id}` deletes the subtree in a transaction. External proxy routes that pointed to the subtree are left without a target; deploys linked to removed routes lose `ProxyRouteId`. The catalog (applications, versions, global environments) is not touched.
 
 ## Frontend
 
-- `lib/buildGraph.ts` è puro e testato: costruisce nodi React Flow dalla topologia, rispetta le posizioni salvate, instrada ogni route sull'applicazione target o sul server target.
-- Canvas `/diagrams/{id}` e `/diagrams/default` con React Flow 12, caricato in un chunk separato.
-- Salva posizioni e ancore/bend; "Salva come…" clona gli scope in un nuovo diagramma.
-- Pannello nodo con anteprima impatti e delete quando il ruolo lo consente.
-- Il disegno delle curve con bend non è modificabile dalla UI: i valori salvati vengono preservati.
+- `lib/buildGraph.ts` is pure and tested: it builds React Flow nodes from the topology, respects saved positions, routes each route to the target application or target server.
+- Canvas `/diagrams/{id}` and `/diagrams/default` with React Flow 12, loaded in a separate chunk.
+- Saves positions and anchors/bends; "Save as…" clones the scopes into a new diagram.
+- Node panel with impact preview and delete when the role allows it.
+- Curve drawing with bends is not editable from the UI: saved values are preserved.
 
-## Test
+## Tests
 
-- Integrazione: topologia con filtri, grafo, round-trip nodi/edge, default unico, permessi diagramma d'ambiente, delete server con ruolo d'ambiente, CRUD proxy con doppio ambiente.
-- Vitest: `buildGraph` (gerarchia, edge su applicazione/server, posizioni salvate, 500 nodi).
-- Playwright: creazione diagramma, apertura canvas, salvataggio layout, ricarica, eliminazione.
+- Integration: topology with filters, graph, node/edge round-trip, single default, environment diagram permissions, server delete with environment role, proxy CRUD with dual environment.
+- Vitest: `buildGraph` (hierarchy, edges to application/server, saved positions, 500 nodes).
+- Playwright: diagram creation, canvas opening, layout save, reload, deletion.
 
-## Limiti noti
+## Known limits
 
-- Import dei diagrammi legacy: rinviato alla Fase 7; serve un dump sanificato (il catalogo reale è in `the legacy export`, vietato).
-- Creazione nodi dal canvas non implementata: si usano le pagine di inventario.
-- Bend e handle vengono salvati ma non modificati dalla UI.
+- Legacy diagram import: deferred to Phase 7; a sanitized dump is needed (the full catalog is kept outside the repository).
+- Creating nodes from the canvas is not implemented: the inventory pages are used.
+- Bends and handles are saved but not modified by the UI.

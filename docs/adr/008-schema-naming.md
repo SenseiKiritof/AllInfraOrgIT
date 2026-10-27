@@ -1,31 +1,31 @@
-# ADR-008 — Nomi dello schema e colonne di audit
+# ADR-008 — Schema names and audit columns
 
-- Stato: accettata
-- Data: 2026-10-25
+- Status: accepted
+- Date: 2026-10-25
 
-## Contesto
+## Context
 
-Lo schema legacy usa nomi PascalCase (`Environments`, `ProviderEnvironments`, `ApplicationApiQueryParams`) e non ha timestamp né concorrenza ottimistica. La migrazione deve preservare gli ID perché i diagrammi li referenziano. Un rinomina completa in snake_case aggiungerebbe mapping e rischio senza un beneficio richiesto.
+The legacy schema uses PascalCase names (`Environments`, `ProviderEnvironments`, `ApplicationApiQueryParams`) and has neither timestamps nor optimistic concurrency. The migration must preserve IDs because the diagrams reference them. A full rename to snake_case would add mapping and risk with no requested benefit.
 
-## Decisione
+## Decision
 
-- Mantenere tabella e colonne in PascalCase, come il legacy, salvo:
-  - `EnvironmentEntity` → `EnvironmentDefinition`, tabella `EnvironmentDefinitions`, FK `EnvironmentDefinitionId`.
-- Ogni tabella di dominio con PK propria riceve `CreatedAt`, `UpdatedAt` (UTC, `datetime(6)`) e `Version` (`int`, default 0, token di concorrenza). Eccezioni: `CommandExecutions` e join.
-- `ServerCredentials` riceve `KeyVersion` e `NeedsReauth`.
-- Enum numerici legacy convertiti in stringhe con check constraint; `ParameterValues` in colonna `JSON`.
-- Vincoli unici candidati: `Users.Username`, `Roles.Name`, `ProviderEnvironments (ProviderId, EnvironmentDefinitionId)`, `ApplicationVersions (ApplicationId, VersionNumber)`, `ProxyRoutes (ProxyConnectionId, Route)`, `ProviderEnvironmentGroupRoles (ProviderEnvironmentId, GroupId, RoleId)`, `DiagramScopeItems/Nodes` per chiave logica. Vanno verificati sul export legacy prima dell'import.
-- Hard delete; nessun soft delete in v1. Le delete distruttive hanno anteprima impatti e audit.
-- `CommandExecutions` resta append-only con `ServerId` senza FK.
+- Keep tables and columns in PascalCase, as in the legacy, except:
+  - `EnvironmentEntity` → `EnvironmentDefinition`, table `EnvironmentDefinitions`, FK `EnvironmentDefinitionId`.
+- Every domain table with its own PK gets `CreatedAt`, `UpdatedAt` (UTC, `datetime(6)`) and `Version` (`int`, default 0, concurrency token). Exceptions: `CommandExecutions` and joins.
+- `ServerCredentials` gets `KeyVersion` and `NeedsReauth`.
+- Legacy numeric enums converted to strings with check constraints; `ParameterValues` into a `JSON` column.
+- Candidate unique constraints: `Users.Username`, `Roles.Name`, `ProviderEnvironments (ProviderId, EnvironmentDefinitionId)`, `ApplicationVersions (ApplicationId, VersionNumber)`, `ProxyRoutes (ProxyConnectionId, Route)`, `ProviderEnvironmentGroupRoles (ProviderEnvironmentId, GroupId, RoleId)`, `DiagramScopeItems/Nodes` per logical key. They must be verified on the legacy export before the import.
+- Hard delete; no soft delete in v1. Destructive deletes have an impact preview and audit.
+- `CommandExecutions` remains append-only with `ServerId` without FK.
 
-## Alternative considerate
+## Alternatives considered
 
-- **snake_case**: più convenzionale in MySQL, ma richiede mapping totale e non risolve un problema reale.
-- **Tenere `Environments` come tabella**: meno rinomine, ma lascia ambiguità con `ProviderEnvironment` e con l'entità `EnvironmentDefinition`.
-- **RowVersion byte[]**: MySQL non ha un rowversion server-side; `Version` int è esplicito e testabile.
+- **snake_case**: more conventional in MySQL, but requires total mapping and does not solve a real problem.
+- **Keep `Environments` as a table**: fewer renames, but leaves ambiguity with `ProviderEnvironment` and the `EnvironmentDefinition` entity.
+- **RowVersion byte[]**: MySQL has no server-side rowversion; `Version` int is explicit and testable.
 
-## Conseguenze
+## Consequences
 
-- L'importer mappa un numero limitato di nomi.
-- Il data dictionary è la fonte per migration e test.
-- I vincoli `UQ*` possono fallire su dati legacy duplicati: la decisione di pulizia va presa in Fase 7, non silenziosamente nell'importer.
+- The importer maps a limited number of names.
+- The data dictionary is the source for migrations and tests.
+- The `UQ*` constraints may fail on duplicate legacy data: the cleanup decision must be made in Phase 7, not silently in the importer.

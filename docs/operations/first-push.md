@@ -1,10 +1,10 @@
-# Primo push e protezione `main`
+# First push and `main` protection
 
-Procedura per portare i quattro repo su GitHub. Non è stata eseguita: in questo ambiente non ci sono credenziali GitHub (`gh` assente, nessun token). I repo sono pronti sul branch `main` locale.
+Procedure to bring the four repos to GitHub. It has not been executed: this environment has no GitHub credentials (`gh` missing, no token). The repos are ready on the local `main` branch.
 
-## 1. Creare i repo
+## 1. Create the repos
 
-Private, stesso owner per tutti e quattro:
+Private, same owner for all four:
 
 ```bash
 gh repo create <owner>/AllInfraOrgIT --private
@@ -13,11 +13,11 @@ gh repo create <owner>/InfraOrgITWeb --private
 gh repo create <owner>/InfraOrgITDocker --private
 ```
 
-In alternativa crearli vuoti dalla UI, senza README, licenza o `.gitignore`.
+Alternatively create them empty from the UI, without README, license or `.gitignore`.
 
-## 2. Aggiungere i remote e pushare
+## 2. Add the remotes and push
 
-Dalla root del workspace:
+From the workspace root:
 
 ```bash
 for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
@@ -27,11 +27,11 @@ for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
 done
 ```
 
-Il push deve includere solo file versionati: nessun `.env`, nessun dump, nessun `node_modules`.
+The push must include only versioned files: no `.env`, no dumps, no `node_modules`.
 
-## 3. Proteggere `main`
+## 3. Protect `main`
 
-Con `gh` autenticato, per ogni repo:
+With `gh` authenticated, for each repo:
 
 ```bash
 for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
@@ -46,30 +46,30 @@ for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
 done
 ```
 
-I nomi dei check sono quelli dei job: `build-test` (backend), `lint-test-build` (frontend), `config` (docker), `check` (meta). Confermarli nella pagina Actions dopo il primo push; per il repo meta aggiungere anche `keycloak-login` se il workflow E2E è abilitato.
+The check names are the job names: `build-test` (backend), `lint-test-build` (frontend), `config` (docker), `check` (meta). Confirm them on the Actions page after the first push; for the meta repo also add `keycloak-login` if the E2E workflow is enabled.
 
-## 4. Segreto per il workflow E2E
+## 4. Secret for the E2E workflow
 
-Il workflow notturno clona i tre repo applicativi. Con repo privati `github.token` non basta: creare un fine-grained PAT con `Contents: read` sui tre repo e salvarlo come `REPO_TOKEN` nel repo meta (`Settings → Secrets and variables → Actions`). Il workflow usa `secrets.REPO_TOKEN || github.token`.
+The nightly workflow clones the three application repos. With private repos `github.token` is not enough: create a fine-grained PAT with `Contents: read` on the three repos and store it as `REPO_TOKEN` in the meta repo (`Settings → Secrets and variables → Actions`). The workflow uses `secrets.REPO_TOKEN || github.token`.
 
-## 5. Verifica
+## 5. Verification
 
-1. Primo push su `main`: i workflow `meta`, `backend-ci`, `frontend-ci`, `docker` devono partire e passare.
-2. `workflow_dispatch` di `e2e`: Keycloak, stack, Playwright.
-3. `make ci` in locale deve dare lo stesso esito dei workflow (escluso E2E, che richiede `make dev`).
-4. Aggiornare `versions.lock` solo dopo un push verificato.
+1. First push to `main`: the `meta`, `backend-ci`, `frontend-ci`, `docker` workflows must start and pass.
+2. `workflow_dispatch` of `e2e`: Keycloak, stack, Playwright.
+3. `make ci` locally must give the same result as the workflows (excluding E2E, which requires `make dev`).
+4. Update `versions.lock` only after a verified push.
 
-## Esecuzione locale dei workflow
+## Running the workflows locally
 
-I quattro workflow applicativi sono stati eseguiti localmente con [`act`](https://github.com/nektos/act) il 2026-10-26:
+The four application workflows were run locally with [`act`](https://github.com/nektos/act) on 2026-10-26:
 
 ```bash
 act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j <job> --pull=false
 ```
 
 - `meta` / `check`
-- `backend-ci` / `build-test` (12 test di integrazione su Testcontainers)
+- `backend-ci` / `build-test` (12 integration tests on Testcontainers)
 - `frontend-ci` / `lint-test-build`
 - `docker` / `config`
 
-Il workflow `e2e` non è eseguibile con `act` finché i repo non hanno un remote: clona i tre repo fratelli da GitHub. I suoi passi (`make dev`, `make e2e`) sono coperti dal test locale.
+The `e2e` workflow cannot run with `act` until the repos have a remote: it clones the three sibling repos from GitHub. Its steps (`make dev`, `make e2e`) are covered by the local test.
