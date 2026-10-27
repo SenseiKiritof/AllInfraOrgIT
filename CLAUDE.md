@@ -10,7 +10,6 @@ Meta repository of the InfraOrgIT workspace. Usage guide and layout in `README.m
 - `versions.lock`: application repo SHAs and images; update only on verified releases.
 - `tools/graphify/workspace.json`: local configuration, never committed; the example is.
 - `Makefile` and `scripts/`: orchestration and development environment.
-- `.opencode/`: OpenCode rules, skills and plugins (see `.opencode/README.md`).
 - `.config/dotnet-tools.json`: local `dotnet-ef` version.
 
 ## Rules

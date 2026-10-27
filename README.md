@@ -32,7 +32,6 @@ Phase 8 completed on the technical perimeter — 2026-10-27; no release executed
 | `docs/` | ERD, data dictionary, permissions, UX, legacy mapping, OpenAPI |
 | `docs/adr/` | ADRs 001–008 and template |
 | `docs/backlog.md` | open work and its verification |
-| `.opencode/` | OpenCode rules, skills and plugins for the workspace |
 | `scripts/` | `dev.sh` and `env.sh` for local development |
 | `tools/graphify/` | graphify workspace configuration |
 | `Makefile` | orchestration for infra, API, web, tests and migrations |
