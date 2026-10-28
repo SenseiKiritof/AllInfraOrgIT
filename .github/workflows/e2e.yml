@@ -17,6 +17,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: AllInfraOrgIT
+      - name: Require REPO_TOKEN
+        env:
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+        run: |
+          if [ -z "$REPO_TOKEN" ]; then
+            echo "::error::REPO_TOKEN missing: sibling repos are private, github.token cannot read them (see docs/operations/first-push.md)."
+            exit 1
+          fi
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
@@ -51,9 +59,9 @@ jobs:
 
       - name: Start stack
         run: |
-          make -C AllInfraOrgIT dev > /tmp/dev.log 2>&1 &
+          setsid make -C AllInfraOrgIT dev > /tmp/dev.log 2>&1 &
           echo $! > /tmp/dev.pid
-          for i in $(seq 1 90); do
+          for i in $(seq 1 150); do
             if curl -fsS http://localhost:5298/health/ready >/dev/null &&
                curl -fsS http://localhost:3000/ >/dev/null; then
               exit 0
@@ -69,5 +77,9 @@ jobs:
       - name: Stop stack
         if: always()
         run: |
-          kill "$(cat /tmp/dev.pid)" 2>/dev/null || true
-          docker compose -f InfraOrgITDocker/compose.yaml down -v
+          if [ -f /tmp/dev.pid ]; then
+            kill -- -"$(cat /tmp/dev.pid)" 2>/dev/null || kill "$(cat /tmp/dev.pid)" 2>/dev/null || true
+          fi
+          if [ -f AllInfraOrgIT/Makefile ] && [ -f InfraOrgITDocker/compose.yaml ]; then
+            make -C AllInfraOrgIT reset
+          fi
