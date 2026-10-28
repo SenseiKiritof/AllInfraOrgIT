@@ -26,7 +26,7 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 | `/applications` | Applications | list: id, name, description, base path, port; create/edit/delete | all |
 | `/applications/{id}` | Application detail | versions, APIs, linked projects, deployed servers | all |
 | `/projects` | Projects | list: id, name, description; create/edit/delete | all |
-| `/projects/{id}` | Project detail | name, description, linked applications (open) | all |
+| `/projects/{id}` | Project detail | name, description, linked applications with base path, port and servers (open) | all |
 | `/diagrams` | Diagrams | list: id, name, description; open, create, delete | all |
 | `/diagrams/{id}` | Diagram canvas | see diagrams flow; `id=0` = global view | all |
 | `/users` | Users | list: id, username, first name, last name; create/edit/delete | all (SystemAdmin write) |
@@ -57,8 +57,10 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 4. **Version APIs**: verb, URL, description, body; CRUD; **Chiama** runs the call server-side with hostname, API keys and query params, showing status, time and body. SystemAdmin only.
 5. **API query params**: name, type; CRUD.
 6. **Linked projects**: multi-select; add/remove.
-7. **Servers**: deployments of the application (`ServerApplications`); add server + version + exposed port, change the server of a deployment, delete; link to the server detail.
+7. **Servers**: deployments of the application (`ServerApplications`) with IP, environment, version and port; add server + version + exposed port, change the server of a deployment, delete; link to the server detail.
 8. **Application actions** (`ActionsBlock`): label, order, template or custom script, placeholder values, confirmation; SystemAdmin only. Operators see only the buttons.
+
+Form selects (server, version, project, menu, location) are searchable: type to filter the option label, arrows and Enter to pick.
 
 ## Diagrams flow `/diagrams/{id}`
 
