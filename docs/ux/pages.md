@@ -52,10 +52,10 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 ## Catalog flow `/applications/{id}`
 
 1. **Application**: name, description, base path, listening port; save; delete.
-2. **Environments**: hostname and SSL-ignore per environment (`ApplicationEnvironments`); the call uses the selected environment. SystemAdmin only.
+2. **Environments**: only the environments where the application is deployed on a server (via `ServerApplications`), with hostname and SSL-ignore (`ApplicationEnvironments`); the call uses the selected environment. SystemAdmin only.
 3. **API keys**: name + location (`Header` or `Query`) from the OpenAPI security schemes, environment (empty = every environment), write-only value; import fills the definitions, the secret is entered here. SystemAdmin only.
 4. **Versions**: list, create, edit, delete; each version has a number.
-5. **Version APIs**: verb, URL, description, body; CRUD; **Chiama** picks the environment, runs the call server-side with hostname, API keys and query params, shows status, time, size, body with copy/download (cap 10 MiB; history keeps 1 MiB, pruned after 30 days); saved by default in **Chiamate** (own history, open/delete). SystemAdmin only.
+5. **Version APIs**: verb, URL, description, body; CRUD; **Chiama** picks the environment, runs the call server-side with hostname, API keys and query params, shows status, time, size, body with copy/download (cap 10 MiB); saving is opt-in and puts the call in **Chiamate** (own history, open/delete, **Ripeti** reopens it with the same environment, query and body). History keeps 1 MiB per call, pruned after 30 days. SystemAdmin only.
 6. **API query params**: name, type; CRUD.
 7. **Linked projects**: multi-select; add/remove.
 8. **Servers**: deployments of the application (`ServerApplications`) with IP, environment, version and port; add server + version + exposed port, change the server of a deployment, delete; link to the server detail.

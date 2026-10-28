@@ -178,7 +178,7 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 |---|---|---|---|
 | Id | int | no | PK |
 | ApplicationId | int | no | FK `Applications.Id` cascade |
-| EnvironmentDefinitionId | int | no | FK `EnvironmentDefinitions.Id` restrict; UQ with ApplicationId |
+| EnvironmentDefinitionId | int | no | FK `EnvironmentDefinitions.Id` restrict; UQ with ApplicationId; only environments where the application has deployed servers |
 | Hostname | varchar(300) | yes | origin for test calls, `http`/`https` |
 | IgnoreSslErrors | bool | no | skip TLS validation on test calls |
 | audit | | | |
