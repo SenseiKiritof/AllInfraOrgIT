@@ -6,10 +6,10 @@ InfraOrgIT workspace: meta repository with architecture decisions, shared config
 
 | Repository | Content |
 |---|---|
-| `AllInfraOrgIT` | this repo: docs, ADRs, `Makefile`, `scripts/`, `versions.lock` |
-| `InfraOrgITApi` | .NET 10 backend: API, EF migrations, legacy importer |
-| `InfraOrgITWeb` | React + Vite frontend |
-| `InfraOrgITDocker` | Docker Compose, Caddy, Keycloak |
+| [`AllInfraOrgIT`](https://github.com/SenseiKiritof/AllInfraOrgIT) | this repo: docs, ADRs, `Makefile`, `scripts/`, `versions.lock` |
+| [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 backend: API, EF migrations, legacy importer |
+| [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React + Vite frontend |
+| [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | Docker Compose, Caddy, Keycloak |
 
 The four directories live side by side:
 
