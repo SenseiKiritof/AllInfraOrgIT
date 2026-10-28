@@ -74,6 +74,7 @@ legacy-dry-run:
 ci: config
 	dotnet build ../InfraOrgITApi/InfraOrgIt.slnx -warnaserror
 	dotnet test ../InfraOrgITApi/InfraOrgIt.slnx
+	dotnet run --project ../InfraOrgITApi/tools/RewrapCredentials -- --self-check
 	yarn --cwd ../InfraOrgITWeb install --frozen-lockfile
 	yarn --cwd ../InfraOrgITWeb biome ci .
 	yarn --cwd ../InfraOrgITWeb tsc --noEmit
