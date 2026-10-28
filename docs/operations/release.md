@@ -47,7 +47,7 @@ The `v*` tags start `.github/workflows/docker.yml` of `InfraOrgITApi` and `Infra
 - `ghcr.io/senseikiritof/infraorgit-api:0.8.0` (`0.8`, `sha-<commit>`, `latest`)
 - `ghcr.io/senseikiritof/infraorgit-web:0.8.0` (same tags)
 
-Before deploying, check `gh run list --workflow docker.yml` in both repos and the image pull. On a host without a local build, use `API_TAG=0.8.0` with the Compose `image:` instead of `build:`.
+Before deploying, check `gh run list --workflow docker.yml` in both repos and the image pull. On a host without a local build, use `API_TAG=0.8.0` and `WEB_TAG=0.8.0` with the Compose `image:` instead of `build:`.
 
 ## Rollback
 

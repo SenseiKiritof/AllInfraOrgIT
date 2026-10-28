@@ -7,8 +7,7 @@ Script `scripts/loadtest.py` (stdlib only) measures latency and throughput on li
 `full` stack running (`make full`) and a SystemAdmin user. The session loads roles at login: the role must be assigned before login.
 
 ```bash
-docker compose -f ../InfraOrgITDocker/compose.yaml \
-  -f ../InfraOrgITDocker/compose.full.yaml --profile full exec -T mysql \
+docker compose -f ../InfraOrgITDocker/compose.yaml exec -T mysql \
   sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" infraorgit -e "
     INSERT INTO Users (Name,Surname,Username,CreatedAt,UpdatedAt,Version)
     VALUES (\"Dev\",\"Admin\",\"admin\",UTC_TIMESTAMP(6),UTC_TIMESTAMP(6),0);

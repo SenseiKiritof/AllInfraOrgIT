@@ -25,8 +25,7 @@ Destructive operation: overwrites both databases.
 1. Stop the services that write:
 
    ```bash
-   docker compose -f ../InfraOrgITDocker/compose.yaml \
-     -f ../InfraOrgITDocker/compose.full.yaml --profile full stop api caddy keycloak
+   docker compose -f ../InfraOrgITDocker/compose.yaml stop web api keycloak
    ```
 
 2. Restore:
@@ -36,7 +35,7 @@ Destructive operation: overwrites both databases.
    CONFIRM_RESTORE=yes BACKUP_DIR=/path/to/backup make restore
    ```
 
-   The script refuses to run if `api`, `caddy` or `keycloak` are still running, if the `.gz` files fail `gzip -t`, or if `CONFIRM_RESTORE=yes` is missing.
+   The script refuses to run if `web`, `api` or `keycloak` are still running, if the `.gz` files fail `gzip -t`, or if `CONFIRM_RESTORE=yes` is missing.
 
 3. Restart with the migration job, which is idempotent:
 

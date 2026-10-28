@@ -30,7 +30,7 @@ for file in infraorgit.sql.gz keycloak.sql.gz; do
 done
 
 running="$(docker compose -f "$DOCKER_DIR/compose.yaml" ps --services --status running 2>/dev/null || true)"
-for service in api caddy keycloak; do
+for service in web api keycloak; do
   if printf '%s\n' "$running" | grep -qx "$service"; then
     echo "Servizio $service ancora attivo: fermalo prima del restore." >&2
     exit 1

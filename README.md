@@ -57,7 +57,7 @@ make dev
 
 ```bash
 make dev      # infra + migrations + API :5298 + Vite :3000; creates .env when missing
-make full     # frontend build + API container, migration job, Keycloak production and Caddy
+make full     # single compose: API + web images, migration job, Keycloak production
 make test     # xunit + Testcontainers MySQL + Vitest
 make ci       # same gates as the workflows, locally
 make openapi  # regenerate openapi/InfraOrgIt.Api.json from the backend

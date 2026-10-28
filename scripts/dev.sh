@@ -9,7 +9,9 @@ DOCKER_DIR="$META_ROOT/../InfraOrgITDocker"
 source "$META_ROOT/scripts/env.sh"
 
 cd "$DOCKER_DIR"
-docker compose up -d --wait mysql mysql-keycloak keycloak
+# Se lo stack completo è attivo, ferma API e web prima di tornare alla modalità dev.
+docker compose stop api web >/dev/null 2>&1 || true
+KC_MODE=dev docker compose up -d --wait mysql mysql-keycloak keycloak
 cd "$META_ROOT"
 
 dotnet tool restore >/dev/null
