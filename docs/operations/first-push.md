@@ -1,16 +1,16 @@
 # First push and `main` protection
 
-Procedure to bring the four repos to GitHub. It has not been executed: this environment has no GitHub credentials (`gh` missing, no token). The repos are ready on the local `main` branch.
+Procedure to bring the four repos to GitHub. The repositories are ready on the local `main` branch.
 
 ## 1. Create the repos
 
-Private, same owner for all four:
+Public, same owner for all four. Use `--private` only for a staging phase, then switch the visibility after the checks.
 
 ```bash
-gh repo create <owner>/AllInfraOrgIT --private
-gh repo create <owner>/InfraOrgITApi --private
-gh repo create <owner>/InfraOrgITWeb --private
-gh repo create <owner>/InfraOrgITDocker --private
+gh repo create <owner>/AllInfraOrgIT --public
+gh repo create <owner>/InfraOrgITApi --public
+gh repo create <owner>/InfraOrgITWeb --public
+gh repo create <owner>/InfraOrgITDocker --public
 ```
 
 Alternatively create them empty from the UI, without README, license or `.gitignore`.
@@ -27,7 +27,7 @@ for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
 done
 ```
 
-The push must include only versioned files: no `.env`, no dumps, no `node_modules`.
+The push must include only versioned files: no `.env`, no local exports or dumps, no `node_modules`.
 
 ## 3. Protect `main`
 
@@ -48,9 +48,9 @@ done
 
 The check names are the job names: `build-test` (backend), `lint-test-build` (frontend), `config` (docker), `check` (meta). Confirm them on the Actions page after the first push; for the meta repo also add `keycloak-login` if the E2E workflow is enabled.
 
-## 4. Secret for the E2E workflow
+## 4. Token for the E2E workflow
 
-The nightly workflow clones the three application repos. With private repos `github.token` is not enough: create a fine-grained PAT with `Contents: read` on the three repos and store it as `REPO_TOKEN` in the meta repo (`Settings → Secrets and variables → Actions`). The workflow uses `secrets.REPO_TOKEN || github.token`.
+The nightly workflow clones the three application repos. With public repos `github.token` can read them, so no secret is required. If you keep the repos private during staging, create a fine-grained PAT with `Contents: read` on the three repos and store it as `REPO_TOKEN` in the meta repo (`Settings → Secrets and variables → Actions`). The workflow uses `secrets.REPO_TOKEN || github.token`.
 
 ## 5. Verification
 

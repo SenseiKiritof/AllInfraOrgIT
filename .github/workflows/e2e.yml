@@ -17,14 +17,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: AllInfraOrgIT
-      - name: Require REPO_TOKEN
-        env:
-          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-        run: |
-          if [ -z "$REPO_TOKEN" ]; then
-            echo "::error::REPO_TOKEN missing: sibling repos are private, github.token cannot read them (see docs/operations/first-push.md)."
-            exit 1
-          fi
       - name: Checkout backend
         uses: actions/checkout@v4
         with:

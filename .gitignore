@@ -9,3 +9,17 @@ __pycache__/
 
 # Personal OpenCode configuration (not versioned)
 .opencode/
+
+# Local data exports, dumps and certificates (never publish)
+*.sql
+*.dump
+*.bak
+*.sql.gz
+*.csv
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+the legacy export
