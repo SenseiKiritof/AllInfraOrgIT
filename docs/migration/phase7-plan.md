@@ -73,7 +73,7 @@ The signed runbook remains to be written: the fake schema does not prove freeze 
 
 ## Risks
 
-- Local exports are not committed in the repos: read-only snapshots and sanitized fixtures.
+- Local exports are not committed: read-only snapshots and sanitized fixtures.
 - Loss of the old credential key.
 - Legacy host key considered trusted: evaluate a reset for critical servers.
 - Large `longtext`: small batches and `max_allowed_packet`.
