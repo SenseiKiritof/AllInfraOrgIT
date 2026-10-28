@@ -24,9 +24,9 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 | `/servers` | Servers | list: id, name, environment; create/edit/delete | all |
 | `/servers/{id}` | Server detail | see server flow | all; remote blocks conditional |
 | `/applications` | Applications | list: id, name, description, base path, port; create/edit/delete | all |
-| `/applications/{id}` | Application detail | see catalog flow | all |
+| `/applications/{id}` | Application detail | versions, APIs, linked projects, deployed servers | all |
 | `/projects` | Projects | list: id, name, description; create/edit/delete | all |
-| `/projects/{id}` | Project detail | name, description, linked applications | all |
+| `/projects/{id}` | Project detail | name, description, linked applications (open) | all |
 | `/diagrams` | Diagrams | list: id, name, description; open, create, delete | all |
 | `/diagrams/{id}` | Diagram canvas | see diagrams flow; `id=0` = global view | all |
 | `/users` | Users | list: id, username, first name, last name; create/edit/delete | all (SystemAdmin write) |
@@ -51,12 +51,14 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 
 ## Catalog flow `/applications/{id}`
 
-1. **Application**: name, description, base path, listening port; save; delete.
-2. **Versions**: list, create, edit, delete; each version has a number.
-3. **Version APIs**: verb, URL, description, body; CRUD.
-4. **API query params**: name, type; CRUD.
-5. **Linked projects**: multi-select; add/remove.
-6. **Application actions** (`ActionsBlock`): label, order, template or custom script, placeholder values, confirmation; SystemAdmin only. Operators see only the buttons.
+1. **Application**: name, description, base path, listening port, hostname (origin used by the test calls); save; delete.
+2. **API keys**: name + location (`Header` or `Query`) from the OpenAPI security schemes, write-only value; import fills the definitions, the secret is entered here. SystemAdmin only.
+3. **Versions**: list, create, edit, delete; each version has a number.
+4. **Version APIs**: verb, URL, description, body; CRUD; **Chiama** runs the call server-side with hostname, API keys and query params, showing status, time and body. SystemAdmin only.
+5. **API query params**: name, type; CRUD.
+6. **Linked projects**: multi-select; add/remove.
+7. **Servers**: deployments of the application (`ServerApplications`); add server + version + exposed port, change the server of a deployment, delete; link to the server detail.
+8. **Application actions** (`ActionsBlock`): label, order, template or custom script, placeholder values, confirmation; SystemAdmin only. Operators see only the buttons.
 
 ## Diagrams flow `/diagrams/{id}`
 
