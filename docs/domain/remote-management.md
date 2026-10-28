@@ -5,7 +5,8 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 ## SSH credentials
 
 - `ServerCredentials` stores a password or private key **encrypted with AES-GCM**; the client only receives `hasSecret`, never ciphertext or plaintext.
-- Layout: `base64(nonce|tag|ciphertext)`, 12-byte nonce, 16-byte tag. A 32-byte key per version in `ServerAccess:CredentialKeys:<n>`; `ServerAccess:CurrentKeyVersion` selects the encryption key. The row keeps `KeyVersion`, so a rotation decrypts the old rows.
+- Layout: `v2:` + `base64(nonce|tag|ciphertext)`, 12-byte nonce, 16-byte tag, written by **SSecureUtils 1.1.1**; the AES key is the SHA-256 of the configured string. A 32-byte base64 key per version in `ServerAccess:CredentialKeys:<n>`; `ServerAccess:CurrentKeyVersion` selects the encryption key. The row keeps `KeyVersion`, so a rotation decrypts the old rows.
+- Values written before the switch carry no `v2:` prefix and are **not readable** by the new code: run `tools/RewrapCredentials` once per database before deploying (`--apply`, dry-run by default, idempotent).
 - In development `scripts/env.sh` generates a key and stores it in `InfraOrgITDocker/.env` (ignored). In production the key comes from a secret manager.
 - A private key is validated with SSH.NET before saving; a password is not.
 - On update an empty secret leaves the stored one unchanged; changing `AuthType` requires the secret.
