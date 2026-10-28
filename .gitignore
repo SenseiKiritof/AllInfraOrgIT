@@ -22,3 +22,5 @@ __pycache__/
 *.pfx
 *.crt
 *.cer
+.DS_Store
+.idea/

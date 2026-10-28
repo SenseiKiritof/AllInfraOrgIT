@@ -23,14 +23,14 @@ workspace/
 
 ## Status
 
-Phase 8 completed on the technical perimeter — 2026-10-27; no release executed yet. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the fake legacy dump runs in Docker. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. Still open: rehearsal on a representative dataset and running `make release`.
+Phase 8 completed on the technical perimeter — 2026-10-27; no release executed yet. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the application database is initialized with schema, base data and the installation data from `InfraOrgITDocker/init/mysql`. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. Still open: rehearsal on a representative dataset and running `make release`.
 
 ## Contents
 
 | Path | Purpose |
 |---|---|
 | `docs/` | ERD, data dictionary, permissions, UX, legacy mapping, OpenAPI |
-| `docs/adr/` | ADRs 001–008 and template |
+| `docs/adr/` | ADRs 001–009 and template |
 | `docs/backlog.md` | open work and its verification |
 | `scripts/` | `dev.sh` and `env.sh` for local development |
 | `tools/graphify/` | graphify workspace configuration |
@@ -64,7 +64,6 @@ make backup   # MySQL application + Keycloak dump into backups/<UTC>
 make restore  # only with CONFIRM_RESTORE=yes BACKUP_DIR=...; overwrites the DBs
 make load-test # targeted load on lists, topology and saves
 make legacy-dry-run  # importer dry-run on JSON fixtures
-make legacy-rehearsal # importer dry-run against the fake legacy MySQL (legacy profile)
 make migrate  # dotnet-ef from the local manifest
 make e2e      # Playwright; requires make dev running
 make e2e-full # Playwright against the full profile (Caddy/HTTPS)

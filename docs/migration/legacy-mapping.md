@@ -1,6 +1,6 @@
 # Legacy → new schema mapping
 
-Legacy source: MySQL 9.5, schema in `InfraOrgITDocker/legacy/01-schema.sql` and EF migration. Target: MySQL LTS, EF Core schema. Importer: `InfraOrgITApi/tools/LegacyImport`, Phase 7.
+Legacy source: MySQL 9.5, legacy schema and EF migration. Target: MySQL LTS, EF Core schema. Importer: `InfraOrgITApi/tools/LegacyImport`, Phase 7.
 
 ## Strategy
 
