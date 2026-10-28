@@ -170,7 +170,17 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | Description | varchar(200) | no | legacy; consider widening |
 | BasePath | varchar(50) | no | |
 | ListeningOnPort | int | no | |
+| audit | | | |
+
+### ApplicationEnvironments
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| ApplicationId | int | no | FK `Applications.Id` cascade |
+| EnvironmentDefinitionId | int | no | FK `EnvironmentDefinitions.Id` restrict; UQ with ApplicationId |
 | Hostname | varchar(300) | yes | origin for test calls, `http`/`https` |
+| IgnoreSslErrors | bool | no | skip TLS validation on test calls |
 | audit | | | |
 
 ### ApplicationApiKeys
@@ -179,10 +189,33 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 |---|---|---|---|
 | Id | int | no | PK |
 | ApplicationId | int | no | FK `Applications.Id` cascade |
-| Name | varchar(200) | no | header or query name from the OpenAPI security scheme; UQ with ApplicationId+Location |
+| EnvironmentDefinitionId | int | yes | FK `EnvironmentDefinitions.Id`; null = every environment |
+| Name | varchar(200) | no | header or query name from the OpenAPI security scheme; UQ with ApplicationId+EnvironmentDefinitionId+Location |
 | Location | varchar(10) | no | `Header` \| `Query` |
 | EncryptedValue | varchar(1000) | no | AES-GCM via SSecureUtils; empty when the value is not configured |
 | KeyVersion | int | no | version of the credential key |
+| audit | | | |
+
+### ApplicationApiCalls
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| Username | varchar(100) | no | owner; every user sees only their calls |
+| ApplicationVersionApiId | int | yes | FK `ApplicationVersionApis.Id` set null |
+| EnvironmentDefinitionId | int | no | FK `EnvironmentDefinitions.Id` restrict |
+| Method | varchar(10) | no | |
+| Url | varchar(1000) | no | resolved target |
+| QueryJson | longtext | yes | request query |
+| RequestBody | longtext | yes | |
+| Status | int | yes | |
+| ContentType | varchar(200) | yes | |
+| Reason | varchar(200) | yes | |
+| DurationMs | bigint | no | |
+| ResponseBody | longtext | yes | capped at 1 MiB, `Truncated` says whether |
+| ResponseSizeBytes | bigint | no | size of the full response |
+| Truncated | bool | no | body stored in the history hit the 1 MiB cap |
+| Binary | bool | no | response is base64 (binary payload) |
 | audit | | | |
 
 ### ApplicationVersions
