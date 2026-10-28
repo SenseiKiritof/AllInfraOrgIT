@@ -16,6 +16,10 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
   workflows.
 - Work often spans repositories: commit separately in each one. Read the
   repo-local `CLAUDE.md` before editing a sibling.
+- Backend owns the schema, the generated OpenAPI contract and RBAC; the SPA
+  calls only same-origin `/api` and `/auth` (Keycloak BFF, no token in
+  JavaScript). Docker owns Compose and Keycloak; the Caddyfile is in the web
+  repo.
 - Toolchain: .NET SDK 10, Node 24, Yarn 1.22.22, Docker Compose v2.
 - UI copy is Italian; code identifiers and commit messages are English
   (Conventional Commits).
@@ -31,19 +35,28 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
   the API with `-warnaserror`, runs tests and the credential rewrap self-check,
   then Biome, `tsc --noEmit`, Vitest, the web build, `jq versions.lock`, the
   OpenAPI regeneration/drift check and the Redocly lint.
+- `.github/workflows/ci.yml` here only validates `versions.lock` and rejects a
+  tracked `.env`; it does not run the build or tests. `make ci` is the real
+  gate.
 - Single tests: `dotnet test ../InfraOrgITApi/InfraOrgIt.slnx --filter
   FullyQualifiedName~Name`; `yarn --cwd ../InfraOrgITWeb vitest run
   src/path/file.test.ts`.
 - `make openapi` regenerates `InfraOrgITApi/openapi/InfraOrgIt.Api.json`.
-  Commit it in `InfraOrgITApi` with endpoint/DTO changes; `make ci` fails on
-  drift.
+  The file is generated: never edit it by hand. Commit it in `InfraOrgITApi`
+  with endpoint/DTO changes; `make ci` regenerates it and fails on drift.
 - Migrations: `make migrate` applies them with the pinned `dotnet-ef`
-  (`.config/dotnet-tools.json`). In the API repo use only `dotnet ef
-  migrations add <Name>`; never hand-edit migrations or the model snapshot.
-- `make e2e` needs `make dev` running. `make e2e-full` needs `make full`, uses
-  `https://localhost`, and inserts the dev `admin` user before running.
+  (`.config/dotnet-tools.json`). To add one, run `source scripts/env.sh &&
+  dotnet tool restore && dotnet tool run dotnet-ef migrations add <Name>
+  --project ../InfraOrgITApi/src/InfraOrgIt.Api --startup-project
+  ../InfraOrgITApi/src/InfraOrgIt.Api` from this directory; never hand-edit
+  migrations or the model snapshot.
+- `make e2e` needs `make dev` running and Playwright browsers installed
+  (`yarn --cwd ../InfraOrgITWeb playwright install chromium`). `make e2e-full`
+  needs `make full`, uses `https://localhost`, and inserts the dev `admin`
+  user before running.
 - `make reset` deletes Compose volumes and `InfraOrgITDocker/data`; it is
   required after Keycloak realm/client changes and destroys local data.
+  `make dev` runs Keycloak with `KC_MODE=dev`; `make full` uses `prod`.
 - `make restore` overwrites both databases: it needs stopped API/web/Keycloak
   and `CONFIRM_RESTORE=yes BACKUP_DIR=<dir>`.
 
@@ -54,9 +67,11 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
 - The `full` stack serves the web image built at image-build time; the Vite
   dev server is used by `make dev`/`make web`. Rebuild the web service after
   frontend changes before testing through Caddy.
-- Init SQL runs only on an empty MySQL volume. `InfraOrgITDocker/init/mysql/
-  1-*.sql` and `2-*.sql` are tracked; `3-CustomData.sql` is a git-ignored
-  local installation export. Never force-add dumps, `data/` or SQL exports.
+- Init SQL runs only on an empty MySQL volume; changes to
+  `InfraOrgITDocker/init/mysql/*.sql` need `make reset`. `1-*.sql` mirrors
+  the EF schema (re-export it after a migration), `2-*.sql` is base data;
+  a local `3-CustomData.sql` is git-ignored. Never force-add dumps, `data/`
+  or SQL exports.
 - RBAC D7 = B: `SystemAdmin` does not imply `ServerAdmin`. Server, deployment,
   console and run actions require `ServerAdmin` on the environment, so a
   missing button can be correct. See `docs/security/permissions.md`.
