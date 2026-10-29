@@ -53,7 +53,7 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 
 Sections follow the population order: a version is needed to deploy a server, and the environments come from the deployments.
 
-1. **Application**: name, description, base path, listening port; save; delete.
+1. **Application**: name, description, base path, listening port, frontend flag (hides the API, API key and call sections); save; delete.
 2. **Versions**: list, create, edit, delete; each version has a number.
 3. **Version APIs**: verb, URL, description, body; CRUD; **Chiama** picks the environment, runs the call server-side with hostname, API keys and query params, shows status, time, size, body with copy/download (cap 10 MiB); saving is opt-in and puts the call in **Chiamate** (own history, open/delete, **Ripeti** reopens it with the same environment, query and body). History keeps 1 MiB per call, pruned after 30 days. SystemAdmin only.
 4. **API query params**: name, type; CRUD.
