@@ -2,6 +2,27 @@
 
 InfraOrgIT workspace: meta repository with architecture decisions, shared configuration, orchestration and release lock.
 
+## What it does
+
+InfraOrgIT maps an organization's IT infrastructure and lets authorized people operate it from one web app: which providers and environments exist, which servers live in them, which application versions run where, how traffic reaches them through proxies, and who may act on each environment.
+
+- **Inventory**: providers (datacenters, clouds), environments (PRE, INT, PROD…) and their combinations; servers with IP, hostname, SSH port and jump host.
+- **Application catalog**: applications with versions, APIs and query parameters, also imported from OpenAPI 3.x or Swagger 2.0; projects group applications. A deployment binds an application version to a server and port. An API can be called server-side on a chosen environment, with that environment's hostname and API keys, and the call can be saved to a personal history.
+- **Topology and diagrams**: proxy connections between servers with their routes, drawn as an interactive diagram (provider → environment → server → deployed application) filtered by provider, environment or project, with saved layouts.
+- **Remote management**: SSH credentials encrypted with AES-GCM, host key pinned on first connection, web SSH console, command templates with `{{Name}}` placeholders, application actions (restart, logs, health check) and network reachability tests; every run is recorded in an audit log.
+- **Access control**: Keycloak login through a backend-for-frontend, no token in the browser; users, groups and roles. `SystemAdmin` manages master data, `ServerAdmin` and `ServerOperator` are granted to groups per environment, and the side menu shows only the allowed entries.
+- **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
+
+Screenshots from a local instance with fictitious data:
+
+| Topology diagram | Servers |
+|---|---|
+| ![Diagram of the production environment with servers, deployed applications and proxy routes](docs/screenshots/diagram.png) | ![Server list with environment, IP, SSH port and jump host](docs/screenshots/servers.png) |
+| **Application** | **Server** |
+| ![Application with versions, APIs and deployments](docs/screenshots/application.png) | ![Server detail with SSH console, credential and reachability tests](docs/screenshots/server.png) |
+| **Execution log** | |
+| ![Audit log of remote actions and reachability tests](docs/screenshots/executions.png) | |
+
 ## Workspace repositories
 
 | Repository | Content |
