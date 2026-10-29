@@ -1,15 +1,34 @@
 # InfraOrgIT
 
-InfraOrgIT maps an organization's IT infrastructure and lets authorized people operate it from the browser: which providers and environments exist, which servers live in them, which application versions run where, how traffic reaches them through proxies, and who may act on each environment.
+InfraOrgIT is one place to describe an organization's IT infrastructure and to work on it from the browser. You model the chain once, from provider to project, and the same model drives the topology diagram, the API tests, the network checks and the SSH console, with permissions per environment and an audit log of every action.
 
 ![Diagram of the production environment with servers, deployed applications and proxy routes](docs/screenshots/diagram.png)
 
-## Features
+## What it does
 
-- **Inventory**: providers (datacenters, clouds), environments (PRE, INT, PROD…) and their combinations; servers with IP and public address, hostname, SSH port, jump host, sizing (cores, memory, disk), operating system, HA node and third-party operator.
-- **Application catalog**: applications typed as backend, frontend or infrastructure (SFTP, RabbitMQ, NGINX, Elastic, Kibana, Kafka, MySQL, MongoDB, Redis), with versions, APIs and query parameters, also imported from OpenAPI 3.x or Swagger 2.0 together with their API key definitions; projects group applications. A deployment binds an application version to a server and port and records how it runs: container or native service, image, container name, compose folder, host port behind a local proxy and HA role (primary or secondary). An API can be called server-side on a chosen environment, with that environment's hostname and API keys, and the call can be saved to a personal history.
-- **Topology and diagrams**: proxy connections between servers with their routes (path, optional virtual host and listen port, target deployment or next connection), drawn as an interactive diagram (provider → environment → server → deployed application) filtered by provider, environment or project, with saved layouts.
-- **Remote management**: web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection; SSH credentials encrypted with AES-GCM and host key pinned on first connection; command templates with `{{Name}}` placeholders and application actions (restart, logs, health check); network reachability tests, all or a selection, run from the server itself. Every run is recorded in an audit log.
+### 1. One model, from provider to project
+
+- **Providers and environments**: datacenters and clouds, each with its environments (PRE, INT, PROD…).
+- **Servers**: IP and public address, hostname, SSH port and jump host, sizing (cores, memory, disk), operating system, HA node and third-party operator.
+- **Applications**: backend, frontend or infrastructure (SFTP, RabbitMQ, NGINX, Elastic, Kibana, Kafka, MySQL, MongoDB, Redis), each with its versions.
+- **Deployments**: an application version on a server and port, with how it runs: container or native service, image, container name, compose folder, host port behind a local proxy, HA role (primary or secondary).
+- **Projects**: group applications and list the servers they run on, production apart from the other environments.
+- **Traffic**: proxy connections and routes (path, virtual host, listen port, target deployment or next connection), drawn as an interactive diagram (provider → environment → server → deployed application) filtered by provider, environment or project, with saved layouts.
+
+### 2. API tests straight from the documentation
+
+Import an OpenAPI 3.x or Swagger 2.0 document into an application version: endpoints, query parameters and API key definitions are created in one step. Each API can then be called server-side on a chosen environment, with that environment's hostname and API keys (stored encrypted), and the call kept in a personal history.
+
+### 3. Reachability tests from the server itself
+
+Network tests are host:port checks, defined per server or globally. Run them all or a selection: each check runs on the server over SSH, so the result shows what that server really reaches, OK or KO with the error.
+
+### 4. Direct operation through the console
+
+A web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection. SSH credentials are encrypted with AES-GCM and the host key is pinned on first connection. Command templates with `{{Name}}` placeholders and application actions (restart, logs, health check) run from the same pages. Console sessions, actions and tests are all recorded in the audit log.
+
+### Around it
+
 - **Access control**: Keycloak login through a backend-for-frontend, no token in the browser; users, groups and roles. `SystemAdmin` manages master data, `ServerAdmin` and `ServerOperator` are granted to groups per environment, and the side menu shows only the allowed entries.
 - **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
@@ -18,6 +37,20 @@ InfraOrgIT maps an organization's IT infrastructure and lets authorized people o
 
 Recordings and screenshots come from a local instance with fictitious data (the "Acme" company); `pre-app-01` and `pre-proxy-01` are real SSH servers in that instance.
 
+**Diagram**
+
+![Zoom, pan and fit on the production diagram](docs/screenshots/diagram.gif)
+
+| Servers | Application |
+|---|---|
+| ![Server list with environment, IP, SSH port and jump host](docs/screenshots/servers.png) | ![Application with type, versions and APIs](docs/screenshots/application.png) |
+| **Server** | **Execution log** |
+| ![Server detail with sizing, SSH credential and reachability tests](docs/screenshots/server.png) | ![Audit log of console sessions, actions and reachability tests](docs/screenshots/executions.png) |
+
+**Network tests and application actions**
+
+![Reachability tests run from pre-app-01 with OK and KO results, then the Health check and Recent logs actions of orders-api](docs/screenshots/tests-actions.gif)
+
 **SSH console**
 
 ![SSH session on pre-app-01: hostname, uptime, disk usage, application log and health endpoint](docs/screenshots/console.gif)
@@ -25,20 +58,6 @@ Recordings and screenshots come from a local instance with fictitious data (the 
 **Several consoles: split view and minimize**
 
 ![Consoles on pre-app-01 and pre-proxy-01 side by side, minimized to the bar and reopened](docs/screenshots/console-split.gif)
-
-**Network tests and application actions**
-
-![Reachability tests run from pre-app-01 with OK and KO results, then the Health check and Recent logs actions of orders-api](docs/screenshots/tests-actions.gif)
-
-**Diagram**
-
-![Zoom, pan and fit on the production diagram](docs/screenshots/diagram.gif)
-
-| Servers | Application |
-|---|---|
-| ![Server list with environment, IP, SSH port and jump host](docs/screenshots/servers.png) | ![Application with versions, APIs and deployments](docs/screenshots/application.png) |
-| **Server** | **Execution log** |
-| ![Server detail with SSH credential and reachability tests](docs/screenshots/server.png) | ![Audit log of console sessions, actions and reachability tests](docs/screenshots/executions.png) |
 
 ## Architecture
 
