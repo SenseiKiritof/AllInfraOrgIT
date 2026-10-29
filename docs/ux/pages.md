@@ -43,7 +43,7 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 
 ## Server flow `/servers/{id}`
 
-1. **Master data**: name, IP, hostname, environment (select `ProviderEnvironments`), and the SSH credential (SystemAdmin only, also when creating); save. If the server has a credential and the address/environment changes, the API requires SystemAdmin.
+1. **Master data**: name, IP, hostname, environment (select `ProviderEnvironments`), and the SSH credential (SystemAdmin only, also when creating); save. Changing IP, SSH port or jump host while a console is open asks for confirmation and closes that console. If the server has a credential and the address/environment changes, the API requires SystemAdmin.
 2. **Deployed applications**: `ServerApplications` list; add application version + exposed port; delete deployment.
 3. **Proxy**: incoming/outgoing connection list; create connection (source/target/direction); delete.
 4. **SSH** (`SshBlock`): credential select, port; save; console if `ServerAdmin`; reset host key. The console dock at the bottom is always visible: sessions become tabs, the chevron minimizes the open panels like Riduci, and a session can be reopened from its tab.
