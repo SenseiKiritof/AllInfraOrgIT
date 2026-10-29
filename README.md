@@ -11,7 +11,7 @@ InfraOrgIT maps an organization's IT infrastructure and lets authorized people o
 - **Topology and diagrams**: proxy connections between servers with their routes, drawn as an interactive diagram (provider → environment → server → deployed application) filtered by provider, environment or project, with saved layouts.
 - **Remote management**: web SSH console with several sessions docked at the bottom of the page and reconnection; SSH credentials encrypted with AES-GCM and host key pinned on first connection; command templates with `{{Name}}` placeholders and application actions (restart, logs, health check); network reachability tests, all or a selection, run from the server itself. Every run is recorded in an audit log.
 - **Access control**: Keycloak login through a backend-for-frontend, no token in the browser; users, groups and roles. `SystemAdmin` manages master data, `ServerAdmin` and `ServerOperator` are granted to groups per environment, and the side menu shows only the allowed entries.
-- **Interface**: Italian and English, light and dark theme.
+- **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
 
 ## See it in action
