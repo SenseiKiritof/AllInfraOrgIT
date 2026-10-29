@@ -15,6 +15,8 @@ KC_MODE=dev docker compose up -d --wait mysql mysql-keycloak keycloak
 cd "$META_ROOT"
 
 dotnet tool restore >/dev/null
+# dotnet-ef builds with --no-restore: restore the solution first, a fresh clone has no obj/.
+dotnet restore "$META_ROOT/../InfraOrgITApi/InfraOrgIt.slnx" >/dev/null
 dotnet tool run dotnet-ef database update \
   --project "$META_ROOT/../InfraOrgITApi/src/InfraOrgIt.Api" \
   --startup-project "$META_ROOT/../InfraOrgITApi/src/InfraOrgIt.Api" >/dev/null

@@ -48,6 +48,7 @@ web:
 migrate:
 	@bash -c 'source ./scripts/env.sh && \
 		dotnet tool restore >/dev/null && \
+		dotnet restore ../InfraOrgITApi/InfraOrgIt.slnx >/dev/null && \
 		dotnet tool run dotnet-ef database update \
 			--project ../InfraOrgITApi/src/InfraOrgIt.Api \
 			--startup-project ../InfraOrgITApi/src/InfraOrgIt.Api'
