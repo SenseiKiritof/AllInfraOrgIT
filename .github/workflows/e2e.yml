@@ -8,10 +8,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   keycloak-login:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
     steps:
       - name: Checkout meta
         uses: actions/checkout@v4
@@ -39,15 +46,40 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: |
+            InfraOrgITApi/**/*.csproj
+            AllInfraOrgIT/.config/dotnet-tools.json
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
 
+      - name: Cache Yarn and node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            InfraOrgITWeb/node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('InfraOrgITWeb/yarn.lock', 'InfraOrgITWeb/package.json') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('InfraOrgITWeb/yarn.lock', 'InfraOrgITWeb/package.json') }}
+          restore-keys: playwright-${{ runner.os }}-
+
       - name: Install dependencies
         run: |
+          # Warm the Docker images while Yarn and Playwright run.
+          cp -n InfraOrgITDocker/.env.example InfraOrgITDocker/.env || true
+          (docker compose --env-file InfraOrgITDocker/.env -f InfraOrgITDocker/compose.yaml pull mysql mysql-keycloak keycloak > /tmp/pull.log 2>&1) &
+          pull_pid=$!
           npm install -g yarn@1.22.22
-          yarn --cwd InfraOrgITWeb install --frozen-lockfile
+          yarn --cwd InfraOrgITWeb install --frozen-lockfile --prefer-offline
           yarn --cwd InfraOrgITWeb playwright install --with-deps chromium
+          wait "$pull_pid" || cat /tmp/pull.log
 
       - name: Start stack
         run: |
