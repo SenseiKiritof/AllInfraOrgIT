@@ -197,6 +197,18 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | KeyVersion | int | no | version of the credential key |
 | audit | | | |
 
+### Translations
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| EntityType | varchar(50) | no | `Menu`, `Role` |
+| EntityId | int | no | id of the menu/role |
+| Field | varchar(50) | no | `Name` for menus, `Label` for roles |
+| Language | varchar(10) | no | language code (`en`); adding a language means new rows |
+| Value | varchar(200) | no | translated label |
+| audit | | | unique (`EntityType`, `EntityId`, `Field`, `Language`) |
+
 ### ApplicationApiCalls
 
 | Column | Type | Null | Constraints / notes |

@@ -6,7 +6,7 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 
 - **Login**: `/api/auth/*` (BFF). Public page `/login-error`. No token readable from JavaScript.
 - **Side menu**: loaded from `GET /api/menus`; in legacy it is not filtered by role. Target: filtered by `MenuRole`. Labels come from the database and are not translated.
-- **Language**: Italian (default) and English in the user dropdown; the choice is stored in `localStorage` and applies immediately. API error messages stay Italian.
+- **Language**: Italian (default) and English in the user dropdown; the choice is stored in `localStorage` and applies immediately. Database-driven labels (menu names, role labels) are translated through the `Translations` table; a new language is a new `Language` code plus its rows (and the frontend dictionary). API error messages stay Italian.
 - **Header**: fixed. Back button on detail routes, the name of the open entity centred, page actions on the right (e.g. Console SSH), then theme and user dropdown with the language selector and Logout.
 - **Detail route**: the menu contains parent (`/servers`) and child (`/servers/{id}`) entries with `HideBackButton=false`; the layout shows the sidebar only when the current route has `HideBackButton=true` (top-level entries).
 - **Error handling**: centralized popup; 401 → refresh or login; API errors shown to the user.
