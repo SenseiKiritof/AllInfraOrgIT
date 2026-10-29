@@ -25,11 +25,17 @@ Network tests are host:port checks, defined per server or globally. Run them all
 
 ### 4. Direct operation through the console
 
-A web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection. SSH credentials are encrypted with AES-GCM and the host key is pinned on first connection. Command templates with `{{Name}}` placeholders and application actions (restart, logs, health check) run from the same pages. Console sessions, actions and tests are all recorded in the audit log.
+A web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection. SSH credentials are encrypted with AES-GCM and the host key is pinned on first connection. Command templates with `{{Name}}` placeholders and application actions (restart, logs, health check) run from the same pages. Every console session, action and test lands in the audit log, with scripts and output redacted and custom values masked. An action can ask for confirmation before it runs, a repeated submission is not run twice, and placeholder values with shell metacharacters are rejected.
+
+### 5. Access by role and environment
+
+- **Login**: Keycloak through a backend-for-frontend, no token in the browser.
+- **Users, groups and roles** managed from the interface. `SystemAdmin` owns the master data: providers, environments, applications and projects, users and groups, SSH credentials, command templates and action scripts, global network tests and the audit log.
+- **Rights per environment**: `ServerAdmin` and `ServerOperator` are granted to groups on single environments. `ServerAdmin` manages servers, deployments, proxy routes and server tests and opens the SSH console; `ServerOperator` runs application actions and network tests. `SystemAdmin` does not imply either, and pages show only the actions allowed on that environment.
+- **Configurable menu**: entries, order and nesting are edited from the Menu page and each entry is assigned to roles, so the side menu shows every user only what they can use.
 
 ### Around it
 
-- **Access control**: Keycloak login through a backend-for-frontend, no token in the browser; users, groups and roles. `SystemAdmin` manages master data, `ServerAdmin` and `ServerOperator` are granted to groups per environment, and the side menu shows only the allowed entries.
 - **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
 
