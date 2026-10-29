@@ -170,7 +170,7 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | Description | varchar(200) | no | legacy; consider widening |
 | BasePath | varchar(50) | no | |
 | ListeningOnPort | int | no | |
-| IsFrontend | bool | no | frontend app: no APIs or API keys |
+| Type | varchar(20) | no | `Backend`, `Frontend`, `Sftp`, `RabbitMq`, `Nginx`, `Elastic`, `Kibana`, `Kafka`; Frontend has no APIs or API keys |
 | audit | | | |
 
 ### ApplicationEnvironments
