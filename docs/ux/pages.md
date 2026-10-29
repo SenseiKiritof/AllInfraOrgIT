@@ -46,7 +46,7 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 1. **Master data**: name, IP, hostname, environment (select `ProviderEnvironments`), and the SSH credential (SystemAdmin only, also when creating); save. If the server has a credential and the address/environment changes, the API requires SystemAdmin.
 2. **Deployed applications**: `ServerApplications` list; add application version + exposed port; delete deployment.
 3. **Proxy**: incoming/outgoing connection list; create connection (source/target/direction); delete.
-4. **SSH** (`SshBlock`): credential select, port; save; console if `ServerAdmin`; reset host key.
+4. **SSH** (`SshBlock`): credential select, port; save; console if `ServerAdmin`; reset host key. The console dock at the bottom is always visible: sessions become tabs, the chevron minimizes the open panels like Riduci, and a session can be reopened from its tab.
 5. **Reachability** (`ReachabilityBlock`): global and server tests with a checkbox each; **Effettua selezionati** (disabled until one is checked) or **Effettua tutti i test**; create/edit/delete server tests if `ServerAdmin`, run if `ServerOperator`.
 6. **Deploy actions** (`DeployActions`): application buttons; confirmation if required; run; output; visible to `ServerOperator`.
 
