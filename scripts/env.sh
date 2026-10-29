@@ -23,7 +23,7 @@ set +a
 
 export ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
 export ASPNETCORE_URLS="${ASPNETCORE_URLS:-http://localhost:5298}"
-export ConnectionStrings__MySql="Server=localhost;Port=3306;Database=infraorgit;User ID=infraorgit;Password=${MYSQL_PASSWORD};"
+export ConnectionStrings__MySql="Server=localhost;Port=13336;Database=infraorgit;User ID=infraorgit;Password=${MYSQL_PASSWORD};"
 export Oidc__ClientSecret="${Oidc__ClientSecret:-${OIDC__CLIENT_SECRET:-dev-client-secret}}"
 export ServerAccess__CredentialKeys__1="${ServerAccess__CredentialKey:?ServerAccess__CredentialKey mancante}"
 export ServerAccess__CurrentKeyVersion="${ServerAccess__CurrentKeyVersion:-1}"

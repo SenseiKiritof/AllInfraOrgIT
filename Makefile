@@ -65,7 +65,7 @@ e2e:
 
 e2e-full:
 	@$(COMPOSE) exec -T mysql sh -c 'mysql -u root -p"$$MYSQL_ROOT_PASSWORD" infraorgit -e "INSERT IGNORE INTO Users (Name,Surname,Username,CreatedAt,UpdatedAt,Version) VALUES (\"Dev\",\"Admin\",\"admin\",UTC_TIMESTAMP(6),UTC_TIMESTAMP(6),0); INSERT IGNORE INTO RoleUser (RolesId,UsersId) SELECT 3,Id FROM Users WHERE Username=\"admin\";"'
-	E2E_BASE_URL=https://localhost E2E_IGNORE_HTTPS=1 yarn --cwd ../InfraOrgITWeb playwright test
+	E2E_BASE_URL=https://localhost:8443 E2E_IGNORE_HTTPS=1 yarn --cwd ../InfraOrgITWeb playwright test
 
 legacy-dry-run:
 	dotnet run --project ../InfraOrgITApi/tools/LegacyImport -- \

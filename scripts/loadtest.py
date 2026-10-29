@@ -2,7 +2,7 @@
 """Load test mirato: liste, topologia e una mutazione create/delete.
 
 Uso (dopo `make full` con un utente SystemAdmin):
-  BASE_URL=https://localhost LOADTEST_USER=admin LOADTEST_PASSWORD=dev-admin \
+  BASE_URL=https://localhost:8443 LOADTEST_USER=admin LOADTEST_PASSWORD=dev-admin \
   REQUESTS=30 CONCURRENCY=5 INSECURE_TLS=1 scripts/loadtest.py
 """
 
@@ -24,7 +24,7 @@ from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, HTTPSHandler, Request, build_opener
 
 
-BASE = os.environ.get("BASE_URL", "https://localhost").rstrip("/")
+BASE = os.environ.get("BASE_URL", "https://localhost:8443").rstrip("/")
 USER = os.environ.get("LOADTEST_USER", "admin")
 PASSWORD = os.environ.get("LOADTEST_PASSWORD", "dev-admin")
 REQUESTS = int(os.environ.get("REQUESTS", "30"))

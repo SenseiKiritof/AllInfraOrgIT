@@ -52,8 +52,8 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
   migrations or the model snapshot.
 - `make e2e` needs `make dev` running and Playwright browsers installed
   (`yarn --cwd ../InfraOrgITWeb playwright install chromium`). `make e2e-full`
-  needs `make full`, uses `https://localhost`, and inserts the dev `admin`
-  user before running.
+  needs `make full`, uses `https://localhost:8443`, and inserts the dev
+  `admin` user before running.
 - `make reset` deletes Compose volumes and `InfraOrgITDocker/data`; it is
   required after Keycloak realm/client changes and destroys local data.
   `make dev` runs Keycloak with `KC_MODE=dev`; `make full` uses `prod`.

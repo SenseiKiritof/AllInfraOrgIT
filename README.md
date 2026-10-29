@@ -110,7 +110,7 @@ make reset    # removes volumes: needed after Keycloak realm/client changes
 make down
 ```
 
-`make e2e` uses `http://localhost:3000`; `make e2e-full` uses `https://localhost` and requires the `full` profile.
+`make e2e` uses `http://localhost:3000`; `make e2e-full` uses `https://localhost:8443` and requires the `full` profile.
 
 ## Status
 
