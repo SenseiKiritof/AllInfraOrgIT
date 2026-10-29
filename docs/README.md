@@ -10,6 +10,7 @@ Index of the Phase 1 documents.
 | `domain/topology-diagrams.md` | topology, proxy, diagrams, scopes, permissions and Phase 4 tests |
 | `domain/remote-management.md` | encrypted credentials, SSH/host key, templating, actions, reachability, Phase 5 audit |
 | `domain/admin-rbac.md` | users, groups, roles, menus, assignments and Phase 6 protections |
+| `domain/inventory-fields-proposal.md` | runtime, container, host port, database types, server sizing, HA, virtual host: model, API, UI, migration and backfill |
 | `migration/phase7-plan.md` | importer plan, order, validation and Phase 7 cutover |
 | `operations/release-audit.md` | Phase 8 hardening/release audit, Must/Should/Nice |
 | `operations/phase8-plan.md` | Phase 8 work packages, decisions and order |

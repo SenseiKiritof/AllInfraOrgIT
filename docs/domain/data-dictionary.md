@@ -126,6 +126,13 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | Name | varchar(200) | no | |
 | IpAddress | varchar(200) | no | |
 | Hostname | varchar(200) | no | |
+| PublicIpAddress | varchar(45) | yes | IPv4/IPv6 public or NAT address |
+| CpuCores | int | yes | whole cores, > 0 |
+| MemoryGb | int | yes | whole GB, > 0 |
+| DiskGb | int | yes | total of the disks, whole GB, > 0 |
+| OperatingSystem | varchar(100) | yes | free text, e.g. `Debian 12` |
+| HaNode | varchar(20) | yes | node label in a redundant group, e.g. `A` |
+| ManagedBy | varchar(100) | yes | third-party operator |
 | CredentialId | int | yes | FK `ServerCredentials.Id` added in Phase 5 |
 | SshPort | int | no | default 22 |
 | HostKeyFingerprint | varchar(100) | yes | SHA256 TOFU |
@@ -155,7 +162,13 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | Id | int | no | PK |
 | ServerId | int | no | FK `Servers.Id` restrict |
 | ApplicationVersionId | int | no | FK `ApplicationVersions.Id` restrict |
-| ExposedPort | int | no | |
+| ExposedPort | int | no | port reachable from outside the server |
+| Runtime | varchar(20) | yes | check `CK_ServerApplications_Runtime`: `Container` \| `Native` |
+| ContainerImage | varchar(300) | yes | repository without tag; only with `Runtime = Container` |
+| ContainerName | varchar(200) | yes | `container_name`; only with `Runtime = Container` |
+| ComposeDirectory | varchar(300) | yes | folder of the compose file; only with `Runtime = Container` |
+| HostPort | int | yes | port published on the host (`HostPort:ListeningOnPort`); equal to `ExposedPort` is stored as null |
+| HaRole | varchar(20) | yes | check `CK_ServerApplications_HaRole`: `Primary` \| `Secondary` |
 | ProxyRouteId | int | yes | FK `ProxyRoutes.Id` added in Phase 4, UQ* (1-1 relationship) |
 | audit | | | |
 
@@ -170,7 +183,7 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | Description | varchar(200) | no | legacy; consider widening |
 | BasePath | varchar(50) | no | |
 | ListeningOnPort | int | no | |
-| Type | varchar(20) | no | `Backend`, `Frontend`, `Sftp`, `RabbitMq`, `Nginx`, `Elastic`, `Kibana`, `Kafka`; Frontend has no APIs or API keys |
+| Type | varchar(20) | no | check `CK_Applications_Type`: `Backend`, `Frontend`, `Sftp`, `RabbitMq`, `Nginx`, `Elastic`, `Kibana`, `Kafka`, `MySql`, `MongoDb`, `Redis`; Frontend has no APIs or API keys |
 | audit | | | |
 
 ### ApplicationEnvironments
@@ -323,7 +336,9 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 |---|---|---|---|
 | Id | int | no | PK |
 | ProxyConnectionId | int | no | FK `ProxyConnections.Id` cascade |
-| Route | varchar(200) | no | UQ* (`ProxyConnectionId`, `Route`) |
+| Route | varchar(200) | no | UQ* (`ProxyConnectionId`, `VirtualHost`, `ListenPort`, `Route`) |
+| VirtualHost | varchar(200) | yes | host matched by the source server, e.g. `shop.acme.example` |
+| ListenPort | int | yes | port the source server listens on, e.g. `443` |
 | MappedTo | varchar(50) | yes | |
 | TargetServerApplicationId | int | yes | FK `ServerApplications.Id`, no action |
 | TargetProxyConnectionId | int | yes | FK `ProxyConnections.Id`, no action |
@@ -418,6 +433,8 @@ Index on `ServerId`. No `Version`: the history is append-only.
 | `RequestTypeEnum` | int 0–4 | `GET`, `POST`, `PUT`, `PATCH`, `DELETE` |
 | `RoleScopeEnum` | int 0–1 | `System`, `Environment` |
 | `ProxyDirection` | varchar | `Outgoing`, `Incoming` (unchanged) |
+| `DeploymentRuntime` | varchar | `Container`, `Native` (new) |
+| `DeploymentHaRole` | varchar | `Primary`, `Secondary` (new) |
 | `CredentialAuthType` | varchar | `Password`, `PrivateKey` (unchanged) |
 | `CommandExecutionKind` | varchar | `Action`, `Reachability`, `Console` (unchanged) |
 | `DiagramScopeType` | varchar | `Provider`, `ProviderEnvironment`, `Project` (unchanged) |

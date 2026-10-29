@@ -43,8 +43,8 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 
 ## Server flow `/servers/{id}`
 
-1. **Master data**: name, IP, hostname, environment (select `ProviderEnvironments`), and the SSH credential (SystemAdmin only, also when creating); save. Changing IP, SSH port or jump host while a console is open asks for confirmation and closes that console. If the server has a credential and the address/environment changes, the API requires SystemAdmin.
-2. **Deployed applications**: `ServerApplications` list; add application version + exposed port; delete deployment.
+1. **Master data**: name, IP, hostname, public IP (NAT), CPU cores, RAM GB, disk GB, operating system, HA node, managed by, environment (select `ProviderEnvironments`), and the SSH credential (SystemAdmin only, also when creating); save. Changing IP, SSH port or jump host while a console is open asks for confirmation and closes that console. If the server has a credential and the address/environment changes, the API requires SystemAdmin.
+2. **Deployed applications**: `ServerApplications` list with runtime, host port and HA role; add application version, exposed port, runtime (`Container`/`Native`), container image, container name, compose folder, host port (`null` when equal to the exposed port) and HA role (`Primary`/`Secondary`); container fields require `Container`; delete deployment.
 3. **Proxy**: incoming/outgoing connection list; create connection (source/target/direction); delete.
 4. **SSH** (`SshBlock`): credential select, port; save; console if `ServerAdmin`; reset host key. The console dock at the bottom is always visible: sessions become tabs, the chevron minimizes the open panels like Riduci, and a session can be reopened from its tab.
 5. **Reachability** (`ReachabilityBlock`): global and server tests with a checkbox each; **Effettua selezionati** (disabled until one is checked) or **Effettua tutti i test**; create/edit/delete server tests if `ServerAdmin`, run if `ServerOperator`.
@@ -54,11 +54,11 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 
 Sections follow the population order: a version is needed to deploy a server, and the environments come from the deployments.
 
-1. **Application**: name, description, base path, listening port, type (`Backend`, `Frontend`, `SFTP`, `RabbitMQ`, `NGINX`, `Elastic`, `Kibana`, `Kafka`); save; delete. `Frontend` hides the API, API key and call sections.
+1. **Application**: name, description, base path, listening port, type (`Backend`, `Frontend`, `SFTP`, `RabbitMQ`, `NGINX`, `Elastic`, `Kibana`, `Kafka`, `MySQL/MariaDB`, `MongoDB`, `Redis`); save; delete. `Frontend` hides the API, API key and call sections.
 2. **Versions**: list, create, edit, delete; each version has a number.
 3. **Version APIs**: verb, URL, description, body; CRUD; **Chiama** picks the environment, runs the call server-side with hostname, API keys and query params, shows status, time, size, body with copy/download (cap 10 MiB); saving is opt-in and puts the call in **Chiamate** (own history, open/delete, **Ripeti** reopens it with the same environment, query and body). History keeps 1 MiB per call, pruned after 30 days. SystemAdmin only.
 4. **API query params**: name, type; CRUD.
-5. **Servers**: deployments of the application (`ServerApplications`) with IP, environment, version and port; add server + version + exposed port, change the server of a deployment, delete; link to the server detail. The server select shows name, IP and environment, and typing filters on any of them.
+5. **Servers**: deployments of the application (`ServerApplications`) with IP, environment, version, exposed port, runtime, host port and HA role; add server + version + exposed port + deployment details (runtime, container image, container name, compose folder, host port, HA role), change the server of a deployment, delete; link to the server detail. The server select shows name, IP and environment, and typing filters on any of them.
 6. **Environments**: only the environments where the application is deployed on a server, with hostname and SSL-ignore (`ApplicationEnvironments`); the call uses the selected environment. Changing the deployments refreshes the list. SystemAdmin only.
 7. **API keys**: name + location (`Header` or `Query`) from the OpenAPI security schemes, environment (empty = every environment), write-only value; import fills the definitions, the secret is entered here. SystemAdmin only.
 8. **Linked projects**: multi-select; add/remove.
