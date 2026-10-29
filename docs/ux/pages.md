@@ -46,7 +46,7 @@ Verified against the legacy frontend (`infra-org-it-fe/app`, Next.js) on 2026-10
 2. **Deployed applications**: `ServerApplications` list; add application version + exposed port; delete deployment.
 3. **Proxy**: incoming/outgoing connection list; create connection (source/target/direction); delete.
 4. **SSH** (`SshBlock`): credential select, port; save; console if `ServerAdmin`; reset host key.
-5. **Reachability** (`ReachabilityBlock`): server tests; create/edit/delete if `ServerAdmin`; run if `ServerOperator`.
+5. **Reachability** (`ReachabilityBlock`): global and server tests with a checkbox each; **Effettua selezionati** (disabled until one is checked) or **Effettua tutti i test**; create/edit/delete server tests if `ServerAdmin`, run if `ServerOperator`.
 6. **Deploy actions** (`DeployActions`): application buttons; confirmation if required; run; output; visible to `ServerOperator`.
 
 ## Catalog flow `/applications/{id}`
