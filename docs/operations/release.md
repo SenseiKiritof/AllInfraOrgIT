@@ -42,7 +42,9 @@ The deploy starts from `versions.lock`: checkout of the SHAs, image build with `
 
 ## Published images
 
-The `v*` tags start `.github/workflows/docker.yml` of `InfraOrgITApi` and `InfraOrgITWeb` and publish to GHCR:
+`.github/workflows/docker.yml` publishes branch images (`main`, `dev`,
+`sha-<commit>`) on every push, so `deploy/compose.yaml` can run without a
+release. The `v*` tags publish the versioned images to GHCR:
 
 - `ghcr.io/senseikiritof/infraorgit-api:0.8.0` (`0.8`, `sha-<commit>`, `latest`)
 - `ghcr.io/senseikiritof/infraorgit-web:0.8.0` (same tags)

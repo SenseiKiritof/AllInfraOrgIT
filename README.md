@@ -144,17 +144,31 @@ make down
 ```bash
 git switch dev
 git switch -c feature/<scope>   # or fix/<scope>
-# work, commit, verify
-git switch dev
-git merge --no-ff feature/<scope>
-git switch main
-git merge --no-ff dev
+# work, commit, run make ci
+git push -u origin feature/<scope>
+gh pr create --base dev
+# merge when the required checks are green, then open dev -> main
 ```
 
-Use the same branch name in every repository touched by the change. Do not
-commit directly to `main`; the `Main` ruleset must stay active (no direct push,
-force-push or deletion on the default branch). Releases are cut from `main` after `dev`
-has been merged.
+Use the same branch name in every repository touched by the change. The
+`Main` ruleset blocks direct pushes, force-push and deletion on `main` and
+`dev`, and requires the pipelines: `build-test` + `image` (API),
+`lint-test-build` + `image` (web), `config` (Docker), `check` (meta). Releases
+are cut from `main` after `dev` has been merged.
+
+## Deploy from published images
+
+`AllInfraOrgIT/deploy/` starts the whole stack from GHCR images, without the
+API/Web source and without a local build:
+
+```bash
+cp deploy/.env.example deploy/.env
+make up-images
+```
+
+The `docker` workflows publish `main`, `dev` and `sha-<commit>` on branch
+pushes, and `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest` on `v*` tags. See
+`deploy/README.md`.
 
 ## Status
 
