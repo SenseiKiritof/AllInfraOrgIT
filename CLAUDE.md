@@ -39,7 +39,9 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
   and `dev`, and requires the checks; the repo admin bypass exists only for
   emergencies. Never commit directly to `main`.
 - Release from `main` after the merge; `versions.lock` and the local tags are
-  built there.
+  built there. `v*` tags are created only by `make release` on `main`: the
+  `Version tags` ruleset makes them immutable, and the API/Web docker workflow
+  refuses a version tag whose commit is not on `main`.
 
 ## Commands and gates
 
