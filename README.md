@@ -189,7 +189,7 @@ Phase 8 completed on the technical perimeter — 2026-10-27; no release executed
 
 ## Release and publishing
 
-`make release VERSION=0.8.0` runs the gates, updates `versions.lock` and creates local `v0.8.0` tags; pushing stays manual (`git push` and `git push --tags` in each repo). Version tags are created only from `main`: the `Version tags` ruleset makes `v*` immutable and the docker workflows reject a tag whose commit is not on `main`. Procedure in `docs/operations/release.md`.
+Merging into `main` with `[Major]`, `[Minor]` or `[Patch]` in the pull request title makes the API/Web `tag` workflow create the next `vX.Y.Z` tag on the merge commit and start the image build. `make release VERSION=0.8.0` completes the missing repos, updates `versions.lock` and skips tags that already exist; pushing stays manual. Version tags are created only from `main`: the `Version tags` ruleset makes `v*` immutable and the docker workflows reject a tag whose commit is not on `main`. Procedure in `docs/operations/release.md`.
 
 `v*` tags trigger `.github/workflows/docker.yml` in `InfraOrgITApi` and `InfraOrgITWeb`: image build, application version tag and push to GHCR.
 

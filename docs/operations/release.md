@@ -8,8 +8,10 @@ Local procedure to tag a `v0.MINOR.PATCH` version. No automatic push.
 - Green gates: `make ci` (build `-warnaserror`, unit/integration, Biome, tsc, Vitest, frontend build, `jq versions.lock`, generated OpenAPI without drift).
 - Stack running for `make e2e` (or `E2E_BASE_URL`); `SKIP_E2E=1` only for local tests.
 - OpenAPI regenerated and committed (`make openapi`, no diff).
-- Version tags only from `main`: `v*` is protected from update/deletion and
-  the API/Web docker workflow checks that the tagged commit is on `main`.
+- Version tags only from `main`: merging with `[Major]`, `[Minor]` or `[Patch]`
+  in the title creates the tag automatically on API/Web; `make release` skips
+  existing tags and completes the others. `v*` is protected from update and
+  deletion, and the docker workflow checks that the tagged commit is on `main`.
 - Pre-deploy backup executed (`make backup`) and restore tested.
 - Phase 7: the rehearsal on a real legacy dump remains a known blocker; the synthetic release does not cover the real cutover.
 
