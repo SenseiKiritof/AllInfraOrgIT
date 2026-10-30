@@ -1,0 +1,190 @@
+name: infraorgit-deploy
+
+# Stack from published images: no API/Web source checkout and no local build.
+# Copy .env.example to .env, set the tags, then:
+#   docker compose --env-file .env -f compose.yaml up -d --wait
+
+services:
+  mysql:
+    image: mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: infraorgit
+      MYSQL_USER: infraorgit
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?definisci MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?definisci MYSQL_ROOT_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:13336:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  mysql-keycloak:
+    image: mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: keycloak
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?definisci KEYCLOAK_DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${KEYCLOAK_DB_ROOT_PASSWORD:?definisci KEYCLOAK_DB_ROOT_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:13337:3306"
+    volumes:
+      - ./data/mysql-keycloak:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1@sha256:a78d6b79572168cb25886b80a8b5b8d4ed4390743e3eecb810538683e209dd6b
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        export KC_HOSTNAME="$${KEYCLOAK_HOSTNAME:-https://localhost:8443}"
+        export KC_HOSTNAME_ADMIN="$${KEYCLOAK_HOSTNAME_ADMIN:-http://localhost:18081}"
+        export KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+        export KC_PROXY_HEADERS=xforwarded
+        exec /opt/keycloak/bin/kc.sh start --import-realm
+    environment:
+      KEYCLOAK_HOSTNAME: ${SITE_URL:-https://localhost:8443}
+      KEYCLOAK_HOSTNAME_ADMIN: ${KEYCLOAK_HOSTNAME_ADMIN:-http://localhost:18081}
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql-keycloak:3306/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?definisci KEYCLOAK_DB_PASSWORD in .env}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?definisci KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:18081:8080"
+    volumes:
+      - ./keycloak/realm-infraorgit.json:/opt/keycloak/data/import/realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    depends_on:
+      mysql-keycloak:
+        condition: service_healthy
+    networks:
+      - default
+      - auth
+
+  migrate:
+    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}
+    command: ["migrate"]
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__MySql: "Server=mysql;Port=3306;Database=infraorgit;User ID=infraorgit;Password=${MYSQL_PASSWORD};"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+  base-data:
+    image: mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69
+    restart: "no"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?definisci MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - ./init/base-data.sql:/base-data.sql:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        mysql -h mysql -u root -p"$${MYSQL_ROOT_PASSWORD}" infraorgit < /base-data.sql
+
+  api:
+    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      base-data:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__MySql: "Server=mysql;Port=3306;Database=infraorgit;User ID=infraorgit;Password=${MYSQL_PASSWORD};"
+      Oidc__Issuer: ${OIDC_ISSUER:-https://localhost:8443/realms/infraorgit}
+      Oidc__InternalIssuer: ${OIDC_INTERNAL_ISSUER:-http://keycloak:8080/realms/infraorgit}
+      Oidc__AllowInsecureInternalDiscovery: "true"
+      Oidc__ClientId: ${OIDC_CLIENT_ID:-infraorgit}
+      Oidc__ClientSecret: ${Oidc__ClientSecret:?definisci Oidc__ClientSecret in .env}
+      Oidc__RedirectUri: ${OIDC_REDIRECT_URI:-https://localhost:8443/auth/callback}
+      Frontend__BaseUrl: ${FRONTEND_BASE_URL:-https://localhost:8443}
+      Auth__SecureCookies: "true"
+      ServerAccess__CredentialKeys__1: ${ServerAccess__CredentialKey:-}
+      ServerAccess__CurrentKeyVersion: ${ServerAccess__CurrentKeyVersion:-1}
+      ENC_KEY: ${ENC_KEY:-}
+      DataProtection__KeysPath: /home/app/.aspnet/DataProtection-Keys
+      SessionStore__MaxSessionsPerUser: ${SESSION_MAX_PER_USER:-10}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      ForwardedHeaders__KnownNetworks: ${FORWARDED_NETWORKS:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - api-dp-keys:/home/app/.aspnet/DataProtection-Keys
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    networks:
+      - default
+      - auth
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/senseikiritof/infraorgit-web}:${WEB_TAG:-main}
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+      API_UPSTREAM: ${API_UPSTREAM:-api:8080}
+      KEYCLOAK_UPSTREAM: ${KEYCLOAK_UPSTREAM:-keycloak:8080}
+    ports:
+      - "8443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+
+networks:
+  auth:
+    internal: true
+
+volumes:
+  api-dp-keys:
+  caddy-data:
+  caddy-config:

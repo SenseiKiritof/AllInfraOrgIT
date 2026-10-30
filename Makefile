@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose -f ../InfraOrgITDocker/compose.yaml
 DOCKER_DIR ?= ../InfraOrgITDocker
 
-.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci openapi backup restore load-test legacy-dry-run release
+.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci openapi backup restore load-test legacy-dry-run release up-images
 
 dev:
 	./scripts/dev.sh
@@ -21,6 +21,10 @@ restore:
 full:
 	$(COMPOSE) up -d --build --wait
 
+up-images:
+	@test -f deploy/.env || { echo "Copia deploy/.env.example in deploy/.env"; exit 2; }
+	docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait
+
 infra:
 	KC_MODE=dev $(COMPOSE) up -d --wait mysql mysql-keycloak keycloak
 
@@ -38,6 +42,7 @@ config:
 	else \
 		$(COMPOSE) --env-file ../InfraOrgITDocker/.env.example config -q; \
 	fi
+	@docker compose --env-file deploy/.env.example -f deploy/compose.yaml config -q
 
 api:
 	@bash -c 'source ./scripts/env.sh && dotnet run --project ../InfraOrgITApi/src/InfraOrgIt.Api --no-launch-profile'
