@@ -36,7 +36,7 @@ A web SSH console with several sessions, side by side or minimized to a bar at t
 
 ### Around it
 
-- **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme.
+- **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme. The shell header carries the page name and its short description; a single record uses a compact form instead of a one-row table.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
 
 ## See it in action
@@ -158,21 +158,34 @@ are cut from `main` after `dev` has been merged.
 
 ## Deploy from published images
 
-`AllInfraOrgIT/deploy/` starts the whole stack from GHCR images, without the
-API/Web source and without a local build:
+`AllInfraOrgIT/deploy/` starts the whole stack from GHCR images: no API/Web
+source, no local build, only this repository and Docker Compose v2.
+
+The `docker` workflows publish, on every branch push, `main`, `dev` and
+`sha-<commit>`, and on `v*` tags `X.Y.Z`, `X.Y`, `sha-<commit>` and `latest`.
+Branch and tag images are multi-arch (`linux/amd64`, `linux/arm64`); the
+packages are public, otherwise run `docker login ghcr.io` first.
 
 ```bash
-cp deploy/.env.example deploy/.env
+cd AllInfraOrgIT
+cp deploy/.env.example deploy/.env   # secrets, image tags, site URL
 make up-images
+# or: docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait
 ```
 
-The `docker` workflows publish `main`, `dev` and `sha-<commit>` on branch
-pushes, and `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest` on `v*` tags. See
+Open `https://localhost:8443` and the Keycloak console on
+`http://localhost:18081/admin`. The API image runs the EF migrations; the base
+data (environments, roles, menus, translations, dev admin) comes from
+`deploy/init/base-data.sql`, and Keycloak imports `deploy/keycloak/realm-infraorgit.json`.
+
+Update with `docker compose --env-file deploy/.env -f deploy/compose.yaml pull`
+then `up -d --wait`; `down` keeps the data in `deploy/data/`, `down -v` also
+removes the named volumes (sessions, Caddy certificates). Full guide in
 `deploy/README.md`.
 
 ## Status
 
-Phase 8 completed on the technical perimeter — 2026-10-27; no release executed yet. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the application database is initialized with schema, base data and the installation data from `InfraOrgITDocker/init/mysql`. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. Still open: rehearsal on a representative dataset and running `make release`.
+Phase 8 completed on the technical perimeter — 2026-10-30. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the application database is initialized with schema, base data and the installation data from `InfraOrgITDocker/init/mysql`. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. The first version tag (`v0.2.0`) was created automatically from a merge title and the multi-arch images are published to GHCR; the image-based deploy stack starts and logs in. Still open: rehearsal on a representative dataset.
 
 ## Contents
 
@@ -185,6 +198,7 @@ Phase 8 completed on the technical perimeter — 2026-10-27; no release executed
 | `scripts/` | `dev.sh` and `env.sh` for local development |
 | `tools/graphify/` | graphify workspace configuration |
 | `Makefile` | orchestration for infra, API, web, tests and migrations |
+| `deploy/` | stack from published images (`make up-images`), env example, Keycloak realm and base data |
 | `versions.lock` | commit SHAs and images of the application repos for reproducible releases |
 
 ## Release and publishing
