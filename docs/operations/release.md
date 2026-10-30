@@ -4,7 +4,7 @@ Local procedure to tag a `v0.MINOR.PATCH` version. No automatic push.
 
 ## Preconditions
 
-- Clean working tree and `main` branch in the four repos (`InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker`, `AllInfraOrgIT`).
+- Clean working tree and `main` branch in the four repos (`InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker`, `AllInfraOrgIT`), with `dev` already merged into `main` and the branch pushed.
 - Green gates: `make ci` (build `-warnaserror`, unit/integration, Biome, tsc, Vitest, frontend build, `jq versions.lock`, generated OpenAPI without drift).
 - Stack running for `make e2e` (or `E2E_BASE_URL`); `SKIP_E2E=1` only for local tests.
 - OpenAPI regenerated and committed (`make openapi`, no diff).
