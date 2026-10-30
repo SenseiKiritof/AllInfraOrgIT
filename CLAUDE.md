@@ -31,11 +31,20 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
 - Start every change from `dev` on `feature/{scope}` or `fix/{scope}`, with a
   short kebab-case scope (`feature/server-details`, `fix/e2e-cleanup`). When a
   change touches several repositories, use the same branch name in each.
-- Merge the branch into `dev`, verify, then merge `dev` into `main`. Never
-  commit directly to `main`; the `Main` ruleset must stay active (no direct
-  push, force-push or deletion on the default branch).
+- Push the branch and open a pull request into `dev`; merge only when the
+  required checks are green (`build-test`/`image` for the API,
+  `lint-test-build`/`image` for the web, `config` for Docker, `check` for this
+  repo). Then open `dev` -> `main`.
+- The `Main` ruleset blocks direct pushes, force-push and deletion on `main`
+  and `dev`, and requires the checks; the repo admin bypass exists only for
+  emergencies. Never commit directly to `main`.
 - Release from `main` after the merge; `versions.lock` and the local tags are
-  built there.
+  built there. `v*` tags are created only from `main`: on API/Web a merge
+  whose title contains `[Major]`, `[Minor]` or `[Patch]` creates the next tag
+  automatically and starts the image build; `make release` completes the
+  missing repos and skips tags that already exist. The `Version tags` ruleset
+  makes them immutable, and the docker workflow refuses a version tag whose
+  commit is not on `main`.
 
 ## Commands and gates
 
@@ -67,6 +76,9 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
   (`yarn --cwd ../InfraOrgITWeb playwright install chromium`). `make e2e-full`
   needs `make full`, uses `https://localhost:8443`, and inserts the dev
   `admin` user before running.
+- `make up-images` starts the stack from the published images with
+  `deploy/compose.yaml` (no API/Web source or local build); see
+  `deploy/README.md`.
 - `make reset` deletes Compose volumes and `InfraOrgITDocker/data`; it is
   required after Keycloak realm/client changes and destroys local data.
   `make dev` runs Keycloak with `KC_MODE=dev`; `make full` uses `prod`.

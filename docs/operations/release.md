@@ -8,6 +8,10 @@ Local procedure to tag a `v0.MINOR.PATCH` version. No automatic push.
 - Green gates: `make ci` (build `-warnaserror`, unit/integration, Biome, tsc, Vitest, frontend build, `jq versions.lock`, generated OpenAPI without drift).
 - Stack running for `make e2e` (or `E2E_BASE_URL`); `SKIP_E2E=1` only for local tests.
 - OpenAPI regenerated and committed (`make openapi`, no diff).
+- Version tags only from `main`: merging with `[Major]`, `[Minor]` or `[Patch]`
+  in the title creates the tag automatically on API/Web; `make release` skips
+  existing tags and completes the others. `v*` is protected from update and
+  deletion, and the docker workflow checks that the tagged commit is on `main`.
 - Pre-deploy backup executed (`make backup`) and restore tested.
 - Phase 7: the rehearsal on a real legacy dump remains a known blocker; the synthetic release does not cover the real cutover.
 
@@ -42,7 +46,9 @@ The deploy starts from `versions.lock`: checkout of the SHAs, image build with `
 
 ## Published images
 
-The `v*` tags start `.github/workflows/docker.yml` of `InfraOrgITApi` and `InfraOrgITWeb` and publish to GHCR:
+`.github/workflows/docker.yml` publishes branch images (`main`, `dev`,
+`sha-<commit>`) on every push, so `deploy/compose.yaml` can run without a
+release. The `v*` tags publish the versioned images to GHCR:
 
 - `ghcr.io/senseikiritof/infraorgit-api:0.8.0` (`0.8`, `sha-<commit>`, `latest`)
 - `ghcr.io/senseikiritof/infraorgit-web:0.8.0` (same tags)

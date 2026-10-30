@@ -4,6 +4,7 @@
 graphify-out/
 tools/graphify/workspace.json
 backups/
+deploy/data/
 __pycache__/
 .DS_Store
 
@@ -12,6 +13,8 @@ __pycache__/
 
 # Local data exports, dumps and certificates (never publish)
 *.sql
+# Curated base data shipped with the image-based deploy stack, not a dump.
+!deploy/init/base-data.sql
 *.dump
 *.bak
 *.sql.gz

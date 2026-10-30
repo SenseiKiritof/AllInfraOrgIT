@@ -144,17 +144,31 @@ make down
 ```bash
 git switch dev
 git switch -c feature/<scope>   # or fix/<scope>
-# work, commit, verify
-git switch dev
-git merge --no-ff feature/<scope>
-git switch main
-git merge --no-ff dev
+# work, commit, run make ci
+git push -u origin feature/<scope>
+gh pr create --base dev
+# merge when the required checks are green, then open dev -> main
 ```
 
-Use the same branch name in every repository touched by the change. Do not
-commit directly to `main`; the `Main` ruleset must stay active (no direct push,
-force-push or deletion on the default branch). Releases are cut from `main` after `dev`
-has been merged.
+Use the same branch name in every repository touched by the change. The
+`Main` ruleset blocks direct pushes, force-push and deletion on `main` and
+`dev`, and requires the pipelines: `build-test` + `image` (API),
+`lint-test-build` + `image` (web), `config` (Docker), `check` (meta). Releases
+are cut from `main` after `dev` has been merged.
+
+## Deploy from published images
+
+`AllInfraOrgIT/deploy/` starts the whole stack from GHCR images, without the
+API/Web source and without a local build:
+
+```bash
+cp deploy/.env.example deploy/.env
+make up-images
+```
+
+The `docker` workflows publish `main`, `dev` and `sha-<commit>` on branch
+pushes, and `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest` on `v*` tags. See
+`deploy/README.md`.
 
 ## Status
 
@@ -175,7 +189,7 @@ Phase 8 completed on the technical perimeter — 2026-10-27; no release executed
 
 ## Release and publishing
 
-`make release VERSION=0.8.0` runs the gates, updates `versions.lock` and creates local `v0.8.0` tags; pushing stays manual (`git push` and `git push --tags` in each repo). Procedure in `docs/operations/release.md`.
+Merging into `main` with `[Major]`, `[Minor]` or `[Patch]` in the pull request title makes the API/Web `tag` workflow create the next `vX.Y.Z` tag on the merge commit and start the image build. `make release VERSION=0.8.0` completes the missing repos, updates `versions.lock` and skips tags that already exist; pushing stays manual. Version tags are created only from `main`: the `Version tags` ruleset makes `v*` immutable and the docker workflows reject a tag whose commit is not on `main`. Procedure in `docs/operations/release.md`.
 
 `v*` tags trigger `.github/workflows/docker.yml` in `InfraOrgITApi` and `InfraOrgITWeb`: image build, application version tag and push to GHCR.
 

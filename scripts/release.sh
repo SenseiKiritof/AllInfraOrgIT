@@ -31,8 +31,7 @@ done
 
 for repo in "${REPOS[@]}" AllInfraOrgIT; do
   if git -C "$ROOT/$repo" rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-    echo "Tag $TAG già presente in $repo." >&2
-    exit 1
+    echo "Tag $TAG già presente in $repo: verrà saltato." >&2
   fi
 done
 
@@ -68,9 +67,13 @@ PY
 git -C "$META_ROOT" add versions.lock
 git -C "$META_ROOT" commit -m ":bookmark: release $TAG"
 for repo in "${REPOS[@]}"; do
-  git -C "$ROOT/$repo" tag -a "$TAG" -m "Release $TAG"
+  if ! git -C "$ROOT/$repo" rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+    git -C "$ROOT/$repo" tag -a "$TAG" -m "Release $TAG"
+  fi
 done
-git -C "$META_ROOT" tag -a "$TAG" -m "Release $TAG"
+if ! git -C "$META_ROOT" rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  git -C "$META_ROOT" tag -a "$TAG" -m "Release $TAG"
+fi
 
 echo "Release locale $TAG creata."
 echo "Push (da eseguire a mano, dopo verifica):"
