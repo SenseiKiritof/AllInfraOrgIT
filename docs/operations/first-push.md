@@ -23,6 +23,7 @@ From the workspace root:
 for r in AllInfraOrgIT InfraOrgITApi InfraOrgITWeb InfraOrgITDocker; do
   git -C "$r" remote add origin "git@github.com:<owner>/$r.git"
   git -C "$r" push -u origin main
+  git -C "$r" push -u origin dev
   git -C "$r" push --tags
 done
 ```

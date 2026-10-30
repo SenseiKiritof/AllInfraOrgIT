@@ -137,6 +137,25 @@ make down
 
 `make e2e` uses `http://localhost:3000`; `make e2e-full` uses `https://localhost:8443` and requires the `full` profile.
 
+## Branching
+
+`dev` is the integration branch; `main` is the release branch.
+
+```bash
+git switch dev
+git switch -c feature/<scope>   # or fix/<scope>
+# work, commit, verify
+git switch dev
+git merge --no-ff feature/<scope>
+git switch main
+git merge --no-ff dev
+```
+
+Use the same branch name in every repository touched by the change. Do not
+commit directly to `main`; the `Main` ruleset must stay active (no direct push,
+force-push or deletion on the default branch). Releases are cut from `main` after `dev`
+has been merged.
+
 ## Status
 
 Phase 8 completed on the technical perimeter — 2026-10-27; no release executed yet. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the application database is initialized with schema, base data and the installation data from `InfraOrgITDocker/init/mysql`. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. Still open: rehearsal on a representative dataset and running `make release`.

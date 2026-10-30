@@ -24,6 +24,19 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
 - UI copy is Italian; code identifiers and commit messages are English
   (Conventional Commits).
 
+## Branching
+
+- `dev` is the integration branch; `main` is the release branch and receives
+  only merges from `dev`.
+- Start every change from `dev` on `feature/{scope}` or `fix/{scope}`, with a
+  short kebab-case scope (`feature/server-details`, `fix/e2e-cleanup`). When a
+  change touches several repositories, use the same branch name in each.
+- Merge the branch into `dev`, verify, then merge `dev` into `main`. Never
+  commit directly to `main`; the `Main` ruleset must stay active (no direct
+  push, force-push or deletion on the default branch).
+- Release from `main` after the merge; `versions.lock` and the local tags are
+  built there.
+
 ## Commands and gates
 
 - `make dev`: MySQL/Keycloak containers, EF migrations, API on `:5298`, Vite
