@@ -104,6 +104,9 @@ jobs:
           if [ -f /tmp/dev.pid ]; then
             kill -- -"$(cat /tmp/dev.pid)" 2>/dev/null || kill "$(cat /tmp/dev.pid)" 2>/dev/null || true
           fi
-          if [ -f AllInfraOrgIT/Makefile ] && [ -f InfraOrgITDocker/compose.yaml ]; then
-            make -C AllInfraOrgIT reset
+          # make reset also removes Docker/data, which MySQL writes as uid 999:
+          # on a Linux runner the unprivileged user cannot delete it. The
+          # runner is ephemeral, so stopping the containers and volumes is enough.
+          if [ -f InfraOrgITDocker/compose.yaml ]; then
+            docker compose -f InfraOrgITDocker/compose.yaml down -v || true
           fi
