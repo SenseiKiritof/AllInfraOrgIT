@@ -40,6 +40,7 @@ Verified against the legacy backend on 2026-10-25 (`MinimalApis/*`, `ServerAcces
 | CommandExecutions (audit) | `SystemAdmin` | — | server-side filter and pagination |
 | ServerAccess (`/ServerAccess/Me`) | authenticated | — | returns admin/operator environments |
 | SSH console (`/socket/Servers/{id}/Console`) | `ServerAdmin` | — | Origin required; no implicit `SystemAdmin` |
+| File browser (`/Servers/{id}/Files...`) | `ServerAdmin` | — | same environment role as the console |
 | Auth/CurrentUser | authenticated | — | |
 
 ## Verified gaps
@@ -71,6 +72,7 @@ General rules:
 | CRUD Applications, ApplicationVersions, ApplicationVersionApis, ApplicationApiQueryParams, Projects | `SystemAdmin` |
 | CRUD Users, Groups, Roles, Menus, ProviderEnvironmentGroupRoles | `SystemAdmin` |
 | CRUD ServerCredentials; SSH assignment; host key reset | `SystemAdmin` |
+| File transfer configuration (`PUT /api/servers/{id}/file-transfer`) | `SystemAdmin` |
 | CRUD CommandTemplates; ApplicationActions config | `SystemAdmin` |
 | Global ReachabilityTests (CRUD and run) | `SystemAdmin` |
 | Read CommandExecutions (audit) | `SystemAdmin` |
@@ -86,6 +88,7 @@ General rules:
 | Delete Topology node `Provider` or `ProviderEnvironment` | `SystemAdmin` |
 | Delete Topology node `Server` or `ServerApplication` | `ServerAdmin` on all environments touched by the cascade |
 | SSH console | `ServerAdmin` on the server's environment |
+| SFTP/FTP file browser (`/api/servers/{id}/files...`) | `ServerAdmin` on the server's environment |
 | Run ApplicationActions and reachability per server/environment | `ServerOperator` on the environment |
 | CRUD ReachabilityTests per server | `ServerAdmin` on the server's environment |
 | All reads | authenticated |

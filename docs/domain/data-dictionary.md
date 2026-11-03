@@ -134,6 +134,9 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 | HaNode | varchar(20) | yes | node label in a redundant group, e.g. `A` |
 | ManagedBy | varchar(100) | yes | third-party operator |
 | CredentialId | int | yes | FK `ServerCredentials.Id` added in Phase 5 |
+| FileTransferProtocol | varchar(10) | yes | `Sftp` \| `Ftp`; null disables the file browser |
+| FileTransferPort | int | yes | default 22 for SFTP, 21 for FTP when null |
+| FileTransferCredentialId | int | yes | FK `ServerCredentials.Id` restrict; falls back to `CredentialId` |
 | SshPort | int | no | default 22 |
 | HostKeyFingerprint | varchar(100) | yes | SHA256 TOFU |
 | JumpServerId | int | yes | FK `Servers.Id` restrict; optional SSH jump host |
