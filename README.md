@@ -70,7 +70,7 @@ Recordings and screenshots come from a local instance with fictitious data (the 
 ```
 browser ──► Caddy ─┬─ /             SPA: React 19, Vite, React Flow, xterm.js
                    ├─ /api, /auth   API: .NET 10, EF Core ──► MySQL 8.4
-                   │                     └─ SSH (SSH.NET) ──► managed servers
+                   │                     └─ SSH/SFTP (SSH.NET), FTP (FluentFTP) ──► managed servers
                    └─ /realms       Keycloak 26 ──► MySQL 8.4
 ```
 

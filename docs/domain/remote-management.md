@@ -24,6 +24,8 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 
 ## File transfer
 
+Full reference: `docs/domain/file-transfer.md`.
+
 - `Servers.FileTransferProtocol` (`Sftp` or `Ftp`), `FileTransferPort` and an optional `FileTransferCredentialId`: the file credential is separate from the SSH one and falls back to it when empty. Configuration is `SystemAdmin` (`PUT /api/servers/{id}/file-transfer`).
 - **SFTP** uses SSH.NET on the same jump-host chain as the console, with the file credential and port; the host key is checked like the SSH connection.
 - **FTP** uses FluentFTP directly with a password credential (a private key is rejected with 422); there is no jump-host tunnel for FTP.
