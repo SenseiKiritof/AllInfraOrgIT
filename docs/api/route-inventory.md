@@ -177,6 +177,18 @@ Generated from the legacy code `InfraOrgIt/MinimalApis` on 2026-10-25. 168 HTTP 
 | Users | Put | `/Users/{id}` | `/api/users/{id}` | SystemAdmin |
 | socket | ANY | `/socket/Servers/{id}/Console` | `/api/socket/servers/{id}/console` | ServerAdmin |
 
+### New v1 routes without a legacy counterpart
+
+| Area | Method | Legacy route | Target route | Permission |
+|---|---|---|---|---|
+| Servers | Put | — | `/api/servers/{id}/file-transfer` | SystemAdmin |
+| Servers | Get | — | `/api/servers/{id}/files` | ServerAdmin |
+| Servers | Get | — | `/api/servers/{id}/files/download` | ServerAdmin |
+| Servers | Post | — | `/api/servers/{id}/files/upload` | ServerAdmin |
+| Servers | Post | — | `/api/servers/{id}/files/directory` | ServerAdmin |
+| Servers | Post | — | `/api/servers/{id}/files/rename` | ServerAdmin |
+| Servers | Delete | — | `/api/servers/{id}/files` | ServerAdmin |
+
 ## Exceptions and notes
 
 - The `Legacy permission` column describes the behaviour of the original; target D7 = B is in `docs/security/permissions.md`.

@@ -9,6 +9,7 @@ Index of the Phase 1 documents.
 | `domain/inventory-parity.md` | Phase 3 parity checklist, deviations and dry-run |
 | `domain/topology-diagrams.md` | topology, proxy, diagrams, scopes, permissions and Phase 4 tests |
 | `domain/remote-management.md` | encrypted credentials, SSH/host key, templating, actions, reachability, Phase 5 audit |
+| `domain/file-transfer.md` | SFTP/FTP configuration, protocols, jump host, browser API, permissions, limits |
 | `domain/admin-rbac.md` | users, groups, roles, menus, assignments and Phase 6 protections |
 | `domain/inventory-fields-proposal.md` | runtime, container, host port, database types, server sizing, HA, virtual host: model, API, UI, migration and backfill |
 | `migration/phase7-plan.md` | importer plan, order, validation and Phase 7 cutover |

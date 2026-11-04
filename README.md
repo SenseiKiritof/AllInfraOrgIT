@@ -25,13 +25,13 @@ Network tests are host:port checks, defined per server or globally. Run them all
 
 ### 4. Direct operation through the console
 
-A web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection. SSH credentials are encrypted with AES-GCM and the host key is pinned on first connection. Command templates with `{{Name}}` placeholders and application actions (restart, logs, health check) run from the same pages. Every console session, action and test lands in the audit log, with scripts and output redacted and custom values masked. An action can ask for confirmation before it runs, a repeated submission is not run twice, and placeholder values with shell metacharacters are rejected.
+A web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection. The same bar opens a console or an SFTP/FTP file browser on any server the user administers. SSH credentials are encrypted with AES-GCM and the host key is pinned on first connection. Command templates with `{{Name}}` placeholders and application actions (restart, logs, health check) run from the same pages. Every console session, action and test lands in the audit log, with scripts and output redacted and custom values masked. An action can ask for confirmation before it runs, a repeated submission is not run twice, and placeholder values with shell metacharacters are rejected.
 
 ### 5. Access by role and environment
 
 - **Login**: Keycloak through a backend-for-frontend, no token in the browser.
 - **Users, groups and roles** managed from the interface. `SystemAdmin` owns the master data: providers, environments, applications and projects, users and groups, SSH credentials, command templates and action scripts, global network tests and the audit log.
-- **Rights per environment**: `ServerAdmin` and `ServerOperator` are granted to groups on single environments. `ServerAdmin` manages servers, deployments, proxy routes and server tests and opens the SSH console; `ServerOperator` runs application actions and network tests. `SystemAdmin` does not imply either, and pages show only the actions allowed on that environment.
+- **Rights per environment**: `ServerAdmin` and `ServerOperator` are granted to groups on single environments. `ServerAdmin` manages servers, deployments, proxy routes and server tests and opens the SSH console and the SFTP/FTP browser; `ServerOperator` runs application actions and network tests. `SystemAdmin` does not imply either, and pages show only the actions allowed on that environment.
 - **Configurable menu**: entries, order and nesting are edited from the Menu page and each entry is assigned to roles, so the side menu shows every user only what they can use.
 
 ### Around it
@@ -70,7 +70,7 @@ Recordings and screenshots come from a local instance with fictitious data (the 
 ```
 browser ──► Caddy ─┬─ /             SPA: React 19, Vite, React Flow, xterm.js
                    ├─ /api, /auth   API: .NET 10, EF Core ──► MySQL 8.4
-                   │                     └─ SSH (SSH.NET) ──► managed servers
+                   │                     └─ SSH/SFTP (SSH.NET), FTP (FluentFTP) ──► managed servers
                    └─ /realms       Keycloak 26 ──► MySQL 8.4
 ```
 

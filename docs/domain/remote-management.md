@@ -22,6 +22,16 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 - errors do not contain secrets.
 - **jump host**: `Servers.JumpServerId` points to another server used as an SSH proxy. `SshConnector` opens the jump session, forwards a local port to the target `host:port`, then connects with the target credential; the tunnel and the jump session are disposed with the target session. Chains are allowed and protected against cycles (422 `jump_cycle`), the API rejects self-reference and cycles on write, and a server used as a jump host cannot be deleted (409).
 
+## File transfer
+
+Full reference: `docs/domain/file-transfer.md`.
+
+- `Servers.FileTransferProtocol` (`Sftp` or `Ftp`), `FileTransferPort` and an optional `FileTransferCredentialId`: the file credential is separate from the SSH one and falls back to it when empty. Configuration is `SystemAdmin` (`PUT /api/servers/{id}/file-transfer`).
+- **SFTP** uses SSH.NET on the same jump-host chain as the console, with the file credential and port; the host key is checked like the SSH connection.
+- **FTP** uses FluentFTP directly with a password credential (a private key is rejected with 422); there is no jump-host tunnel for FTP.
+- Browser API (`ServerAdmin` on the environment, 60 requests/min per user): `GET /api/servers/{id}/files?path=`, `GET .../files/download`, `POST .../files/upload` (multipart, max 200 MB), `POST .../files/directory`, `POST .../files/rename`, `DELETE .../files`. Paths are normalized POSIX paths; `..` cannot escape the root.
+- The UI exposes the browser from the console dock and from the server detail header; the file credential can be chosen independently from the SSH one.
+
 ## Templating and actions
 
 - `{{Name}}` placeholders; built-ins: `ServerName`, `Hostname`, `IpAddress`, `ApplicationName`, `BasePath`, `Version`, `ExposedPort`.
@@ -42,6 +52,7 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 
 - `GET /api/command-executions` (`SystemAdmin`): paginated, filterable by server, kind and text; script and output are redacted.
 - WebSocket console `/api/socket/servers/{id}/console`: session cookie, **Origin** required and allowed, `ServerAdmin` role on the environment, maximum duration 30 min. The audit records opening/closing and any error, never the keystrokes.
+- The console dock at the bottom also has **+** to open a console by choosing a server (only environments where the user is `ServerAdmin`) and **File** to open the SFTP/FTP browser for the same servers.
 
 ## Frontend
 
@@ -49,7 +60,7 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 - `/commands`: template CRUD and placeholder count.
 - `/reachability`: global tests.
 - `/executions`: log with expandable output.
-- Server detail: SSH credential/port, host key reset, reachability test with run, deploy actions, console.
+- Server detail: SSH credential/port, host key reset, file access (SFTP/FTP protocol, port, optional separate credential), reachability test with run, deploy actions, console and file browser.
 - Application detail: action configuration (template or custom script, JSON parameters, confirmation).
 
 ## Configuration
@@ -67,9 +78,9 @@ The keys are mandatory at startup: without `CredentialKeys` the API does not sta
 
 ## Tests
 
-- 11 unit: encryption (round-trip, tamper, missing version), renderer (quotes, missing placeholders, metacharacters), error handler.
-- 22 integration: encrypted credentials never returned, SSH assignment, host key, actions with redacted audit and idempotency, reachability, console with a foreign Origin, **real SSH against a disposable OpenSSH container** with TOFU and mismatch.
-- 4 Playwright E2E, including credentials, commands, reachability, log.
+- 34 unit: encryption (round-trip, tamper, missing version), renderer (quotes, missing placeholders, metacharacters), remote path normalization, error handler.
+- 53 integration: encrypted credentials never returned, SSH assignment, host key, actions with redacted audit and idempotency, reachability, console with a foreign Origin, file-transfer RBAC and API, **real SSH/SFTP against a disposable OpenSSH container** with TOFU and mismatch, **real FTP against a disposable vsftpd container** (list, upload, download, create/rename/delete).
+- 5 Playwright E2E, including credentials, commands, reachability, log.
 
 ## Known limits
 
