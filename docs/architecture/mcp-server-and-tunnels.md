@@ -53,10 +53,11 @@ authorization server for MCP. Two client profiles:
 | Service/integration | client credentials, audience `infraorgit-mcp`, scopes `mcp:read` / `mcp:operate` | CI, automation, agents without a human |
 | Interactive desktop/IDE | authorization code + PKCE, same user as the SPA | Claude Desktop, OpenCode, IDE plugins |
 
-A personal API key (hashed in a new table) is a simpler fallback for local
-clients that do not implement OAuth discovery. It should be a feature-flagged
-compatibility path, not the primary one, because it bypasses the OAuth
-hardening and needs its own revocation/rotation UI.
+Personal API keys are also in scope (decision D1): a new `ApiTokens` table
+stores a hash, name, owner, scopes, expiry and last use, with create/revoke in
+the user profile. OAuth stays the primary path for clients that support it;
+API keys cover desktop/IDE clients without OAuth discovery. Both map to the
+same user and RBAC checks.
 
 ### 3.2 Tools and scopes (v1 read-only)
 
@@ -85,6 +86,12 @@ Action tools in a second phase, reusing the existing guarded services:
 No create/update/delete tools in v1. No raw shell: `commands` would be a
 free-form execution tool and defeats the action allowlist. The console stays
 interactive-only.
+
+Action tools are enabled per user, not only by scope (decision D2): a new
+`McpGrants` table (user or group, allowed read/action tools, optional
+environment filter) is checked before the environment RBAC. A user can see the
+tools they are granted and nothing more; a grant never overrides a missing
+`ServerAdmin`/`ServerOperator` right.
 
 Resources (`infraorgit://servers/{id}`, `infraorgit://applications/{id}`) can
 expose the same JSON for clients that prefer resources to tools. Prompts can
@@ -159,10 +166,11 @@ the feature is approved.
 | Read-only MVP with a static bearer/API key | 5–7 |
 | OAuth 2.1 + protected-resource metadata + Keycloak client | +5–8 |
 | Full read tools, filtering, audit, tests, docs | +4–6 |
-| Action tools (`reachability.run`, `actions.run`) | +5–8 |
-| Hardening, observability, client allowlist | +3–4 |
-| **Total, read-only production** | **16–22** |
-| **Total, read-only + actions** | **22–30** |
+| Audit foundation (`AuditEvents` + service) | 4–6 |
+| Action tools (`reachability.run`, `actions.run`) + `McpGrants` UI | +6–9 |
+| Hardening, observability, client allowlist | +3–5 |
+| **Total, read-only production (both auth)** | **20–28** |
+| **Total, read-only + actions** | **29–42** |
 
 ## 4. Local tunnels
 
@@ -187,15 +195,20 @@ is not optional for a real local forward; the question is which app.
 | **C. Local InfraOrgIT agent** | small cross-platform CLI/tray app; device login to InfraOrgIT, fetches allowlisted targets, opens SSH local forwards with SSH.NET, reports status and audit | fully integrated, central audit, no XPipe dependency, reuses jump hosts/host-key pinning | new app to install, sign and update; credential handling; 3 OS targets | 15–25 days + packaging |
 | **D. API-host tunnel + WebSocket proxy** | API opens the forward, browser tunnels TCP over WebSocket to `/api/tunnels/{id}` | works from any browser, no install | API becomes a TCP proxy: SSRF/abuse/resource exhaustion, latency, complex backpressure; not recommended | 20–30 days |
 
-Recommendation: **A + B now**, **C next** if tunnels must live inside
-InfraOrgIT. Do not build D unless there is a strong requirement to work from a
-locked-down browser with no local install.
+Decision D3: **C is the target**, with A + B as interim shortcuts until the
+app ships. Do not build D unless a browser-only requirement appears later.
 
-### 4.3 Local agent design (option C)
+### 4.3 Desktop app design (option C)
 
-- Distribution: .NET self-contained binary/tray for macOS (arm64/x64), Linux,
-  Windows; signed and notarized on macOS, signed on Windows; auto-update from
-  a signed manifest.
+- Scope (decision D3): a desktop application that offers the browser features
+  and the tunnels in one place, and can connect to **several InfraOrgIT
+  instances** (name, URL, account per instance, tabs or a switcher).
+- Shell: a thin native shell with an embedded webview per instance, so the SPA
+  is reused instead of duplicated; the tunnel engine and the instance switcher
+  live in the native shell.
+- Distribution (decision D4: all modern OS): .NET self-contained app for macOS
+  (arm64/x64), Linux and Windows; signed and notarized on macOS, signed on
+  Windows; auto-update from a signed manifest.
 - Auth: OAuth 2.1 device authorization grant (RFC 8628) through Keycloak; the
   agent never stores the user's password. Token refresh and revoke.
 - Targets: the API returns an allowlist derived from the inventory
@@ -204,10 +217,11 @@ locked-down browser with no local install.
   create a tunnel to something the user cannot see.
 - Bind: `127.0.0.1` only, ephemeral or requested local port above 1024;
   collision check; max concurrent tunnels; idle timeout.
-- SSH: SSH.NET with the same jump-host chain and host-key pinning; credentials
-  either from the user's SSH agent/keychain or a short-lived credential issued
-  by the API for that server and tunnel (preferred; auditable, no long-lived
-  key on disk).
+- SSH (decision D5): use the **user's SSH agent**. The first implementation
+  spawns the system `ssh -L`/`-J` process, inheriting `SSH_AUTH_SOCK` and the
+  user's `~/.ssh/config`; no private key reaches InfraOrgIT or the app. A later
+  native SSH.NET path can use an agent connector, but the process approach is
+  smaller and matches how XPipe works.
 - Audit/status: agent reports start/stop/errors; the API stores tunnel events
   and shows them in the server detail and the audit log.
 - UI: server/deployment action "Apri tunnel", list of active local tunnels,
@@ -220,34 +234,71 @@ locked-down browser with no local install.
 
 | Slice | Days (person) |
 |---|---|
-| XPipe links + `ssh -L` snippets + docs | 1–2 |
-| Agent MVP (macOS, device auth, allowlist, jump hosts, status) | 12–16 |
-| Packaging/signing/notarization/auto-update | +5–8 |
-| Windows/Linux variants | +5–8 |
+| XPipe links + `ssh -L` snippets + docs (interim) | 1–2 |
+| Desktop app shell + multi-instance + webview | 10–15 |
+| Device auth, keychain token storage, instance accounts | 4–6 |
+| Tunnel manager (system ssh, allowlist, ports, status, audit) | 8–12 |
+| macOS/Windows/Linux packaging, signing, notarization, auto-update | 8–12 |
+| Tests and docs | 4–6 |
+| **Total, desktop app** | **34–51** |
 | API-host WebSocket proxy (not recommended) | 20–30 |
 
 ## 5. Roadmap
 
-1. **Stage 1 — 2–3 weeks**: MCP read-only with Keycloak OAuth and audit; XPipe
-   deep links and copyable `ssh -L`; documentation and an MCP test client.
-2. **Stage 2 — 3–4 weeks**: MCP action tools with confirmation and rate
-   limits; local agent MVP on macOS with allowlisted tunnels and audit.
-3. **Stage 3 — hardening**: Windows/Linux agent, signing/auto-update, load
-   tests, penetration test of the MCP surface, tunnel abuse cases.
+1. **Stage 1 — 4–5 weeks**: `AuditEvents` foundation; MCP read-only with
+   Keycloak OAuth **and** personal API keys; XPipe deep links and copyable
+   `ssh -L` as interim tunnels; MCP test client and docs.
+2. **Stage 2 — 3–4 weeks**: MCP action tools with `McpGrants`, confirmation,
+   idempotency and rate limits.
+3. **Stage 3 — 8–10 weeks**: desktop app on macOS first (multi-instance,
+   embedded SPA, tunnels through the user's SSH agent, audit), then Windows and
+   Linux, signing/notarization/auto-update.
+4. **Stage 4 — hardening**: load tests, penetration test of the MCP surface,
+   tunnel abuse cases, retention and audit review.
 
-## 6. Decisions needed
+## 6. Decisions taken
 
-1. MCP authentication: OAuth 2.1 only, or also personal API keys for desktop
-   clients? (recommended: OAuth first, API keys behind a flag)
-2. MCP scope in v1: read-only, or read + reachability/actions?
-3. Tunnels: XPipe links first, or invest in the local agent immediately?
-4. Which operating systems must the agent support in v1?
-5. Credential model for the agent: user's SSH agent, or short-lived credentials
-   issued by InfraOrgIT?
-6. Audit storage: a new `McpToolCalls`/`TunnelEvents` table, or a generic
-   `AuditEvents` table that also replaces/extents `CommandExecutions`?
+| # | Decision |
+|---|---|
+| D1 | MCP auth: OAuth 2.1 via Keycloak **and** personal API keys. |
+| D2 | MCP exposes actions too, enabled per user/group through `McpGrants`; environment RBAC still applies. |
+| D3 | Tunnels live in a desktop app that also offers the browser features and connects to multiple InfraOrgIT instances; XPipe deep links are an interim shortcut. |
+| D4 | Desktop app on all modern OS: macOS (arm64/x64), Windows, Linux. |
+| D5 | The app uses the user's SSH agent (`ssh -L`/`-J` with `SSH_AUTH_SOCK`); no private key stored by InfraOrgIT. |
 
-## 7. Non-goals
+**D6 — audit storage (recommended).** A new append-only `AuditEvents` table
+plus an `IAuditService`, shared by MCP and tunnels; `CommandExecutions` stays
+the SSH-command log and is not reshaped.
+
+- Columns: `Id`, `OccurredAt`, `Kind` (`McpToolCall`, `TunnelStart`,
+  `TunnelStop`, `TunnelError`), `ActorUserId`/`ActorUsername` (snapshot, no FK
+  cascade), `ClientId`, `Action`, `TargetType`/`TargetId`, `Outcome`
+  (`Ok`/`Error`/`Denied`), `ErrorCode`, `DurationMs`, `CorrelationId`,
+  `DetailJson` (redacted, capped at 4 KB).
+- Tunnel events also carry `ServerId`, `TargetHost`, `TargetPort`, `LocalPort`
+  as nullable typed columns; MCP calls leave them null.
+- MCP logs every `tools/call`, including denied ones; tunnel logs start, stop,
+  error and client disconnect. No tool arguments with secrets and no SSH
+  output in `DetailJson`.
+- Indexes on `(OccurredAt)`, `(Kind, OccurredAt)`, `(ActorUsername, OccurredAt)`;
+  retention configurable, default 180 days, with a purge job.
+- Why not extend `CommandExecutions`: its shape is a command run (script,
+  exit code, redacted output) and its page is the execution log; MCP calls and
+  tunnel sessions would pollute it.
+- Why not one table per feature: a generic audit table gives one page, one
+  filter, one retention policy and one writer; feature-specific fields go in
+  typed nullable columns or `DetailJson`.
+
+## 7. Open points
+
+- Keycloak client naming and scopes for MCP; whether the SPA client can be
+  reused for the authorization-code flow.
+- Agent update channel and signing keys; which OS versions are "modern" for
+  support.
+- Central visibility of active tunnels: the app owns the sessions; if the web
+  UI must show them, add a `TunnelSessions` projection fed by the app.
+
+## 8. Non-goals
 
 - Raw shell access over MCP.
 - Browser-to-server TCP tunnels without a local component.
