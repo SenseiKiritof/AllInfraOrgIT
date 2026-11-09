@@ -105,3 +105,12 @@ Form selects (server, version, project, menu, location) are searchable: type to 
 - Provider/environment detail: the relation is already handled by `ProviderEnvironment`; avoid two forms editing the same pair.
 - Diagrams: separate `buildGraph`/layout (pure, testable functions) from the canvas.
 - Admin: one users page with inline groups/roles; no separate navigation if not needed.
+
+## Account — Token API `/tokens`
+
+Reached from the user menu (not the side menu). Lists the personal tokens with
+name, scopes, creation, expiry, last use and state; **Nuovo token** creates a
+token with `mcp:read` or `mcp:read mcp:operate` and an optional expiry; the raw
+value is shown once with a copy button. **Revoca** invalidates it immediately.
+The tokens authenticate MCP clients against `/mcp` and other non-browser
+clients; the browser session is not used there.

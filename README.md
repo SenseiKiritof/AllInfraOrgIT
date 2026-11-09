@@ -37,6 +37,7 @@ A web SSH console with several sessions, side by side or minimized to a bar at t
 ### Around it
 
 - **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme. The shell header carries the page name and its short description; a single record uses a compact form instead of a one-row table.
+- **MCP**: read-only tools over the inventory on `/mcp` (Streamable HTTP), authenticated with personal API tokens created from the user menu (`/tokens`), and an append-only audit of every call.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
 
 ## See it in action
