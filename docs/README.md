@@ -12,6 +12,7 @@ Index of the Phase 1 documents.
 | `domain/file-transfer.md` | SFTP/FTP configuration, protocols, jump host, browser API, permissions, limits |
 | `domain/admin-rbac.md` | users, groups, roles, menus, assignments and Phase 6 protections |
 | `domain/inventory-fields-proposal.md` | runtime, container, host port, database types, server sizing, HA, virtual host: model, API, UI, migration and backfill |
+| `architecture/mcp-server-and-tunnels.md` | study: MCP server exposure, auth/RBAC, tool catalogue, local tunnel options (XPipe vs agent) and effort |
 | `migration/phase7-plan.md` | importer plan, order, validation and Phase 7 cutover |
 | `operations/release-audit.md` | Phase 8 hardening/release audit, Must/Should/Nice |
 | `operations/phase8-plan.md` | Phase 8 work packages, decisions and order |
