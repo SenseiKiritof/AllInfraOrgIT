@@ -1,6 +1,6 @@
 # MCP server and local tunnels — feasibility study
 
-- Status: study, not implemented
+- Status: stage 1 in progress (read-only MCP with API tokens implemented)
 - Date: 2026-11-09
 - Scope: expose InfraOrgIT as an MCP server; evaluate local SSH tunnels (XPipe today) and how they could live in InfraOrgIT.
 
@@ -288,6 +288,19 @@ the SSH-command log and is not reshaped.
 - Why not one table per feature: a generic audit table gives one page, one
   filter, one retention policy and one writer; feature-specific fields go in
   typed nullable columns or `DetailJson`.
+
+## 6b. Implemented slice
+
+- `ApiTokens` + `AuditEvents` tables and `AuditService`.
+- Personal API tokens managed from `/tokens` (user menu); SHA-256 hash at rest,
+  scopes `mcp:read`/`mcp:operate`, expiry, last use, revoke.
+- `/mcp` Streamable HTTP endpoint (MCP C# SDK 2.4.0, stateless) with bearer API
+  token authentication and read-only tools: `list_servers`, `get_server`,
+  `list_applications`, `list_projects`, `list_deployments`.
+- Every tool call writes an `AuditEvents` row; denied/revoked tokens get 401.
+- Caddy routes `/mcp*` to the API.
+- Still to do: OAuth 2.1/Keycloak bearer path, `McpGrants` and action tools,
+  resources/prompts, tunnel app.
 
 ## 7. Open points
 

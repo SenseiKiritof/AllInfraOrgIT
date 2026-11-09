@@ -428,6 +428,47 @@ New table; replaces the legacy `Environments`. The entity is named `EnvironmentD
 
 Index on `ServerId`. No `Version`: the history is append-only.
 
+### ApiTokens
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| UserId | int | no | FK `Users.Id` cascade |
+| Name | varchar(200) | no | label chosen by the owner |
+| TokenHash | varchar(64) | no | SHA-256 hex of `itk_…`; the raw value is shown once |
+| Scopes | varchar(500) | no | space-separated: `mcp:read`, `mcp:operate` |
+| CreatedAt | datetime(6) | no | |
+| ExpiresAt | datetime(6) | yes | null = no expiry |
+| LastUsedAt | datetime(6) | yes | updated on each accepted request |
+| RevokedAt | datetime(6) | yes | non-null = rejected |
+
+Unique index on `TokenHash`; index on `UserId`. Used by the MCP endpoint in
+place of the browser session.
+
+### AuditEvents
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| OccurredAt | datetime(6) | no | UTC |
+| Kind | varchar(30) | no | `McpToolCall`, `TunnelStart`, `TunnelStop`, `TunnelError` |
+| ActorUserId | int | yes | snapshot, no FK |
+| ActorUsername | varchar(100) | no | snapshot, no FK |
+| ClientId | varchar(100) | yes | API token id or OAuth client |
+| Action | varchar(100) | no | tool or tunnel action |
+| TargetType / TargetId | varchar(30) / int | yes | polymorphic target |
+| ServerId | int | yes | tunnel target server, snapshot |
+| TargetHost / TargetPort / LocalPort | varchar(300) / int / int | yes | tunnel target and local bind |
+| Outcome | varchar(20) | no | `Ok`, `Error`, `Denied` |
+| ErrorCode | varchar(100) | yes | |
+| DurationMs | int | no | |
+| CorrelationId | varchar(100) | yes | request correlation id |
+| DetailJson | longtext | yes | redacted, capped at 4 KB |
+
+Append-only; indexes on `OccurredAt`, `(Kind, OccurredAt)` and
+`(ActorUsername, OccurredAt)`. Shared by MCP calls and tunnel sessions;
+`CommandExecutions` remains the SSH command log.
+
 ## Legacy → new enum mapping
 
 | Legacy enum | Legacy type | New |
@@ -442,3 +483,5 @@ Index on `ServerId`. No `Version`: the history is append-only.
 | `CommandExecutionKind` | varchar | `Action`, `Reachability`, `Console` (unchanged) |
 | `DiagramScopeType` | varchar | `Provider`, `ProviderEnvironment`, `Project` (unchanged) |
 | `DiagramNodeType` | varchar | `Provider`, `ProviderEnvironment`, `Server`, `ServerApplication` (unchanged) |
+| `AuditKind` | varchar | `McpToolCall`, `TunnelStart`, `TunnelStop`, `TunnelError` (new) |
+| `AuditOutcome` | varchar | `Ok`, `Error`, `Denied` (new) |
