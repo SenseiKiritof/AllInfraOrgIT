@@ -106,9 +106,9 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
 - MCP clients use `/mcp` with a personal API token from the user menu
   (`/tokens`) or a Keycloak OAuth token (`infraorgit-mcp` client credentials,
   `infraorgit-mcp-desktop` PKCE, scopes `mcp:read`/`mcp:operate`). Tokens are
-  hashed; tools need `mcp:read` or `mcp:operate`; action tools also need an
-  `McpGrant` (`/api/mcp/grants`, SystemAdmin) and the environment operator
-  right; the desktop client defaults to read-only and requests `mcp:operate`
+  hashed; tools need `mcp:read` or `mcp:operate`; action tools
+  (`run_reachability_tests`, `run_application_action`) also need an `McpGrant`
+  (`/mcp-grants`, SystemAdmin) and the environment operator right; the desktop client defaults to read-only and requests `mcp:operate`
   when needed. Discovery is on
   `/.well-known/oauth-protected-resource`. The endpoint is switched off with
   `Mcp:Enabled=false`.
