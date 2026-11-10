@@ -302,6 +302,10 @@ the SSH-command log and is not reshaped.
   and public `infraorgit-mcp-desktop` (PKCE), scopes `mcp:read`/`mcp:operate`,
   audience mapper, discovery document at
   `/.well-known/oauth-protected-resource`.
+- The `/mcp` policy requires `mcp:read` or `mcp:operate`; a token without a
+  scope gets 403. The desktop client defaults to `mcp:read` with
+  `mcp:operate` optional, so a single MCP connection can be read-only or
+  read-write by choice. Action tools will additionally require `McpGrants`.
 - Caddy routes `/mcp*` and the discovery path to the API.
 - Still to do: `McpGrants` and action tools, resources/prompts, tunnel app.
 
