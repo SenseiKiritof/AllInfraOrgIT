@@ -326,7 +326,12 @@ the SSH-command log and is not reshaped.
   with jump host and `hostPort ?? exposedPort`; `POST /api/tunnels/events`
   writes `TunnelStart`/`TunnelStop`/`TunnelError` audit rows. Both require a
   token with `tunnels:operate`; the Keycloak desktop client can request it.
-- Still to do: tunnel engine and packaging in the desktop app.
+- Desktop tunnel engine (`../InfraOrgITDesktop/Tunnels`): `ssh -L`/`-J`
+  through the user's agent, loopback port allocation, active tunnel list,
+  start/stop/error events to the audit API; tokens stay in memory. Verified
+  locally with an sshd container + `ssh-agent` (forward listening and
+  authenticated).
+- Still to do: packaging and signing in the desktop app.
 
 ## 7. Open points
 
