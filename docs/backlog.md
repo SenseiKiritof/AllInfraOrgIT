@@ -39,17 +39,26 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Done with the token in memory; checked against a local sshd container and `ssh-agent` (authenticated, local port listening). Non-allowlisted targets are rejected by the API integration test.
 
 - [x] **Desktop device login**
-  RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token; tokens in memory only.
+  RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token.
   Verification: full flow against the local realm (device request, consent, access token with `mcp:read tunnels:operate`, refresh token) and 23 desktop tests.
 
-- [ ] **Desktop token persistence and refresh**
-  Store the refresh token in the OS keychain (macOS Keychain, Windows Credential Manager, libsecret), refresh silently on expiry and revoke on logout.
+- [x] **Desktop token persistence and refresh**
+  Refresh token in macOS Keychain, Windows Credential Manager or `secret-tool` (memory fallback), session restore, refresh within 60s of expiry and once on 401, logout clears the store.
+  Verification: 38 desktop tests; platform stores use fake runners in CI, real keychain/signtool behavior still needs a manual run.
 
-- [ ] **Central tunnel visibility**
-  `TunnelSessions` projection fed by the desktop heartbeats plus a web page listing active tunnels; today only start/stop/error events are visible in the audit log.
+- [x] **Central tunnel visibility**
+  `TunnelSessions` projection with 30s heartbeats, two-minute staleness cleanup, `GET /api/tunnels/sessions` filtered to operator environments and `/tunnels` page with 15s refresh.
+  Verification: API integration tests and desktop heartbeat tests green.
 
-- [ ] **Signing, notarization and auto-update**
-  Unsigned multi-RID artifacts are built by `publish.yml`; sign/notarize macOS, sign Windows, add auto-update, then add the repo to `make release`/`versions.lock`.
+- [x] **Rate limits**
+  Dedicated `mcp` and `tunnels` fixed windows (120/min per user or token), with a burst test returning 429.
+
+- [x] **Signing and notarization workflow**
+  `publish.yml` imports the macOS certificate, signs, notarizes and staples, signs Windows with signtool, and uploads a GitHub Release on `v*` tags; unsigned builds still work without secrets.
+  Verification: actionlint/shellcheck clean and unsigned publish works; real certificates and notarization need the repository secrets.
+
+- [ ] **Auto-update**
+  Check a signed manifest/release, verify the artifact and offer the update; the app still has no updater and is not in `make release`/`versions.lock`.
 
 ## Workspace
 
