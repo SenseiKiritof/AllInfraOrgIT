@@ -298,9 +298,12 @@ the SSH-command log and is not reshaped.
   token authentication and read-only tools: `list_servers`, `get_server`,
   `list_applications`, `list_projects`, `list_deployments`.
 - Every tool call writes an `AuditEvents` row; denied/revoked tokens get 401.
-- Caddy routes `/mcp*` to the API.
-- Still to do: OAuth 2.1/Keycloak bearer path, `McpGrants` and action tools,
-  resources/prompts, tunnel app.
+- OAuth 2.1 via Keycloak: confidential `infraorgit-mcp` (client credentials)
+  and public `infraorgit-mcp-desktop` (PKCE), scopes `mcp:read`/`mcp:operate`,
+  audience mapper, discovery document at
+  `/.well-known/oauth-protected-resource`.
+- Caddy routes `/mcp*` and the discovery path to the API.
+- Still to do: `McpGrants` and action tools, resources/prompts, tunnel app.
 
 ## 7. Open points
 
