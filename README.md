@@ -89,8 +89,10 @@ This repository is the workspace meta repository: architecture decisions, shared
 | [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 backend: API, EF migrations, legacy importer |
 | [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React + Vite frontend |
 | [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | Docker Compose, Caddy, Keycloak |
+| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | .NET 10 + Photino desktop shell |
 
-The four directories live side by side:
+The four server directories live side by side; the desktop repository is
+optional and only needed when working on the desktop app:
 
 ```
 workspace/
@@ -98,6 +100,7 @@ workspace/
   InfraOrgITApi/
   InfraOrgITWeb/
   InfraOrgITDocker/
+  InfraOrgITDesktop/   # optional
 ```
 
 ## Quick start
@@ -109,6 +112,7 @@ git clone https://github.com/SenseiKiritof/AllInfraOrgIT.git
 git clone https://github.com/SenseiKiritof/InfraOrgITApi.git
 git clone https://github.com/SenseiKiritof/InfraOrgITWeb.git
 git clone https://github.com/SenseiKiritof/InfraOrgITDocker.git
+git clone https://github.com/SenseiKiritof/InfraOrgITDesktop.git   # optional
 cp InfraOrgITDocker/.env.example InfraOrgITDocker/.env
 cd AllInfraOrgIT
 make dev
