@@ -331,20 +331,28 @@ the SSH-command log and is not reshaped.
   with jump host and `hostPort ?? exposedPort`; `POST /api/tunnels/events`
   writes `TunnelStart`/`TunnelStop`/`TunnelError` audit rows. Both require a
   token with `tunnels:operate`; the Keycloak desktop client can request it.
+- Central tunnel visibility: `POST /api/tunnels/sessions` upserts a live row
+  per tunnel (heartbeat every 30s), `GET /api/tunnels/sessions` returns active
+  rows filtered to operator environments (SystemAdmin sees all), and a
+  cleanup service marks rows stale after two minutes. `/tunnels` shows them
+  with a 15s refresh. The dedicated `tunnels`/`mcp` limits are 120/min per
+  user or token.
 - Desktop tunnel engine (`../InfraOrgITDesktop/Tunnels`): `ssh -L`/`-J`
   through the user's agent, loopback port allocation, active tunnel list,
-  start/stop/error events to the audit API; tokens stay in memory. Verified
-  locally with an sshd container + `ssh-agent` (forward listening and
-  authenticated).
+  start/stop/error events and session heartbeats. Verified locally with an
+  sshd container + `ssh-agent` (forward listening and authenticated).
 - Desktop device login: RFC 8628 + PKCE against
   `infraorgit-mcp-desktop`, issuer discovered from the protected-resource
-  metadata, user code opened in the browser; access and refresh tokens stay in
-  memory. Verified against the local realm (device request, consent, token and
-  scopes).
+  metadata, user code opened in the browser; the refresh token is stored in
+  the OS secret store (Keychain, Credential Manager, secret-tool) and access
+  tokens stay in memory with refresh on expiry/401. Verified against the local
+  realm (device request, consent, token and scopes).
 - Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
-  (Linux) built by `publish.yml`; version from tag or manual input.
-- Still to do: keychain and automatic refresh, signing/notarization/
-  auto-update, central visibility of active tunnels.
+  (Linux) built by `publish.yml`; signing, notarization and GitHub Release
+  upload are wired behind repository secrets. Version from tag or manual
+  input.
+- Still to do: auto-update, XPipe/`ssh -L` interim links, hardening
+  (load/pentest, Windows/Linux GUI runtime checks).
 
 ## 7. Open points
 
@@ -352,8 +360,6 @@ the SSH-command log and is not reshaped.
   reused for the authorization-code flow.
 - Agent update channel and signing keys; which OS versions are "modern" for
   support.
-- Central visibility of active tunnels: the app owns the sessions; if the web
-  UI must show them, add a `TunnelSessions` projection fed by the app.
 
 ## 8. Non-goals
 
