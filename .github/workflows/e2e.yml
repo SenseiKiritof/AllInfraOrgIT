@@ -85,7 +85,7 @@ jobs:
         run: |
           setsid make -C AllInfraOrgIT dev > /tmp/dev.log 2>&1 &
           echo $! > /tmp/dev.pid
-          for i in $(seq 1 150); do
+          for i in $(seq 1 300); do
             if curl -fsS http://localhost:5298/health/ready >/dev/null &&
                curl -fsS http://localhost:3000/ >/dev/null; then
               exit 0
