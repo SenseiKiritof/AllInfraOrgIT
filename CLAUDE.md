@@ -7,11 +7,14 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
 
 ## Workspace
 
-- Four sibling git repositories: this one plus `../InfraOrgITApi` (.NET 10
-  API, EF migrations, legacy importer), `../InfraOrgITWeb` (React 19 + Vite)
-  and `../InfraOrgITDocker` (Compose, Caddy, Keycloak).
-- The `Makefile` and `scripts/` assume exactly that side-by-side layout. Run
-  `make` from this directory; do not rename or move the four folders.
+- Five sibling git repositories: this one plus `../InfraOrgITApi` (.NET 10
+  API, EF migrations, legacy importer), `../InfraOrgITWeb` (React 19 + Vite),
+  `../InfraOrgITDocker` (Compose, Caddy, Keycloak) and `../InfraOrgITDesktop`
+  (.NET 10 + Photino desktop shell).
+- The `Makefile` and `scripts/` assume the four server repositories side by
+  side. Run `make` from this directory; do not rename or move those four
+  folders. The desktop repo is optional and is not part of `make` or the
+  release lock yet.
 - When prose and scripts disagree, trust `Makefile`, `scripts/` and the CI
   workflows.
 - Work often spans repositories: commit separately in each one. Read the
@@ -33,8 +36,9 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
   change touches several repositories, use the same branch name in each.
 - Push the branch and open a pull request into `dev`; merge only when the
   required checks are green (`build-test`/`image` for the API,
-  `lint-test-build`/`image` for the web, `config` for Docker, `check` for this
-  repo). Then open `dev` -> `main`.
+  `lint-test-build`/`image` for the web, `config` for Docker,
+  `build-test` for the desktop, `check` for this repo). Then open `dev` ->
+  `main`.
 - The `Main` ruleset blocks direct pushes, force-push and deletion on `main`
   and `dev`, and requires the checks; the repo admin bypass exists only for
   emergencies. Never commit directly to `main`.
@@ -126,3 +130,5 @@ open work in `docs/backlog.md`, decisions in `docs/adr/`.
 - `docs/security/permissions.md`: role matrix and target v1 rules.
 - `docs/operations/release.md`: release, rollback, tags.
 - `tools/graphify/README.md`: workspace graph configuration.
+- `../InfraOrgITDesktop/README.md`: desktop shell, instances and tunnel
+  roadmap.
