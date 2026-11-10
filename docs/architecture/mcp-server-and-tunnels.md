@@ -313,7 +313,12 @@ the SSH-command log and is not reshaped.
   mandatory; results and denials are audited.
 - Grants are managed from `/mcp-grants` (Users page, SystemAdmin) and through
   `/api/mcp/grants`.
-- Still to do: resources/prompts, tunnel app.
+- MCP resources: `infraorgit://inventory/summary` (counts),
+  `infraorgit://servers/{id}` and `infraorgit://applications/{id}`; reads reuse
+  the tool queries and are audited as `read_resource`.
+- MCP prompts: `diagnose-server` and `application-impact`, templates that only
+  describe which tools to call.
+- Still to do: tunnel app.
 
 ## 7. Open points
 
