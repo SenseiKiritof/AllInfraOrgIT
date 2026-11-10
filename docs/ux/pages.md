@@ -114,3 +114,12 @@ token with `mcp:read` or `mcp:read mcp:operate` and an optional expiry; the raw
 value is shown once with a copy button. **Revoca** invalidates it immediately.
 The tokens authenticate MCP clients against `/mcp` and other non-browser
 clients; the browser session is not used there.
+
+## Admin — MCP grants `/mcp-grants`
+
+Reached from the **Users** page header (SystemAdmin). Lists the `McpGrants`
+with subject (user or group), action, environment and creation date;
+**Nuovo grant** picks a subject, an action (`reachability.run`,
+`actions.run`, `*`) and an optional environment; **Elimina** revokes it.
+A grant only enables MCP action tools: the environment role
+(`ServerOperator`/`ServerAdmin`) is still required.

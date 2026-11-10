@@ -307,12 +307,13 @@ the SSH-command log and is not reshaped.
   `mcp:operate` optional, so a single MCP connection can be read-only or
   read-write by choice. Action tools will additionally require `McpGrants`.
 - Caddy routes `/mcp*` and the discovery path to the API.
-- Action tool `run_reachability_tests`: requires `mcp:operate`, an
-  `McpGrant` for `reachability.run` (user/group, optional environment) and
-  `ServerOperator`/`ServerAdmin` on the environment; `confirm=true` is
-  mandatory; results and denials are audited. Grants are managed through
-  `/api/mcp/grants` (SystemAdmin; UI pending).
-- Still to do: more action tools, grants UI, resources/prompts, tunnel app.
+- Action tools `run_reachability_tests` and `run_application_action`:
+  require `mcp:operate`, an `McpGrant` for the user/group (optional
+  environment) and `ServerOperator`/`ServerAdmin`; `confirm=true` is
+  mandatory; results and denials are audited.
+- Grants are managed from `/mcp-grants` (Users page, SystemAdmin) and through
+  `/api/mcp/grants`.
+- Still to do: resources/prompts, tunnel app.
 
 ## 7. Open points
 
