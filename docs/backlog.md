@@ -27,9 +27,10 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   `tunnels:operate` token scope; `GET /api/tunnels/targets` (operator environments only, jump host and username from the server, target from the deployment) and `POST /api/tunnels/events` writing `TunnelStart`/`TunnelStop`/`TunnelError`.
   Verification: integration test for scope, RBAC, allowlist and audit rows.
 
-- [ ] **Desktop tunnel engine**
+- [x] **Desktop tunnel engine**
   System `ssh -L`/`-J` with `SSH_AUTH_SOCK`, local port allocation, start/stop/status and audit calls; token kept in memory or the OS keychain.
   Verification: local sshd with a test key, negative test on a non-allowlisted target.
+  Done with the token in memory; checked against a local sshd container and `ssh-agent` (authenticated, local port listening). Non-allowlisted targets are rejected by the API integration test.
 
 - [ ] **Packaging and release**
   macOS/Windows/Linux bundles, signing/notarization and auto-update; only then add the repo to `make release`/`versions.lock`.
