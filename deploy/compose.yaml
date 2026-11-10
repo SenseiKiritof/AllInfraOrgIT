@@ -135,6 +135,12 @@ services:
       Oidc__RedirectUri: ${OIDC_REDIRECT_URI:-https://localhost:8443/auth/callback}
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:-https://localhost:8443}
       Auth__SecureCookies: "true"
+      Mcp__Enabled: ${MCP_ENABLED:-true}
+      Mcp__Oidc__Authority: ${MCP_OIDC_AUTHORITY:-https://localhost:8443/realms/infraorgit}
+      Mcp__Oidc__MetadataAddress: ${MCP_OIDC_METADATA_ADDRESS:-http://keycloak:8080/realms/infraorgit/.well-known/openid-configuration}
+      Mcp__Oidc__Issuer: ${MCP_OIDC_ISSUER:-https://localhost:8443/realms/infraorgit}
+      Mcp__Oidc__Audience: ${MCP_OIDC_AUDIENCE:-infraorgit-mcp}
+      Mcp__Oidc__RequireHttpsMetadata: "false"
       ServerAccess__CredentialKeys__1: ${ServerAccess__CredentialKey:-}
       ServerAccess__CurrentKeyVersion: ${ServerAccess__CurrentKeyVersion:-1}
       ENC_KEY: ${ENC_KEY:-}
