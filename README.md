@@ -38,6 +38,7 @@ A web SSH console with several sessions, side by side or minimized to a bar at t
 
 - **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme. The shell header carries the page name and its short description; a single record uses a compact form instead of a one-row table.
 - **MCP**: inventory tools, resources (`infraorgit://servers/{id}`, `infraorgit://applications/{id}`, `infraorgit://inventory/summary`) and prompts (`diagnose-server`, `application-impact`) over `/mcp` (Streamable HTTP), authenticated with personal API tokens from the user menu (`/tokens`) or Keycloak OAuth clients (`infraorgit-mcp` for client credentials, `infraorgit-mcp-desktop` for PKCE). Read tools require `mcp:read`/`mcp:operate`; action tools (`run_reachability_tests`, `run_application_action`) additionally require `mcp:operate`, an `McpGrant` for the user or group and the environment operator right. The desktop client defaults to read-only. Every call is audited; discovery is on `/.well-known/oauth-protected-resource`.
+- **Desktop e tunnel**: `InfraOrgITDesktop` (.NET 10 + Photino) apre più istanze in finestre separate; l'API espone l'allowlist `GET /api/tunnels/targets` e gli eventi `POST /api/tunnels/events` con token `tunnels:operate`, solo per gli ambienti in cui l'utente è operatore.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
 
 ## See it in action

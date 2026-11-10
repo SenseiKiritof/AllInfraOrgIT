@@ -293,7 +293,7 @@ the SSH-command log and is not reshaped.
 
 - `ApiTokens` + `AuditEvents` tables and `AuditService`.
 - Personal API tokens managed from `/tokens` (user menu); SHA-256 hash at rest,
-  scopes `mcp:read`/`mcp:operate`, expiry, last use, revoke.
+  scopes `mcp:read`/`mcp:operate`/`tunnels:operate`, expiry, last use, revoke.
 - `/mcp` Streamable HTTP endpoint (MCP C# SDK 2.4.0, stateless) with bearer API
   token authentication and read-only tools: `list_servers`, `get_server`,
   `list_applications`, `list_projects`, `list_deployments`.
@@ -321,6 +321,11 @@ the SSH-command log and is not reshaped.
 - Desktop shell (`../InfraOrgITDesktop`, .NET 10 + Photino, ADR-011):
   multi-instance manager with a per-user JSON store and one child window per
   open instance.
+- Desktop tunnel API: `GET /api/tunnels/targets` returns only servers with
+  deployments, a credential username and the caller's operator environments,
+  with jump host and `hostPort ?? exposedPort`; `POST /api/tunnels/events`
+  writes `TunnelStart`/`TunnelStop`/`TunnelError` audit rows. Both require a
+  token with `tunnels:operate`; the Keycloak desktop client can request it.
 - Still to do: tunnel engine and packaging in the desktop app.
 
 ## 7. Open points
