@@ -349,10 +349,10 @@ the SSH-command log and is not reshaped.
   realm (device request, consent, token and scopes).
 - Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
   (Linux) built by `publish.yml`; signing, notarization and GitHub Release
-  upload are wired behind repository secrets. Version from tag or manual
-  input.
-- Still to do: auto-update, XPipe/`ssh -L` interim links, hardening
-  (load/pentest, Windows/Linux GUI runtime checks).
+  upload are wired behind repository secrets. The app checks the latest
+  GitHub release and opens it; version from tag or manual input.
+- Still to do: automatic update install, XPipe/`ssh -L` interim links,
+  hardening (load/pentest, Windows/Linux GUI runtime checks).
 
 ## 7. Open points
 
