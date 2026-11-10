@@ -23,7 +23,7 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   .NET 10 + Photino (ADR-011); per-user `instances.json`, one child window per instance, URL validation, unit tests and three-OS CI.
   Verification: `dotnet test InfraOrgITDesktop.slnx` and `ci` green on ubuntu/macos/windows.
 
-- [ ] **Tunnel allowlist and audit API**
+- [x] **Tunnel allowlist and audit API**
   `tunnels:operate` token scope; `GET /api/tunnels/targets` (operator environments only, jump host and username from the server, target from the deployment) and `POST /api/tunnels/events` writing `TunnelStart`/`TunnelStop`/`TunnelError`.
   Verification: integration test for scope, RBAC, allowlist and audit rows.
 
