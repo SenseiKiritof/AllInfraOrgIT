@@ -17,6 +17,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [x] **Servers page UI bugs**
   Sidebar made scrollable (`min-h-0 overflow-y-auto`) and shell `overflow-hidden`; tables already inside `overflow-x-auto`. The residual overlay from the screenshot is not reproducible after refresh: if it comes back, note the route and menu state.
 
+## MCP
+
+- [x] **Read tools and audit**
+  Remaining read tools (`list_providers`, `get_application`, `get_project`, `list_reachability_tests`, `get_topology`, `list_executions`), `AuditEvents` retention (180 days) and `GET /api/audit-events` + `/audit` page for SystemAdmin.
+  Verification: MCP/audit integration tests and API CI green.
+
 ## Desktop — `InfraOrgITDesktop`
 
 - [x] **Shell and multi-instance manager**
@@ -32,8 +38,18 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Verification: local sshd with a test key, negative test on a non-allowlisted target.
   Done with the token in memory; checked against a local sshd container and `ssh-agent` (authenticated, local port listening). Non-allowlisted targets are rejected by the API integration test.
 
-- [ ] **Packaging and release**
-  macOS/Windows/Linux bundles, signing/notarization and auto-update; only then add the repo to `make release`/`versions.lock`.
+- [x] **Desktop device login**
+  RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token; tokens in memory only.
+  Verification: full flow against the local realm (device request, consent, access token with `mcp:read tunnels:operate`, refresh token) and 23 desktop tests.
+
+- [ ] **Desktop token persistence and refresh**
+  Store the refresh token in the OS keychain (macOS Keychain, Windows Credential Manager, libsecret), refresh silently on expiry and revoke on logout.
+
+- [ ] **Central tunnel visibility**
+  `TunnelSessions` projection fed by the desktop heartbeats plus a web page listing active tunnels; today only start/stop/error events are visible in the audit log.
+
+- [ ] **Signing, notarization and auto-update**
+  Unsigned multi-RID artifacts are built by `publish.yml`; sign/notarize macOS, sign Windows, add auto-update, then add the repo to `make release`/`versions.lock`.
 
 ## Workspace
 

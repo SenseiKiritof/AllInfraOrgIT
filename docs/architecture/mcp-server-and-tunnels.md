@@ -296,8 +296,13 @@ the SSH-command log and is not reshaped.
   scopes `mcp:read`/`mcp:operate`/`tunnels:operate`, expiry, last use, revoke.
 - `/mcp` Streamable HTTP endpoint (MCP C# SDK 2.4.0, stateless) with bearer API
   token authentication and read-only tools: `list_servers`, `get_server`,
-  `list_applications`, `list_projects`, `list_deployments`.
+  `list_providers`, `list_applications`, `get_application`, `list_projects`,
+  `get_project`, `list_deployments`, `list_reachability_tests`,
+  `get_topology`, `list_executions` (SystemAdmin).
 - Every tool call writes an `AuditEvents` row; denied/revoked tokens get 401.
+  `Audit:RetentionDays` (default 180) purges older rows in background
+  batches; `GET /api/audit-events` and the `/audit` page expose them to
+  SystemAdmin with kind/outcome/text/server filters.
 - OAuth 2.1 via Keycloak: confidential `infraorgit-mcp` (client credentials)
   and public `infraorgit-mcp-desktop` (PKCE), scopes `mcp:read`/`mcp:operate`,
   audience mapper, discovery document at
@@ -331,7 +336,15 @@ the SSH-command log and is not reshaped.
   start/stop/error events to the audit API; tokens stay in memory. Verified
   locally with an sshd container + `ssh-agent` (forward listening and
   authenticated).
-- Still to do: packaging and signing in the desktop app.
+- Desktop device login: RFC 8628 + PKCE against
+  `infraorgit-mcp-desktop`, issuer discovered from the protected-resource
+  metadata, user code opened in the browser; access and refresh tokens stay in
+  memory. Verified against the local realm (device request, consent, token and
+  scopes).
+- Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
+  (Linux) built by `publish.yml`; version from tag or manual input.
+- Still to do: keychain and automatic refresh, signing/notarization/
+  auto-update, central visibility of active tunnels.
 
 ## 7. Open points
 
