@@ -57,8 +57,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   `publish.yml` imports the macOS certificate, signs, notarizes and staples, signs Windows with signtool, and uploads a GitHub Release on `v*` tags; unsigned builds still work without secrets.
   Verification: actionlint/shellcheck clean and unsigned publish works; real certificates and notarization need the repository secrets.
 
-- [ ] **Auto-update**
-  Check a signed manifest/release, verify the artifact and offer the update; the app still has no updater and is not in `make release`/`versions.lock`.
+- [x] **Update check**
+  The manager reads GitHub `releases/latest`, compares the assembly version and opens the release page; notes capped, stable tags only.
+  Verification: 23 fake-handler tests and three-OS CI; no download/install.
+
+- [ ] **Automatic update install**
+  Download the signed artifact, verify it and replace the app; the updater is still manual (release page) and the desktop repo is not in `make release`/`versions.lock`.
 
 ## Workspace
 
