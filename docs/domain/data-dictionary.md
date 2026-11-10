@@ -469,6 +469,21 @@ Append-only; indexes on `OccurredAt`, `(Kind, OccurredAt)` and
 `(ActorUsername, OccurredAt)`. Shared by MCP calls and tunnel sessions;
 `CommandExecutions` remains the SSH command log.
 
+### McpGrants
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| UserId | int | yes | FK `Users.Id` cascade; exactly one of UserId/GroupId |
+| GroupId | int | yes | FK `Groups.Id` cascade; exactly one of UserId/GroupId |
+| Action | varchar(50) | no | `reachability.run`, `actions.run`, `*` |
+| EnvironmentDefinitionId | int | yes | null = every environment |
+| CreatedAt | datetime(6) | no | |
+
+Check `CK_McpGrants_Subject` (`(UserId IS NULL) + (GroupId IS NULL) = 1`) and
+`CK_McpGrants_Action`. Grants only enable MCP action tools; the normal
+`ServerAdmin`/`ServerOperator` right on the environment is still required.
+
 ## Legacy → new enum mapping
 
 | Legacy enum | Legacy type | New |
@@ -485,3 +500,4 @@ Append-only; indexes on `OccurredAt`, `(Kind, OccurredAt)` and
 | `DiagramNodeType` | varchar | `Provider`, `ProviderEnvironment`, `Server`, `ServerApplication` (unchanged) |
 | `AuditKind` | varchar | `McpToolCall`, `TunnelStart`, `TunnelStop`, `TunnelError` (new) |
 | `AuditOutcome` | varchar | `Ok`, `Error`, `Denied` (new) |
+| `McpAction` | varchar | `reachability.run`, `actions.run`, `*` (new) |

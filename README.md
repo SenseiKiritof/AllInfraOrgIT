@@ -37,7 +37,7 @@ A web SSH console with several sessions, side by side or minimized to a bar at t
 ### Around it
 
 - **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme. The shell header carries the page name and its short description; a single record uses a compact form instead of a one-row table.
-- **MCP**: read-only tools over the inventory on `/mcp` (Streamable HTTP), authenticated with personal API tokens from the user menu (`/tokens`) or Keycloak OAuth clients (`infraorgit-mcp` for client credentials, `infraorgit-mcp-desktop` for PKCE). Tools require `mcp:read` or `mcp:operate`; the desktop client defaults to read-only and can request `mcp:operate`. Every call is audited; discovery is on `/.well-known/oauth-protected-resource`.
+- **MCP**: inventory tools over `/mcp` (Streamable HTTP), authenticated with personal API tokens from the user menu (`/tokens`) or Keycloak OAuth clients (`infraorgit-mcp` for client credentials, `infraorgit-mcp-desktop` for PKCE). Read tools require `mcp:read`/`mcp:operate`; `run_reachability_tests` additionally requires `mcp:operate`, an `McpGrant` for the user or group and the environment operator right. The desktop client defaults to read-only. Every call is audited; discovery is on `/.well-known/oauth-protected-resource`.
 - **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
 
 ## See it in action
