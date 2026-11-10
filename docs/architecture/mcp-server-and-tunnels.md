@@ -1,6 +1,6 @@
 # MCP server and local tunnels — feasibility study
 
-- Status: stage 1 in progress (read-only MCP with API tokens implemented)
+- Status: stage 1-2 implemented; desktop shell started (stage 3)
 - Date: 2026-11-09
 - Scope: expose InfraOrgIT as an MCP server; evaluate local SSH tunnels (XPipe today) and how they could live in InfraOrgIT.
 
@@ -318,7 +318,10 @@ the SSH-command log and is not reshaped.
   the tool queries and are audited as `read_resource`.
 - MCP prompts: `diagnose-server` and `application-impact`, templates that only
   describe which tools to call.
-- Still to do: tunnel app.
+- Desktop shell (`../InfraOrgITDesktop`, .NET 10 + Photino, ADR-011):
+  multi-instance manager with a per-user JSON store and one child window per
+  open instance.
+- Still to do: tunnel engine and packaging in the desktop app.
 
 ## 7. Open points
 
