@@ -343,7 +343,8 @@ the SSH-command log and is not reshaped.
   user or token.
 - Desktop tunnel engine (`../InfraOrgITDesktop/Tunnels`): `ssh -L`/`-D`/`-R`
   through the user's agent, multi-hop `-J`, loopback port allocation, custom
-  services with autoStart, open-in-browser for Local HTTP(S), active tunnel
+  services with autoStart, open-in-browser for Local HTTP(S), automatic
+  reconnect of autoStart services after an unexpected exit, active tunnel
   list, start/stop/error events and session heartbeats. Verified locally with
   an sshd container + `ssh-agent` (forward listening and authenticated).
 - Desktop device login: RFC 8628 + PKCE against
@@ -357,8 +358,8 @@ the SSH-command log and is not reshaped.
   upload are wired behind repository secrets. The app checks the latest
   GitHub release, downloads the matching archive, verifies its SHA-256 and
   opens the folder; installation is still manual.
-- Still to do: automatic update install, tunnel persistence/auto-reconnect,
-  hardening (load/pentest, Windows/Linux GUI runtime checks).
+- Still to do: automatic update install, tunnel persistence across app
+  restarts, hardening (load/pentest, Windows GUI runtime checks).
 
 ## 7. Open points
 
