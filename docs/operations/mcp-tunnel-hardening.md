@@ -55,6 +55,14 @@ test -n "$TOKEN" && test "$TOKEN" != null
 Do not paste the token into the command line of a shared host: it is visible in
 the process list. Use `MCP_TOKEN` in the environment or the desktop keychain.
 
+The desktop stores the refresh token in the OS secret store. On macOS the
+current `security` invocation passes the value with `-w <token>`, so it is
+visible in the process argument list to other local processes while the command
+runs. This is a short local exposure, not a network one (PT-16): do not run the
+desktop on a host with untrusted local users, and treat the argv limitation as
+accepted until the store uses stdin or the native Keychain API. See
+[`../security/transport.md`](../security/transport.md).
+
 ## 2. RBAC matrix
 
 `SystemAdmin` does **not** imply `ServerAdmin`/`ServerOperator` (D7 = B). The
@@ -63,7 +71,7 @@ environment role. See [`../security/permissions.md`](../security/permissions.md)
 
 | Surface | Auth / scope | Environment right | Result |
 |---|---|---|---|
-| Read tools (`list_servers`, `get_server`, `list_providers`, `list_applications`, `get_application`, `list_projects`, `get_project`, `list_deployments`, `list_reachability_tests`, `get_topology`) | `mcp:read` or `mcp:operate` | none checked today | all inventory rows, not filtered by environment (see gaps) |
+| Read tools (`list_servers`, `get_server`, `list_providers`, `list_applications`, `get_application`, `list_projects`, `get_project`, `list_deployments`, `list_reachability_tests`, `get_topology`) | `mcp:read` or `mcp:operate` | none checked today | all inventory rows, not filtered by environment; accepted D7 read model (see gaps) |
 | `list_executions` | `mcp:read` or `mcp:operate` | `SystemAdmin` | tool error (`isError`) for other users |
 | `run_reachability_tests`, `run_application_action` | `mcp:operate` + `McpGrant` | `ServerOperator` or `ServerAdmin` on the target environment | runs with `confirm=true`; otherwise denied |
 | `GET /api/tunnels/targets` | `tunnels:operate` | operator on the server environment | only operator servers with a credential and at least one deployment |
@@ -199,9 +207,11 @@ investigation policy.
 same view in the UI. Authentication failures (401) do not reach the audit
 writer: use the API/Caddy access logs to count them.
 
-## 6. Prompt injection and untrusted output
+## 6. Prompt injection, untrusted output and agency
 
-Tool output is data for the AI client, never instructions:
+The MCP server is a data/tool provider for an external model: it does not run
+an agent, keep memory or accept instructions from tool output. Treat every
+string returned by a tool as untrusted data, never as an instruction.
 
 - Inventory fields (names, hostnames, OS, application versions, execution
   output) can contain text controlled by an administrator or by a managed
@@ -218,6 +228,44 @@ Tool output is data for the AI client, never instructions:
   tools to call; they add no permissions. Their arguments are inserted into the
   prompt text, so a client must not treat a prompt argument as trusted
   instruction.
+
+### `confirm` is model-supplied
+
+`confirm=true` is a boolean chosen by the MCP client (the model). It proves
+that the request contained the field, not that a human approved the action; the
+server cannot distinguish the two. Scope, `McpGrant` and the environment role
+are the security boundary, and `confirm` is only a stumble guard.
+
+- Do not auto-approve action tools. Configure the client to ask before every
+  `run_reachability_tests` / `run_application_action` call and to show the
+  server, action and arguments before approval.
+- Disable "yolo"/auto-run modes for tokens with `mcp:operate`; use a
+  read-only `mcp:read` token for exploration and connect with operate rights
+  only for an approved task.
+- A denied action call is audited. Treat repeated denials as a signal of
+  prompt injection, a stale grant or an over-broad client policy.
+- A human-only approval channel or signed intent is still an open remediation
+  item (PT-18); until it exists, the client's approval prompt is the only
+  human factor.
+
+### Review grants
+
+Grants are managed from `/mcp-grants` (Users page, `SystemAdmin`) or
+`GET/POST /api/mcp/grants`:
+
+1. List every grant and map it to a person or group with a current need.
+2. Keep the action narrow (`reachability.run` or `actions.run`, not `*`) and
+   limit it to one environment where possible.
+3. Check that the holder still has the matching `ServerOperator`/`ServerAdmin`
+   right; a grant never replaces the environment role.
+4. Remove grants and tokens when the integration or person leaves; revoke
+   personal tokens in `/tokens`.
+
+OWASP mapping: LLM01 prompt injection, LLM02 sensitive information disclosure,
+LLM05 improper output handling, LLM06 excessive agency, ASI01 agent goal
+hijack, ASI02 tool misuse, ASI06 memory/context poisoning and ASI09
+human-agent trust exploitation. Findings PT-03/PT-13/PT-18 in
+[`../security/pentest-2026-11.md`](../security/pentest-2026-11.md).
 
 Practical test: create a server whose name starts with a prompt-injection
 sentence, call `list_servers` through the client, and verify the model quotes
@@ -330,6 +378,7 @@ baseline. There is no fixed latency SLO yet; compare with
 | Event replay | events only append audit rows; no action is triggered | repeat a `start` event, verify two audit rows and no tunnel |
 | Jump host confusion | jump host and username come from the server, not the request | inspect `/targets` and the desktop command line |
 | Token in process list/history | use keychain or `MCP_TOKEN`; never `--token` on shared hosts | `ps` while the desktop/script runs |
+| Cleartext desktop instance | HTTPS for non-loopback URLs; `INFRAORGIT_INSECURE_TLS=1` is development-only | set an `http://` instance and inspect the token/data path; see [`../security/transport.md`](../security/transport.md) |
 
 Run the negative tests on a local `make full` stack, not production. The API
 integration tests already cover scope, RBAC, allowlist and audit for the tunnel
@@ -339,8 +388,9 @@ endpoints (`InfraOrgITApi/tests/InfraOrgIt.IntegrationTests/TunnelApiTests.cs`).
 
 - [ ] All test/load tokens revoked; production tokens have an expiry and only
       the scopes they need.
-- [ ] `mcp:read` holders reviewed: read tools currently return the whole
-      inventory (see gaps).
+- [ ] `mcp:read` holders reviewed: read tools return the whole inventory under
+      the D7 read model (see gaps); confirm each holder is trusted with every
+      environment.
 - [ ] RBAC matrix checked with a `SystemAdmin` who is not an operator and an
       operator who is not `SystemAdmin`.
 - [ ] `McpGrant` rows reviewed (`/mcp-grants`); no `*` grant without a reason.
@@ -482,9 +532,14 @@ These are current-code observations, not claims that the control exists:
    queries the full inventory for `list_servers`, `get_server`,
    `list_applications`, `get_application`, `list_projects`, `get_project`,
    `list_deployments`, `list_reachability_tests` and `get_topology`; only
-   `list_executions` checks `SystemAdmin`. The architecture document says read
-   tools are filtered by environment access. Until the API is changed, treat
-   every `mcp:read` token as a whole-inventory read grant.
+   `list_executions` checks `SystemAdmin`. This matches the D7 read model
+   (inventory reads are open to every authenticated user; see
+   [`../security/permissions.md#read-model-pt-05`](../security/permissions.md#read-model-pt-05)),
+   but it makes every `mcp:read` token a whole-inventory read grant. Privilege
+   metadata (`/api/users`, `/api/groups`, `/api/roles`,
+   `/api/provider-environment-group-roles`) is being restricted to
+   `SystemAdmin`. Per-environment read filtering remains an open decision for
+   multi-team or externally shared MCP clients.
 2. **Tunnel audit target is client-reported.** `POST /api/tunnels/events` and
    `POST /api/tunnels/sessions` validate IDs and the operator right, but accept
    `TargetHost`/`TargetPort` from the desktop. They cannot prove what the local
