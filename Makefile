@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose -f ../InfraOrgITDocker/compose.yaml
 DOCKER_DIR ?= ../InfraOrgITDocker
 
-.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci openapi backup restore load-test legacy-dry-run release up-images
+.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci openapi backup restore load-test loadtest-mcp legacy-dry-run release up-images
 
 dev:
 	./scripts/dev.sh
@@ -14,6 +14,13 @@ backup:
 
 load-test:
 	REQUESTS=$${REQUESTS:-30} CONCURRENCY=$${CONCURRENCY:-5} ./scripts/loadtest.py
+
+loadtest-mcp:
+	@test -n "$$MCP_TOKEN" || { echo "MCP_TOKEN richiesto: token personale con mcp:read dal menu /tokens."; exit 2; }
+	MCP_BASE_URL="$${MCP_BASE_URL:-https://localhost:8443}" \
+		MCP_REQUESTS="$${MCP_REQUESTS:-$${REQUESTS:-30}}" \
+		MCP_CONCURRENCY="$${MCP_CONCURRENCY:-$${CONCURRENCY:-5}}" \
+		./scripts/loadtest-mcp.py
 
 restore:
 	./scripts/restore.sh $(BACKUP_DIR)

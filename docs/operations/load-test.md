@@ -42,6 +42,27 @@ Isolated stack (`ds-loadtest`), 12 requests per endpoint, concurrency 4:
 
 Exit code 0 (no errors, average below 1000 ms).
 
+## MCP endpoint
+
+`scripts/loadtest-mcp.py` measures `POST /mcp` with JSON-RPC `initialize`,
+`tools/list` and an optional read `tools/call`; it parses JSON and SSE replies
+and reports p50/p95/p99 plus requests/second. It is read-only by default and is
+not part of CI. The `/mcp` limit is 120 requests/minute per token, so a run above
+that includes expected 429 responses and exits non-zero.
+
+```bash
+python3 scripts/loadtest-mcp.py --self-test   # local stub, no instance
+python3 -m py_compile scripts/loadtest-mcp.py
+MCP_TOKEN=itk_... MCP_INSECURE_TLS=1 make loadtest-mcp
+MCP_TOKEN=itk_... MCP_TOOL=list_servers REQUESTS=60 CONCURRENCY=6 \
+  MCP_INSECURE_TLS=1 make loadtest-mcp
+```
+
+Defaults: 30 measured requests, concurrency 5, no tool call. Warm-up adds one
+`initialize` per worker and one `tools/list` per worker when `MCP_TOOL` is set.
+Full checklist, 429 procedure and tunnel abuse cases:
+[`mcp-tunnel-hardening.md`](mcp-tunnel-hardening.md).
+
 ## Limits
 
 - Numbers on a single Docker machine, empty database: they do not represent production or representative data.
