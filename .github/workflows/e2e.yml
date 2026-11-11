@@ -78,14 +78,21 @@ jobs:
           pull_pid=$!
           npm install -g yarn@1.22.22
           yarn --cwd InfraOrgITWeb install --frozen-lockfile --prefer-offline
-          yarn --cwd InfraOrgITWeb playwright install --with-deps chromium
+          if compgen -G "$HOME/.cache/ms-playwright/chromium-*" >/dev/null; then
+            echo "Playwright browser already cached; skipping apt dependencies."
+          else
+            yarn --cwd InfraOrgITWeb playwright install --with-deps chromium || {
+              echo "::warning::Playwright apt dependencies failed (runner DNS); retrying browser without deps."
+              yarn --cwd InfraOrgITWeb playwright install chromium
+            }
+          fi
           wait "$pull_pid" || cat /tmp/pull.log
 
       - name: Start stack
         run: |
           setsid make -C AllInfraOrgIT dev > /tmp/dev.log 2>&1 &
           echo $! > /tmp/dev.pid
-          for i in $(seq 1 300); do
+          for _ in $(seq 1 300); do
             if curl -fsS http://localhost:5298/health/ready >/dev/null &&
                curl -fsS http://localhost:3000/ >/dev/null; then
               exit 0
