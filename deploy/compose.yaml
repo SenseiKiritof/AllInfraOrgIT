@@ -1,7 +1,9 @@
 name: infraorgit-deploy
 
 # Stack from published images: no API/Web source checkout and no local build.
-# Copy .env.example to .env, set the tags, then:
+# Copy .env.example to .env, replace every CHANGE_ME_* secret, then run the
+# preflight before starting:
+#   deploy/scripts/check-env.sh .env
 #   docker compose --env-file .env -f compose.yaml up -d --wait
 
 services:
@@ -46,14 +48,10 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1@sha256:a78d6b79572168cb25886b80a8b5b8d4ed4390743e3eecb810538683e209dd6b
     restart: unless-stopped
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        export KC_HOSTNAME="$${KEYCLOAK_HOSTNAME:-https://localhost:8443}"
-        export KC_HOSTNAME_ADMIN="$${KEYCLOAK_HOSTNAME_ADMIN:-http://localhost:18081}"
-        export KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
-        export KC_PROXY_HEADERS=xforwarded
-        exec /opt/keycloak/bin/kc.sh start --import-realm
+    # Renders deploy/keycloak/realm-infraorgit.json into the import directory,
+    # substituting the client/MCP secrets and the application admin password.
+    entrypoint: ["/opt/keycloak/entrypoint.sh"]
+    command: ["start", "--import-realm"]
     environment:
       KEYCLOAK_HOSTNAME: ${SITE_URL:-https://localhost:8443}
       KEYCLOAK_HOSTNAME_ADMIN: ${KEYCLOAK_HOSTNAME_ADMIN:-http://localhost:18081}
@@ -63,12 +61,25 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?definisci KEYCLOAK_DB_PASSWORD in .env}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?definisci KEYCLOAK_ADMIN_PASSWORD in .env}
+      OIDC_CLIENT_SECRET: ${Oidc__ClientSecret:?definisci Oidc__ClientSecret in .env}
+      MCP_CLIENT_SECRET: ${MCP_CLIENT_SECRET:?definisci MCP_CLIENT_SECRET in .env}
+      INFRAORGIT_ADMIN_PASSWORD: ${INFRAORGIT_ADMIN_PASSWORD:?definisci INFRAORGIT_ADMIN_PASSWORD in .env}
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "true"
     ports:
       - "127.0.0.1:18081:8080"
     volumes:
-      - ./keycloak/realm-infraorgit.json:/opt/keycloak/data/import/realm.json:ro
+      - ./keycloak/entrypoint.sh:/opt/keycloak/entrypoint.sh:ro
+      - ./keycloak/realm-infraorgit.json:/opt/keycloak/realm/realm-infraorgit.json:ro
+    # read_only is not possible with the upstream image: Keycloak re-augments
+    # Quarkus into /opt/keycloak/lib/quarkus at startup. The writable paths are
+    # limited to /tmp and the import/cache directory.
+    tmpfs:
+      - /tmp
+      - /opt/keycloak/data
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000'"]
       interval: 5s
@@ -83,7 +94,7 @@ services:
       - auth
 
   migrate:
-    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}
+    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}${API_DIGEST:+@}${API_DIGEST:-}
     command: ["migrate"]
     restart: "no"
     depends_on:
@@ -115,7 +126,7 @@ services:
         mysql -h mysql -u root -p"$${MYSQL_ROOT_PASSWORD}" infraorgit < /base-data.sql
 
   api:
-    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}
+    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}${API_DIGEST:+@}${API_DIGEST:-}
     restart: unless-stopped
     depends_on:
       migrate:
@@ -141,7 +152,7 @@ services:
       Mcp__Oidc__Issuer: ${MCP_OIDC_ISSUER:-https://localhost:8443/realms/infraorgit}
       Mcp__Oidc__Audience: ${MCP_OIDC_AUDIENCE:-infraorgit-mcp}
       Mcp__Oidc__RequireHttpsMetadata: "false"
-      ServerAccess__CredentialKeys__1: ${ServerAccess__CredentialKey:-}
+      ServerAccess__CredentialKeys__1: ${ServerAccess__CredentialKey:?definisci ServerAccess__CredentialKey in .env}
       ServerAccess__CurrentKeyVersion: ${ServerAccess__CurrentKeyVersion:-1}
       ENC_KEY: ${ENC_KEY:-}
       DataProtection__KeysPath: /home/app/.aspnet/DataProtection-Keys
@@ -159,7 +170,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health/live || exit 1"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/live HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3; head -1 <&3 | grep -q \"200 OK\"'"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -169,17 +180,29 @@ services:
       - auth
 
   web:
-    image: ${WEB_IMAGE:-ghcr.io/senseikiritof/infraorgit-web}:${WEB_TAG:-main}
+    image: ${WEB_IMAGE:-ghcr.io/senseikiritof/infraorgit-web}:${WEB_TAG:-main}${WEB_DIGEST:+@}${WEB_DIGEST:-}
     restart: unless-stopped
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
       API_UPSTREAM: ${API_UPSTREAM:-api:8080}
       KEYCLOAK_UPSTREAM: ${KEYCLOAK_UPSTREAM:-keycloak:8080}
     ports:
-      - "8443:443"
+      # Loopback by default. Set WEB_BIND=0.0.0.0 (or a specific interface IP)
+      # only for an intentional network exposure with TLS and firewall rules.
+      - "${WEB_BIND:-127.0.0.1}:8443:443"
     volumes:
       - caddy-data:/data
       - caddy-config:/config
+    read_only: true
+    tmpfs:
+      - /tmp
+    # The Caddy binary in the published image carries cap_net_bind_service;
+    # no-new-privileges blocks that file capability, so grant it explicitly.
+    cap_drop: [ALL]
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       api:
         condition: service_healthy
