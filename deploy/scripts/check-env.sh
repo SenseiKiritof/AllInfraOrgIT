@@ -91,6 +91,34 @@ require_value INFRAORGIT_ADMIN_PASSWORD 16
 require_value Oidc__ClientSecret 24
 require_value MCP_CLIENT_SECRET 24
 
+# Mirror the realm password policy for the templated bootstrap administrator:
+# deploy/keycloak/realm-infraorgit.json sets length(12), upperCase(1),
+# lowerCase(1), digits(1), specialChars(1), notUsername and notEmail. Keycloak
+# enforces the policy on password changes, but import-time validation of the
+# seeded credential is not a reliable control (it depends on the Keycloak
+# version and can fail the whole realm import), so reject a weak password here
+# with a clear message before the container starts. The imported user is "admin"
+# with email "admin@example.invalid"; the length rule already makes those
+# values unusable, the explicit checks keep the preflight aligned with the
+# realm if the policy changes.
+check_admin_password_policy() {
+  name=INFRAORGIT_ADMIN_PASSWORD
+  value="$(get_value "$name")"
+  missing=""
+  [ "${#value}" -ge 12 ] || missing="$missing length(12)"
+  case "$value" in *[A-Z]*) ;; *) missing="$missing upperCase(1)" ;; esac
+  case "$value" in *[a-z]*) ;; *) missing="$missing lowerCase(1)" ;; esac
+  case "$value" in *[0-9]*) ;; *) missing="$missing digits(1)" ;; esac
+  case "$value" in *[[:punct:]]*) ;; *) missing="$missing specialChars(1)" ;; esac
+  lower="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
+  [ "$lower" != "admin" ] || missing="$missing notUsername"
+  [ "$lower" != "admin@example.invalid" ] || missing="$missing notEmail"
+  [ -z "$missing" ] ||
+    fail "$name non rispetta la password policy del realm:$missing (generare con openssl rand -base64 32)"
+}
+
+check_admin_password_policy
+
 [ "$(get_value Oidc__ClientSecret)" != "$(get_value MCP_CLIENT_SECRET)" ] ||
   fail "Oidc__ClientSecret e MCP_CLIENT_SECRET devono essere diversi"
 

@@ -56,8 +56,9 @@ make up-images
 ```
 
 `check-env.sh` refuses missing values, `CHANGE_ME` placeholders, the known
-`dev-*` secrets and the old all-`a` credential key. `make up-images` runs it
-before Compose, so the stack cannot start with the shipped defaults.
+`dev-*` secrets, the old all-`a` credential key and a bootstrap administrator
+password weaker than the realm password policy (see below). `make up-images`
+runs it before Compose, so the stack cannot start with the shipped defaults.
 
 Open `https://localhost:8443` (self-signed certificate) and
 `http://localhost:18081/admin` for the Keycloak console.
@@ -84,6 +85,38 @@ and restrict the port with a firewall. `check-env.sh` prints a warning when
 `WEB_BIND` is not loopback; the exposure is accepted only because it is
 explicit.
 
+## Transport security
+
+The stack protects only its own TLS endpoints. Every target and client
+connection is the operator's responsibility:
+
+- **FTP is cleartext.** The file-transfer connector supports SFTP over SSH and
+  plain FTP. Plain FTP sends the username, password, commands and file content
+  unencrypted, and an on-path attacker can read or alter them. Use SFTP for
+  every target. FTPS is not implemented in the connector, so it cannot be
+  selected as a mitigation today; if a legacy target only offers FTP, reach it
+  through an SSH tunnel or a dedicated management network and record a
+  time-boxed exception. Never expose FTP to the internet and never use it with
+  an administrator credential.
+- **Local HTTP stays on loopback.** `http://localhost:18081/admin` (Keycloak)
+  and the `http://localhost:3000` redirect in the realm are cleartext and must
+  remain bound to `127.0.0.1`. Do not point `KEYCLOAK_HOSTNAME_ADMIN`,
+  `SITE_URL` or an OIDC redirect at plain HTTP on a real interface: the
+  authorization code, session cookie and bearer tokens would travel in clear.
+  For remote administration keep the loopback bind and forward the port over
+  SSH (`ssh -L 18081:127.0.0.1:18081 <host>`), or put the stack behind a
+  TLS-terminating reverse proxy with a valid certificate.
+- **Tokens are passwords.** Personal API tokens, MCP bearer tokens and client
+  secrets must only cross HTTPS; never put them in a query string (they end up
+  in access logs, saved call history and backups), prefer the `Authorization`
+  header, and do not paste them into tickets, chat or shell history. Keep
+  `deploy/.env` at mode `600` and out of unencrypted backups. Do not set
+  `INFRAORGIT_INSECURE_TLS=1` outside an isolated lab: the desktop client sends
+  its bearer and refresh token to the configured instance, so an `http://`
+  non-loopback instance URL exposes them. On a shared host the macOS Keychain
+  helper can briefly expose a token in the process argument list (PT-16); use a
+  dedicated machine for desktop sessions.
+
 ## Administrator bootstrap
 
 The shipped Keycloak realm still creates the username `admin`, because the
@@ -103,6 +136,54 @@ after bootstrap if your policy requires it.
 `base-data.sql` maps the application user `admin` to `SystemAdmin`. If you
 rename or replace that user in Keycloak, update or remove the corresponding
 row and role mapping in the application database as well.
+
+## Password policy and MFA
+
+The deploy realm sets a password policy: at least 12 characters with an
+uppercase letter, a lowercase letter, a digit and a special character, and the
+password must not equal the username or the email:
+
+```text
+length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername(undefined) and notEmail(undefined)
+```
+
+Keycloak validates it whenever a password is set or changed, including the
+forced first-login change for `admin`. The preflight mirrors the policy for
+`INFRAORGIT_ADMIN_PASSWORD`: import-time validation of the seeded credential
+is not a reliable control (it depends on the Keycloak version and can fail the
+whole realm import), so `check-env.sh` rejects a bootstrap password that is too
+short or misses a character class before the container starts.
+
+Limitations: a password policy does not apply retroactively until the next
+password change, and `--import-realm` does not update an existing realm. On a
+stack deployed before this change, set the same policy in the Keycloak console
+(Realm settings -> Authentication -> Password policy) and rotate the
+administrator password. The master realm (`KEYCLOAK_ADMIN`) has its own policy
+and OTP settings; configure them in the console after the first start.
+
+MFA is deliberately **not** forced by the realm import. Enabling OTP on the
+only imported administrator before anyone has enrolled an authenticator would
+lock the deployment out. Require it as a post-bootstrap step:
+
+1. In the Keycloak admin console open Authentication -> Required actions and
+   enable **Configure OTP**, so users can enroll a TOTP authenticator.
+2. For every administrator and every account that can use stored SSH
+   credentials, the console or actions, open Users -> <user> -> Required
+   actions, add **Configure OTP** and save. The next login forces enrollment.
+3. To require OTP for a group rather than one user at a time, create a Keycloak
+   group or role (for example `mfa-required`), assign the administrators to it,
+   and bind a copy of the `browser` flow with a `Condition - user role`
+   subflow around `OTP Form`. Export the realm (or the custom flow) afterwards
+   so a rebuilt stack can reproduce it.
+4. Keep a break-glass path: a second administrator, the master-realm
+   administrator on the loopback port, and recovery codes stored offline. Test
+   the flow with a normal account before binding it realm-wide.
+
+`SystemAdmin` is an application role in the InfraOrgIT database, not a Keycloak
+role, so keeping the `mfa-required` group aligned with application
+administrators is an operational task: review it whenever roles change. The
+application has no step-up authentication of its own, so the Keycloak flow is
+the only second factor in front of console, action and credential operations.
 
 ## Secrets and rotation
 
@@ -162,6 +243,37 @@ MySQL 8.4 and Keycloak are pinned by digest. API/Web images remain tag-based
 because digests are release-specific; use a version or `sha-<commit>` tag, or
 set `API_DIGEST`/`WEB_DIGEST`, and `check-env.sh` warns about `main`, `dev` and
 `latest` without a digest.
+
+## Resource limits
+
+Every long-running service sets `mem_limit`, `cpus` and `pids_limit`, each
+overridable from `.env` (PT-17):
+
+| Service | `mem_limit` | `cpus` | `pids_limit` | Overrides |
+|---|---|---|---|---|
+| `mysql` | 1g | 1.0 | 512 | `MYSQL_MEM_LIMIT`, `MYSQL_CPUS`, `MYSQL_PIDS_LIMIT` |
+| `mysql-keycloak` | 768m | 1.0 | 512 | `KEYCLOAK_DB_MEM_LIMIT`, `KEYCLOAK_DB_CPUS`, `KEYCLOAK_DB_PIDS_LIMIT` |
+| `keycloak` | 2g | 2.0 | 1024 | `KEYCLOAK_MEM_LIMIT`, `KEYCLOAK_CPUS`, `KEYCLOAK_PIDS_LIMIT` |
+| `api` | 768m | 1.0 | 512 | `API_MEM_LIMIT`, `API_CPUS`, `API_PIDS_LIMIT` |
+| `web` | 256m | 0.5 | 256 | `WEB_MEM_LIMIT`, `WEB_CPUS`, `WEB_PIDS_LIMIT` |
+
+The defaults assume a single host for a small team: up to ~50 servers and ~20
+concurrent users, MySQL keeping its default 128 MiB InnoDB buffer pool,
+Keycloak 26 keeping its upstream 2 GB recommendation for a small production
+deployment (it allocates up to 70% of the limit as JVM heap plus ~300 MiB
+non-heap, and the unoptimized image augments Quarkus at startup), and Caddy
+serving only as a reverse proxy. `mem_limit` is a hard cgroup cap, so an
+undersized value OOM-kills the container (MySQL during an import, Keycloak
+during the realm import) rather than degrading gracefully; `pids_limit` counts
+threads, not just processes, so MySQL and the JVM need headroom. Raise the
+values in `.env` before importing a large inventory, running a backup on the
+same host, or serving more users. The one-shot `migrate` and `base-data` jobs
+stay unlimited so the first start cannot fail on an undersized cap. After a
+restart check `docker stats` and
+`docker inspect --format '{{.State.OOMKilled}}' <container>`; these are Compose
+(non-Swarm) limits, not Swarm reservations. The defaults add up to ~4.75 GiB
+for the five services, so plan an 8 GiB host to leave room for Docker, the OS
+and backups.
 
 ## Update / stop
 
