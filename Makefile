@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose -f ../InfraOrgITDocker/compose.yaml
 DOCKER_DIR ?= ../InfraOrgITDocker
 
-.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci desktop-ci openapi backup restore load-test loadtest-mcp legacy-dry-run release up-images
+.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci desktop-ci openapi backup restore load-test loadtest-mcp security-smoke legacy-dry-run release up-images
 
 dev:
 	./scripts/dev.sh
@@ -21,6 +21,15 @@ loadtest-mcp:
 		MCP_REQUESTS="$${MCP_REQUESTS:-$${REQUESTS:-30}}" \
 		MCP_CONCURRENCY="$${MCP_CONCURRENCY:-$${CONCURRENCY:-5}}" \
 		./scripts/loadtest-mcp.py
+
+# Penetration-lite negative checks. Not in CI: it needs real tokens and the
+# rate-limit burst writes audit rows and consumes the token budget.
+security-smoke:
+	@test -n "$$MCP_TOKEN" || { echo "MCP_TOKEN richiesto: token personale con mcp:read dal menu /tokens."; exit 2; }
+	@test -n "$$MCP_OPERATE_TOKEN" || { echo "MCP_OPERATE_TOKEN richiesto: token con mcp:operate e tunnels:operate."; exit 2; }
+	SECURITY_SMOKE_BASE_URL="$${SECURITY_SMOKE_BASE_URL:-https://localhost:8443}" \
+	SECURITY_SMOKE_INSECURE_TLS="$${SECURITY_SMOKE_INSECURE_TLS:-1}" \
+		./scripts/security-smoke.py
 
 restore:
 	./scripts/restore.sh $(BACKUP_DIR)

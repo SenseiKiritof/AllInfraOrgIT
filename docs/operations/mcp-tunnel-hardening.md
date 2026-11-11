@@ -356,6 +356,123 @@ endpoints (`InfraOrgITApi/tests/InfraOrgIt.IntegrationTests/TunnelApiTests.cs`).
       confirmed.
 - [ ] `MCP_ENABLED` matches the environment decision; Caddy exposes only
       `/mcp`, `/mcp/*`, `/.well-known/oauth-protected-resource*` and `/api/*`.
+- [ ] `make security-smoke` run on a test instance; temp tokens revoked after
+      the run.
+
+## 11. Security smoke test
+
+`scripts/security-smoke.py` is the repeatable negative-check pass for a
+running instance. It is stdlib only, read-only by default and prints one
+`PASS`/`FAIL`/`SKIP` line per control; any `FAIL` exits non-zero. It is not in
+`make ci`: it needs real tokens, and the optional burst writes audit rows and
+consumes the token rate budget.
+
+Checks:
+
+- no auth -> 401 on `/mcp`, `/api/servers`, `/api/tunnels/targets` and
+  `/api/audit-events`;
+- `/.well-known/oauth-protected-resource` is public and advertises an absolute
+  resource, an authorization server and the `mcp:read`/`mcp:operate` scopes;
+- the `/mcp` 401 `WWW-Authenticate` challenge points at that metadata
+  (`resource_metadata`, RFC 9728);
+- a `mcp:read` token can call `tools/list` but is denied
+  `run_reachability_tests`;
+- an operate token without `McpGrant` or the environment operator right is
+  denied the action;
+- `/api/tunnels/targets` returns 200 with only the allowlisted DTO fields for a
+  tunnel token, and 403 for a read-only token;
+- `/api/audit-events` denies a non-admin token (403; the route accepts browser
+  sessions only, so a bearer token gets 401 first, which is accepted as denial);
+- `X-Content-Type-Options: nosniff` and `Referrer-Policy` are present;
+- CORS/preflight for `/api` does not echo an arbitrary origin (PASS with no
+  CORS headers, which is the current API behavior);
+- optional burst: at least one `429` on `/mcp` (off by default).
+
+Inputs are `--base-url`, `--token` (`mcp:read`), optional `--operate-token`
+(`mcp:operate` + `tunnels:operate`), optional `--outsider-token` (any
+low-privilege user), `--insecure-tls` and `--self-test`. The Make target reads
+`MCP_TOKEN` and `MCP_OPERATE_TOKEN` from the environment, so the raw values do
+not appear in the process list; the script never prints them and redacts them
+from every detail line.
+
+```bash
+cd AllInfraOrgIT
+read -rs MCP_TOKEN; echo; export MCP_TOKEN              # mcp:read
+read -rs MCP_OPERATE_TOKEN; echo; export MCP_OPERATE_TOKEN  # mcp:operate tunnels:operate
+make security-smoke
+```
+
+Direct run and self-test:
+
+```bash
+python3 -m py_compile scripts/security-smoke.py
+python3 scripts/security-smoke.py --self-test
+MCP_TOKEN=... MCP_OPERATE_TOKEN=... \
+  python3 scripts/security-smoke.py --base-url https://localhost:8443 --insecure-tls
+make -n security-smoke
+```
+
+Expected output (local `make full`, 2026-11-11). The `WWW-Authenticate` line is
+the one current finding, see gap 5 below:
+
+```text
+security smoke: https://localhost:8443
+  read=mcp:read operate=provided outsider=absent timeout=15s
+PASS unauthenticated POST /mcp -> 401: 401
+PASS unauthenticated GET /api/servers -> 401: 401
+PASS unauthenticated GET /api/tunnels/targets -> 401: 401
+PASS unauthenticated GET /api/audit-events -> 401: 401
+PASS oauth protected-resource is public: 200, public JSON
+PASS oauth metadata advertises resource, server and scopes: ...
+FAIL mcp 401 challenge points to metadata: Bearer challenge lacks resource_metadata (RFC 9728): ...
+PASS read token can call tools/list: 13 tools
+PASS read token cannot call an action tool: denied: ... Serve lo scope mcp:operate.
+PASS operate token without grant is denied the action: denied: ... Nessun grant MCP ...
+PASS tunnels targets with tunnel token: 200, allowlisted fields, 25 targets
+PASS tunnels targets with read-only token -> 403: 403
+PASS audit-events with non-admin token -> denied: 401 (read token): route accepts browser sessions ...
+PASS security headers present: /health/live: nosniff and no-referrer
+PASS CORS does not allow an arbitrary origin: no CORS headers (HTTP 405)
+SKIP mcp rate limit burst -> 429: disabled (...)
+result: FAIL (14 passed, 1 failed, 1 skipped)
+```
+
+Enable the burst explicitly. It runs last and leaves the token rate-limited for
+the rest of the one-minute window:
+
+```bash
+SECURITY_SMOKE_RATE_REQUESTS=121 make security-smoke
+```
+
+The action checks pass `testIds: [-1]`: if a token is wrongly authorized, the
+grant and operator checks run but no reachability probe matches, so the smoke
+test does not touch a server. Revoke the temp tokens after the run.
+
+What this does not cover:
+
+- **Full penetration test.** No exploit chains, auth-bypass fuzzing, OAuth/OIDC
+  redirect or token-substitution attacks, CSRF/session fixation, IDOR/BOLA
+  beyond the listed endpoints, injection, SSRF, TLS/cipher review or
+  dependency/container CVE scanning. Commission a dedicated assessment for
+  those.
+- **Load, capacity and DoS.** One optional burst proves the limiter returns
+  429; it does not measure throughput, latency, soak behavior, DB/SSH
+  contention or a distributed flood. Use `scripts/loadtest-mcp.py` for the
+  baseline described in section 8.
+- **Infrastructure.** Caddy/Compose/Keycloak configuration, network exposure,
+  edge certificate chain and HSTS, DNS, host/OS hardening, secret manager,
+  backup/restore, audit retention purge and monitoring/alerting are out of
+  scope. The security headers are checked on the API response, not on every
+  edge route.
+- **Browser and desktop flows.** Cookie flags, CSP behavior in a real browser,
+  the tunnel process (`ssh -L`/`-J`, loopback bind, keychain) and the UI RBAC
+  are covered by the manual checklist and the integration tests, not here.
+- **Positive RBAC matrix.** Only the supplied personas are exercised; a
+  `SystemAdmin` who is not an operator, a revoked/expired token and
+  `Mcp:Enabled=false` (404) remain manual checks in sections 1-3.
+- **Idempotence and side effects.** The run writes `LastUsedAt`, audit rows and
+  the rate-limit budget. Do not point it at production outside an approved
+  window.
 
 ## Known gaps to track
 
@@ -378,6 +495,13 @@ These are current-code observations, not claims that the control exists:
 4. **Audit retention is not exposed in Compose.** The default 180 days lives in
    `appsettings.json`; changing it requires the `Audit__RetentionDays`
    configuration key.
+5. **MCP 401 has no metadata pointer.** `Program.cs` answers `/mcp` without
+   authentication with a bare `WWW-Authenticate: Bearer`; it does not set
+   `resource_metadata=".../.well-known/oauth-protected-resource"` (RFC 9728).
+   Clients can still find the metadata by the well-known path, but
+   `make security-smoke` reports this line as `FAIL`. Fix in
+   `InfraOrgITApi/src/InfraOrgIt.Api/Program.cs` (challenge event or a
+   middleware) and re-run the smoke test.
 
 ## Baseline locale
 

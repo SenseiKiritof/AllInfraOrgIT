@@ -133,6 +133,7 @@ make backup   # MySQL application + Keycloak dump into backups/<UTC>
 make restore  # only with CONFIRM_RESTORE=yes BACKUP_DIR=...; overwrites the DBs
 make load-test # targeted load on lists, topology and saves
 make loadtest-mcp # MCP /mcp load with MCP_TOKEN; read-only, not in CI
+make security-smoke # negative security checks; needs MCP_TOKEN + MCP_OPERATE_TOKEN, not in CI
 make legacy-dry-run  # importer dry-run on JSON fixtures
 make migrate  # dotnet-ef from the local manifest
 make e2e      # Playwright; requires make dev running
