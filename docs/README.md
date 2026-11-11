@@ -18,6 +18,7 @@ Index of the Phase 1 documents.
 | `operations/phase8-plan.md` | Phase 8 work packages, decisions and order |
 | `operations/backup-restore.md` | MySQL/Keycloak dumps, restore and executed proof |
 | `operations/load-test.md` | targeted load on lists, topology and saves, with results |
+| `operations/mcp-tunnel-hardening.md` | MCP and tunnel hardening checklist: auth, RBAC, allowlist, rate limits, audit, load and abuse cases |
 | `operations/release.md` | release checklist, `make release`, tags, push and rollback |
 | `security/permissions.md` | permission matrix verified on the legacy app and target v1 |
 | `ux/pages.md` | page map, flows and differences from the original |
