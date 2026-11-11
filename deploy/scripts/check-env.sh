@@ -141,17 +141,16 @@ decoded_len="$(printf '%s' "$credential_key" | openssl base64 -d -A 2>/dev/null 
 [ "$decoded_len" -eq 32 ] ||
   fail "ServerAccess__CredentialKey deve decodificare a 32 byte (trovati $decoded_len): openssl rand -base64 32"
 
-# Image tags are part of the deploy input: a fresh .env must make an explicit
-# choice, and a mutable branch tag deserves a digest or an immutable tag.
+# Image tags are part of the deploy input. A fresh .env must make an explicit
+# choice, and a mutable branch tag is refused unless the exact manifest is
+# pinned by digest: deploy must be reproducible.
 check_digest() {
   name=$1
   value="$(get_value "$name")"
   [ -n "$value" ] || return 0
   check_placeholder "$name" "$value"
-  case "$value" in
-    sha256:*) ;;
-    *) fail "$name deve iniziare con sha256:" ;;
-  esac
+  [[ "$value" =~ ^sha256:[0-9a-f]{64}$ ]] ||
+    fail "$name deve essere un digest sha256 completo (sha256:<64 hex>), non '$value'"
 }
 
 require_tag() {
@@ -162,16 +161,8 @@ require_tag() {
   check_placeholder "$name" "$value"
   case "$value" in
     main|dev|latest)
-      digest="$(get_value "$digest_name")"
-      if [ -n "$digest" ]; then
-        check_placeholder "$digest_name" "$digest"
-        case "$digest" in
-          *sha256:*) ;;
-          *) fail "$digest_name deve iniziare con sha256: quando $name=$value" ;;
-        esac
-      else
-        warn "$name=$value e un tag mobile: usare una versione/sha-<commit> oppure impostare $digest_name=sha256:..."
-      fi
+      [ -n "$(get_value "$digest_name")" ] ||
+        fail "$name=$value e un tag mobile: usare una versione X.Y.Z/sha-<commit> oppure impostare $digest_name=sha256:<64 hex>"
       ;;
   esac
 }
