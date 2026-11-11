@@ -45,8 +45,17 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   AutoStart custom services retry up to 3 times with a 5s delay after an unexpected ssh exit; user stop, panel change, logout and exit cancel retries, and token/auth failures do not retry.
   Verification: 101 desktop tests, including retry budget, busy fixed port and new session ids.
 
-- [ ] **Tunnel persistence across restarts**
-  Keep/restore active tunnels when the app restarts; today they stop with the process, even though autoStart services start again when the panel loads.
+- [x] **Tunnel persistence across restarts**
+  `tunnels.json` stores only identity (instance/server/service or deployment, mode, requested port), atomic and secret-free; startup restore refreshes the keychain token, loads the allowlist, prunes deleted/disabled services and skips active ones; clear action.
+  Verification: 117 desktop tests covering restore, missing token, pruning, stop/logout removal.
+
+- [x] **Windows GUI smoke**
+  `gui-smoke-windows` on `windows-latest` starts the app, waits 8s and fails on early exit; window handle logged. Linux job unchanged.
+  Verification: run 43004152371 green, negative path tested.
+
+- [x] **Desktop release flow**
+  Desktop in `REPOS`, `make desktop-ci` gate, five-repo `versions.lock`, release docs and push list; `publish.yml` refuses tags not on `main`; `Version tags` ruleset immutable.
+  Verification: `make desktop-ci`, `make -n release`, shellcheck and workflow checks.
 
 - [x] **Desktop device login**
   RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token.
@@ -71,8 +80,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   The manager reads GitHub `releases/latest`, compares the assembly version, downloads the matching archive, verifies its SHA-256 and opens the folder; stable tags only, missing checksum requires explicit confirmation.
   Verification: 83 desktop tests, fake HTTP handlers and three-OS CI; no automatic install.
 
-- [ ] **Automatic update install**
-  Replace the app from the verified archive and add the desktop repo to `make release`/`versions.lock`; installation is still manual (release page/download).
+- [x] **Automatic update install (macOS/Linux)**
+  After a verified download, macOS atomically replaces the `.app` with a detached helper (validates bundle id, restores on failure, relaunches) and Linux replaces the published directory; Windows opens the verified zip for manual extraction.
+  Verification: 133 desktop tests plus build/gui-smoke on three OS; helper scripts are not executed against the real app in CI.
+
+- [ ] **Windows self-replace**
+  Implement the same wait-replace-restart helper for the Windows zip/exe layout and validate it on a real runner.
 
 ## Workspace
 
