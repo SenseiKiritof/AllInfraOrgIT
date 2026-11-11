@@ -104,9 +104,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Deploy secrets/network/templating (PT-01), API-key history redaction + scrub (PT-02), deploy MCP scope/secret (PT-03), cross-environment jump host and proxy route guards (PT-04/PT-06).
   Verification: API integration tests, deploy preflight/compose config, local full stack healthy; report section 10.
 
-- [ ] **Pentest 2026-11 medium/low findings**
-  Environment-filtered reads or accepted-risk decision (PT-05), session role revocation (PT-07), MFA/password policy (PT-08), file-transfer host-key pinning (PT-09), audit coverage/tamper evidence (PT-10), signed updater trust (PT-11), per-token rate limits (PT-12), HTTP confirmation enforcement (PT-13), tunnel session target validation (PT-14), SameSite/doc alignment (PT-15), transport hardening (PT-16), resource limits (PT-17), MCP prompt-injection guidance (PT-18).
-  Partial in the deploy stack: password policy + bootstrap preflight (PT-08), transport guidance (PT-16), service resource limits (PT-17). MFA enforcement, FTP/TLS client support and the remaining container rootfs gaps stay open.
+- [x] **Pentest 2026-11 medium fixes**
+  RBAC metadata reads restricted to SystemAdmin (PT-05); session revocation on role/group changes (PT-07); SSH/SFTP host-key pinning (PT-09); audit rows for file transfer/inventory/tunnel services (PT-10); signed checksum manifest for desktop installs (PT-11); HTTP/SPA action confirmation (PT-13); tunnel-session target validation (PT-14); SameSite/transport/MCP prompt-injection docs (PT-15/16/18); deploy password policy and resource limits (PT-08/17).
+  Verification: API integration tests, Web 101 tests, desktop 153 tests, deploy preflight/compose config, publish manifest signature `Verified OK`.
+
+- [ ] **Pentest 2026-11 residual**
+  PT-12 per-token rate-limit partitioning; PT-16 FTPS/API connector, non-loopback desktop HTTPS enforcement and macOS token via native Keychain; PT-18 server-enforced human approval; PT-10 tamper-evident audit (hash chain/WORM); PT-17 Keycloak/web rootfs and mutable-tag warnings.
 
 ## Workspace
 
