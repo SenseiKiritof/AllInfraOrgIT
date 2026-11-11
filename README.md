@@ -176,20 +176,22 @@ packages are public, otherwise run `docker login ghcr.io` first.
 
 ```bash
 cd AllInfraOrgIT
-cp deploy/.env.example deploy/.env   # secrets, image tags, site URL
+cp deploy/.env.example deploy/.env   # replace CHANGE_ME_* (secrets and image tags)
+deploy/scripts/check-env.sh deploy/.env
 make up-images
 # or: docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait
 ```
 
 Open `https://localhost:8443` and the Keycloak console on
 `http://localhost:18081/admin`. The API image runs the EF migrations; the base
-data (environments, roles, menus, translations, dev admin) comes from
-`deploy/init/base-data.sql`, and Keycloak imports `deploy/keycloak/realm-infraorgit.json`.
+data (environments, roles, menus, translations, bootstrap admin) comes from
+`deploy/init/base-data.sql`, and Keycloak imports the templated
+`deploy/keycloak/realm-infraorgit.json` with secrets rendered from `.env`.
 
 Update with `docker compose --env-file deploy/.env -f deploy/compose.yaml pull`
 then `up -d --wait`; `down` keeps the data in `deploy/data/`, `down -v` also
-removes the named volumes (sessions, Caddy certificates). Full guide in
-`deploy/README.md`.
+removes the named volumes (API data protection keys, Caddy certificates).
+Full guide in `deploy/README.md`.
 
 ## Status
 
