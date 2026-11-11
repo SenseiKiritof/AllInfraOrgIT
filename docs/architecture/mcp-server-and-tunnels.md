@@ -359,8 +359,9 @@ the SSH-command log and is not reshaped.
   GitHub release, downloads the matching archive, verifies its SHA-256 and,
   on macOS/Linux, replaces itself through a detached helper and restarts;
   Windows keeps the verified zip for manual extraction.
-- Still to do: Windows self-replace, hardening (penetration test), real
-  signing/notarization runs with the repository secrets.
+- Still to do: real signing/notarization runs with the repository secrets and a
+  full penetration test; the automated security smoke and load baseline are
+  in place.
 
 ## 7. Open points
 

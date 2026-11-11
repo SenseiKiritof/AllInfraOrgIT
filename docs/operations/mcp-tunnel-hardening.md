@@ -495,13 +495,9 @@ These are current-code observations, not claims that the control exists:
 4. **Audit retention is not exposed in Compose.** The default 180 days lives in
    `appsettings.json`; changing it requires the `Audit__RetentionDays`
    configuration key.
-5. **MCP 401 has no metadata pointer.** `Program.cs` answers `/mcp` without
-   authentication with a bare `WWW-Authenticate: Bearer`; it does not set
-   `resource_metadata=".../.well-known/oauth-protected-resource"` (RFC 9728).
-   Clients can still find the metadata by the well-known path, but
-   `make security-smoke` reports this line as `FAIL`. Fix in
-   `InfraOrgITApi/src/InfraOrgIt.Api/Program.cs` (challenge event or a
-   middleware) and re-run the smoke test.
+5. **MCP 401 metadata pointer — fixed 2026-11-11.** `/mcp` 401 responses now
+   set `WWW-Authenticate: Bearer resource_metadata=".../.well-known/oauth-protected-resource"`
+   (RFC 9728); covered by an integration test and `make security-smoke`.
 
 ## Baseline locale
 
@@ -516,3 +512,16 @@ MCP_TOKEN=itk_... MCP_INSECURE_TLS=1 MCP_REQUESTS=60 MCP_CONCURRENCY=10 \
 Risultato: 60/60 richieste OK, 0 errori/429, p50 20.5 ms, p95 41.8 ms,
 p99 48.2 ms, ~387 req/s. Usare questo dato come riferimento per la regressione,
 non come capacità di produzione: è un ambiente locale con un solo processo API.
+
+## Security smoke locale
+
+`make security-smoke` con token `mcp:read` e `mcp:operate tunnels:operate`:
+
+- 15 controlli PASS, 1 SKIP (burst disabilitato di default).
+- Con `--rate-limit-requests 121`: **16 PASS, 0 FAIL**; il 429 arriva dopo 107
+  richieste (budget 120/min già parzialmente consumato).
+- Coperti: 401 senza auth, metadata pubblica e scopes, challenge RFC 9728,
+  separazione read/operate, denial senza grant, allowlist tunnel, 403 con token
+  read-only, audit negato, header e CORS.
+- Non coperti: pentest completo, carico/capacità, infrastruttura e
+  configurazione dei secret.
