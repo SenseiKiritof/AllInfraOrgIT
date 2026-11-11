@@ -210,7 +210,7 @@ Phase 8 completed on the technical perimeter — 2026-10-30. Backend, frontend, 
 
 ## Release and publishing
 
-Merging into `main` with `[Major]`, `[Minor]` or `[Patch]` in the pull request title makes the API/Web `tag` workflow create the next `vX.Y.Z` tag on the merge commit and start the image build. `make release VERSION=0.8.0` completes the missing repos, updates `versions.lock` and skips tags that already exist; pushing stays manual. Version tags are created only from `main`: the `Version tags` ruleset makes `v*` immutable and the docker workflows reject a tag whose commit is not on `main`. Procedure in `docs/operations/release.md`.
+Merging into `main` with `[Major]`, `[Minor]` or `[Patch]` in the pull request title makes the API/Web `tag` workflow create the next `vX.Y.Z` tag on the merge commit and start the image build. `make release VERSION=0.8.0` completes the missing repos (including `InfraOrgITDesktop`), updates `versions.lock` and skips tags that already exist; pushing stays manual. Version tags are created only from `main`: the `Version tags` ruleset makes `v*` immutable and the docker workflows reject a tag whose commit is not on `main`. The desktop `v*` tag must also be pushed from `main`; it starts `publish.yml`, which creates the GitHub Release with the signed (when the secrets exist) archives. Procedure in `docs/operations/release.md`.
 
 `v*` tags trigger `.github/workflows/docker.yml` in `InfraOrgITApi` and `InfraOrgITWeb`: image build, application version tag and push to GHCR.
 
@@ -222,7 +222,7 @@ docker run --rm -p 8080:80 ghcr.io/senseikiritof/infraorgit-web:0.8.0
 
 Published tags: `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest`. The version number is baked into the image (`org.opencontainers.image.version`, `APP_VERSION` for the API, `VITE_APP_VERSION` for the web app).
 
-`versions.lock` pins backend, frontend and docker commits. A release is the checkout of those commits; rollback is the previous lock.
+`versions.lock` pins backend, frontend, docker and desktop commits. A release is the checkout of those commits; rollback is the previous lock. The desktop entry is added by the next `make release`; older locks without it stay valid.
 
 ## Rules
 
