@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose -f ../InfraOrgITDocker/compose.yaml
 DOCKER_DIR ?= ../InfraOrgITDocker
 
-.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci openapi backup restore load-test loadtest-mcp legacy-dry-run release up-images
+.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci desktop-ci openapi backup restore load-test loadtest-mcp legacy-dry-run release up-images
 
 dev:
 	./scripts/dev.sh
@@ -98,6 +98,10 @@ ci: config
 	@test -z "$$(git -C ../InfraOrgITApi status --porcelain -- openapi/InfraOrgIt.Api.json)" || \
 		{ echo "OpenAPI drift: rigenerare e committare openapi/InfraOrgIt.Api.json" >&2; exit 1; }
 	npx --yes @redocly/cli lint docs/api/openapi.yaml
+
+desktop-ci:
+	dotnet build ../InfraOrgITDesktop/InfraOrgITDesktop.slnx -warnaserror
+	dotnet test ../InfraOrgITDesktop/InfraOrgITDesktop.slnx --no-build
 
 release:
 	@test -n "$(VERSION)" || { echo "Uso: make release VERSION=0.8.0" >&2; exit 2; }
