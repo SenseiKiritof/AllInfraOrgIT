@@ -328,19 +328,24 @@ the SSH-command log and is not reshaped.
   open instance.
 - Desktop tunnel API: `GET /api/tunnels/targets` returns only servers with
   deployments, a credential username and the caller's operator environments,
-  with jump host and `hostPort ?? exposedPort`; `POST /api/tunnels/events`
-  writes `TunnelStart`/`TunnelStop`/`TunnelError` audit rows. Both require a
-  token with `tunnels:operate`; the Keycloak desktop client can request it.
+  with jump chains and `hostPort ?? exposedPort`; it also carries the enabled
+  `TunnelServices` (Local/Dynamic/Remote, Tcp/Http/Https, openPath, autoStart).
+  `POST /api/tunnels/events` writes `TunnelStart`/`TunnelStop`/`TunnelError`
+  audit rows. Both require a token with `tunnels:operate`; Remote services are
+  visible only to ServerAdmin. ServerAdmin CRUDs services from the server
+  drawer and can discover listening ports with `ss -tlnH` over the server's
+  own SSH connection (`POST /api/servers/{id}/tunnel-services/discover`).
 - Central tunnel visibility: `POST /api/tunnels/sessions` upserts a live row
   per tunnel (heartbeat every 30s), `GET /api/tunnels/sessions` returns active
   rows filtered to operator environments (SystemAdmin sees all), and a
   cleanup service marks rows stale after two minutes. `/tunnels` shows them
   with a 15s refresh. The dedicated `tunnels`/`mcp` limits are 120/min per
   user or token.
-- Desktop tunnel engine (`../InfraOrgITDesktop/Tunnels`): `ssh -L`/`-J`
-  through the user's agent, loopback port allocation, active tunnel list,
-  start/stop/error events and session heartbeats. Verified locally with an
-  sshd container + `ssh-agent` (forward listening and authenticated).
+- Desktop tunnel engine (`../InfraOrgITDesktop/Tunnels`): `ssh -L`/`-D`/`-R`
+  through the user's agent, multi-hop `-J`, loopback port allocation, custom
+  services with autoStart, open-in-browser for Local HTTP(S), active tunnel
+  list, start/stop/error events and session heartbeats. Verified locally with
+  an sshd container + `ssh-agent` (forward listening and authenticated).
 - Desktop device login: RFC 8628 + PKCE against
   `infraorgit-mcp-desktop`, issuer discovered from the protected-resource
   metadata, user code opened in the browser; the refresh token is stored in
@@ -350,8 +355,9 @@ the SSH-command log and is not reshaped.
 - Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
   (Linux) built by `publish.yml`; signing, notarization and GitHub Release
   upload are wired behind repository secrets. The app checks the latest
-  GitHub release and opens it; version from tag or manual input.
-- Still to do: automatic update install, XPipe/`ssh -L` interim links,
+  GitHub release, downloads the matching archive, verifies its SHA-256 and
+  opens the folder; installation is still manual.
+- Still to do: automatic update install, tunnel persistence/auto-reconnect,
   hardening (load/pentest, Windows/Linux GUI runtime checks).
 
 ## 7. Open points
@@ -365,6 +371,6 @@ the SSH-command log and is not reshaped.
 
 - Raw shell access over MCP.
 - Browser-to-server TCP tunnels without a local component.
-- Replacing XPipe's full feature set (RDP/VNC, file manager, services).
+- Replacing XPipe's full feature set (RDP/VNC, file manager).
 - Multi-tenant MCP clients with per-client environment grants in v1; scopes
   stay coarse and environment rights come from the user's groups.
