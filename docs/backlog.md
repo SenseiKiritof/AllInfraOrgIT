@@ -109,7 +109,7 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Verification: API integration tests, Web 101 tests, desktop 153 tests, deploy preflight/compose config, publish manifest signature `Verified OK`.
 
 - [ ] **Pentest 2026-11 residual**
-  PT-12 per-token rate-limit partitioning; PT-16 FTPS/API connector, non-loopback desktop HTTPS enforcement and macOS token via native Keychain; PT-18 server-enforced human approval; PT-10 tamper-evident audit (hash chain/WORM); PT-17 Keycloak/web rootfs and mutable-tag warnings.
+  PT-10 tamper-evident audit chain is implemented, but WORM/external anchoring and prefix/suffix deletion detection remain; PT-16 macOS native Keychain/stdin; PT-18 server-enforced human approval; PT-17 Keycloak/web rootfs and mutable-tag warnings; MFA enforcement (documented, not forced).
 
 ## Workspace
 
