@@ -5,11 +5,27 @@ name: infraorgit-deploy
 # preflight before starting:
 #   deploy/scripts/check-env.sh .env
 #   docker compose --env-file .env -f compose.yaml up -d --wait
+#
+# Resource limits (PT-17). Every long-running service sets mem_limit, cpus and
+# pids_limit; each value is overridable from .env. The defaults size a small
+# single-host install: up to ~50 servers and ~20 concurrent users. mem_limit is
+# a hard cgroup cap, so an undersized value OOM-kills the container instead of
+# slowing it down (MySQL during an import, Keycloak during the realm import);
+# pids_limit counts threads as well as processes. Raise the limits before a
+# large inventory import or backup and check `docker stats` and
+# `docker inspect --format '{{.State.OOMKilled}}' <container>` after a restart.
+# The migrate/base-data one-shot jobs stay unlimited: they are short-lived and
+# a too-low cap there would fail the first start.
 
 services:
   mysql:
     image: mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69
     restart: unless-stopped
+    # 1 GiB leaves room for the default 128 MiB InnoDB buffer pool plus
+    # per-connection buffers; 512 threads covers MySQL internals and clients.
+    mem_limit: ${MYSQL_MEM_LIMIT:-1g}
+    cpus: "${MYSQL_CPUS:-1.0}"
+    pids_limit: ${MYSQL_PIDS_LIMIT:-512}
     environment:
       MYSQL_DATABASE: infraorgit
       MYSQL_USER: infraorgit
@@ -29,6 +45,11 @@ services:
   mysql-keycloak:
     image: mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69
     restart: unless-stopped
+    # Keycloak's database: smaller than the application database, but the same
+    # MySQL baseline; 768 MiB keeps startup and the realm import out of OOM.
+    mem_limit: ${KEYCLOAK_DB_MEM_LIMIT:-768m}
+    cpus: "${KEYCLOAK_DB_CPUS:-1.0}"
+    pids_limit: ${KEYCLOAK_DB_PIDS_LIMIT:-512}
     environment:
       MYSQL_DATABASE: keycloak
       MYSQL_USER: keycloak
@@ -52,6 +73,12 @@ services:
     # substituting the client/MCP secrets and the application admin password.
     entrypoint: ["/opt/keycloak/entrypoint.sh"]
     command: ["start", "--import-realm"]
+    # Quarkus derives the JVM heap from the container limit (70% max). Keycloak
+    # recommends at least 750 MiB and ~2 GiB for a small production deployment;
+    # the unoptimized image also augments Quarkus at startup, so keep headroom.
+    mem_limit: ${KEYCLOAK_MEM_LIMIT:-2g}
+    cpus: "${KEYCLOAK_CPUS:-2.0}"
+    pids_limit: ${KEYCLOAK_PIDS_LIMIT:-1024}
     environment:
       KEYCLOAK_HOSTNAME: ${SITE_URL:-https://localhost:8443}
       KEYCLOAK_HOSTNAME_ADMIN: ${KEYCLOAK_HOSTNAME_ADMIN:-http://localhost:18081}
@@ -128,6 +155,11 @@ services:
   api:
     image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}${API_DIGEST:+@}${API_DIGEST:-}
     restart: unless-stopped
+    # .NET runtime plus the SSH/file connectors: 768 MiB and 1 CPU is enough
+    # for a small team; raise it with the inventory and the console usage.
+    mem_limit: ${API_MEM_LIMIT:-768m}
+    cpus: "${API_CPUS:-1.0}"
+    pids_limit: ${API_PIDS_LIMIT:-512}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -182,6 +214,11 @@ services:
   web:
     image: ${WEB_IMAGE:-ghcr.io/senseikiritof/infraorgit-web}:${WEB_TAG:-main}${WEB_DIGEST:+@}${WEB_DIGEST:-}
     restart: unless-stopped
+    # Caddy is a reverse proxy in front of the API and Keycloak; 256 MiB and
+    # half a CPU are enough unless static assets or uploads are served heavily.
+    mem_limit: ${WEB_MEM_LIMIT:-256m}
+    cpus: "${WEB_CPUS:-0.5}"
+    pids_limit: ${WEB_PIDS_LIMIT:-256}
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
       API_UPSTREAM: ${API_UPSTREAM:-api:8080}
