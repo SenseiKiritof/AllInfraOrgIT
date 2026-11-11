@@ -172,7 +172,9 @@ source, no local build, only this repository and Docker Compose v2.
 The `docker` workflows publish, on every branch push, `main`, `dev` and
 `sha-<commit>`, and on `v*` tags `X.Y.Z`, `X.Y`, `sha-<commit>` and `latest`.
 Branch and tag images are multi-arch (`linux/amd64`, `linux/arm64`); the
-packages are public, otherwise run `docker login ghcr.io` first.
+packages are public, otherwise run `docker login ghcr.io` first. Prefer the
+immutable `X.Y.Z`/`sha-<commit>` tags: `main`, `dev` and `latest` are refused
+by the preflight unless `API_DIGEST`/`WEB_DIGEST` pins the manifest.
 
 ```bash
 cd AllInfraOrgIT
