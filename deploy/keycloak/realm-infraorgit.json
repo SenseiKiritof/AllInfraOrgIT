@@ -10,6 +10,12 @@
   "waitIncrementSeconds": 60,
   "maxFailureWaitSeconds": 900,
   "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername(undefined) and notEmail(undefined)",
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyPeriod": 30,
+  "otpPolicyCodeReusable": false,
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 28800,
@@ -153,6 +159,10 @@
       "firstName": "Admin",
       "lastName": "InfraOrgIT",
       "email": "admin@example.invalid",
+      "requiredActions": [
+        "UPDATE_PASSWORD",
+        "CONFIGURE_TOTP"
+      ],
       "credentials": [
         {
           "type": "password",

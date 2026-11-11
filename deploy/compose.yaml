@@ -1,8 +1,9 @@
 name: infraorgit-deploy
 
 # Stack from published images: no API/Web source checkout and no local build.
-# Copy .env.example to .env, replace every CHANGE_ME_* secret, then run the
-# preflight before starting:
+# Copy .env.example to .env, replace every CHANGE_ME_* secret, pin API_TAG and
+# WEB_TAG to a version or sha-<commit> (main/dev/latest also need an
+# API_DIGEST/WEB_DIGEST), then run the preflight before starting:
 #   deploy/scripts/check-env.sh .env
 #   docker compose --env-file .env -f compose.yaml up -d --wait
 #
@@ -73,6 +74,12 @@ services:
     # substituting the client/MCP secrets and the application admin password.
     entrypoint: ["/opt/keycloak/entrypoint.sh"]
     command: ["start", "--import-realm"]
+    # Read-only rootfs. The upstream image augments Quarkus into
+    # /opt/keycloak/lib/quarkus on start, so that path is a named volume
+    # initialised from the image and writable only there. Remove the volume
+    # after a Keycloak image upgrade if the cached augmentation prevents
+    # startup: docker volume rm infraorgit-deploy_keycloak-quarkus.
+    read_only: true
     # Quarkus derives the JVM heap from the container limit (70% max). Keycloak
     # recommends at least 750 MiB and ~2 GiB for a small production deployment;
     # the unoptimized image also augments Quarkus at startup, so keep headroom.
@@ -98,9 +105,9 @@ services:
     volumes:
       - ./keycloak/entrypoint.sh:/opt/keycloak/entrypoint.sh:ro
       - ./keycloak/realm-infraorgit.json:/opt/keycloak/realm/realm-infraorgit.json:ro
-    # read_only is not possible with the upstream image: Keycloak re-augments
-    # Quarkus into /opt/keycloak/lib/quarkus at startup. The writable paths are
-    # limited to /tmp and the import/cache directory.
+      - keycloak-quarkus:/opt/keycloak/lib/quarkus
+    # /tmp and the import/cache directory are ephemeral; the entrypoint
+    # renders the realm into /opt/keycloak/data/import on every start.
     tmpfs:
       - /tmp
       - /opt/keycloak/data
@@ -121,7 +128,7 @@ services:
       - auth
 
   migrate:
-    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}${API_DIGEST:+@}${API_DIGEST:-}
+    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:?definisci API_TAG in .env}${API_DIGEST:+@}${API_DIGEST:-}
     command: ["migrate"]
     restart: "no"
     depends_on:
@@ -153,7 +160,7 @@ services:
         mysql -h mysql -u root -p"$${MYSQL_ROOT_PASSWORD}" infraorgit < /base-data.sql
 
   api:
-    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:-main}${API_DIGEST:+@}${API_DIGEST:-}
+    image: ${API_IMAGE:-ghcr.io/senseikiritof/infraorgit-api}:${API_TAG:?definisci API_TAG in .env}${API_DIGEST:+@}${API_DIGEST:-}
     restart: unless-stopped
     # .NET runtime plus the SSH/file connectors: 768 MiB and 1 CPU is enough
     # for a small team; raise it with the inventory and the console usage.
@@ -212,8 +219,18 @@ services:
       - auth
 
   web:
-    image: ${WEB_IMAGE:-ghcr.io/senseikiritof/infraorgit-web}:${WEB_TAG:-main}${WEB_DIGEST:+@}${WEB_DIGEST:-}
+    image: ${WEB_IMAGE:-ghcr.io/senseikiritof/infraorgit-web}:${WEB_TAG:?definisci WEB_TAG in .env}${WEB_DIGEST:+@}${WEB_DIGEST:-}
     restart: unless-stopped
+    # The upstream Caddy image has no unprivileged user and its /data and
+    # /config directories are root-owned. An arbitrary uid still works because
+    # /data/caddy and /config/caddy are mode 1777 in the image (and in a fresh
+    # named volume copied from it). On an existing root-run deployment, chown
+    # the volumes once before switching (the project name is in `name:`):
+    #   docker run --rm --user 0 --cap-drop ALL --cap-add CHOWN \
+    #     -v infraorgit-deploy_caddy-data:/data \
+    #     -v infraorgit-deploy_caddy-config:/config \
+    #     --entrypoint chown <web-image> -R 10001:10001 /data /config
+    user: "10001:10001"
     # Caddy is a reverse proxy in front of the API and Keycloak; 256 MiB and
     # half a CPU are enough unless static assets or uploads are served heavily.
     mem_limit: ${WEB_MEM_LIMIT:-256m}
@@ -233,8 +250,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    # The Caddy binary in the published image carries cap_net_bind_service;
-    # no-new-privileges blocks that file capability, so grant it explicitly.
+    # Non-root needs NET_BIND_SERVICE for the 443 listener; the image's file
+    # capability does not survive no-new-privileges, so grant it explicitly.
     cap_drop: [ALL]
     cap_add:
       - NET_BIND_SERVICE
@@ -254,3 +271,4 @@ volumes:
   api-dp-keys:
   caddy-data:
   caddy-config:
+  keycloak-quarkus:
