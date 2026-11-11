@@ -356,10 +356,11 @@ the SSH-command log and is not reshaped.
 - Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
   (Linux) built by `publish.yml`; signing, notarization and GitHub Release
   upload are wired behind repository secrets. The app checks the latest
-  GitHub release, downloads the matching archive, verifies its SHA-256 and
-  opens the folder; installation is still manual.
-- Still to do: automatic update install, tunnel persistence across app
-  restarts, hardening (load/pentest, Windows GUI runtime checks).
+  GitHub release, downloads the matching archive, verifies its SHA-256 and,
+  on macOS/Linux, replaces itself through a detached helper and restarts;
+  Windows keeps the verified zip for manual extraction.
+- Still to do: Windows self-replace, hardening (penetration test), real
+  signing/notarization runs with the repository secrets.
 
 ## 7. Open points
 

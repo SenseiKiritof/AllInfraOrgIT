@@ -378,3 +378,17 @@ These are current-code observations, not claims that the control exists:
 4. **Audit retention is not exposed in Compose.** The default 180 days lives in
    `appsettings.json`; changing it requires the `Audit__RetentionDays`
    configuration key.
+
+## Baseline locale
+
+Misurato l'11/11/2026 sullo stack `make full` locale (macOS arm64), token
+`mcp:read`, endpoint `https://localhost:8443/mcp`:
+
+```bash
+MCP_TOKEN=itk_... MCP_INSECURE_TLS=1 MCP_REQUESTS=60 MCP_CONCURRENCY=10 \
+  make loadtest-mcp
+```
+
+Risultato: 60/60 richieste OK, 0 errori/429, p50 20.5 ms, p95 41.8 ms,
+p99 48.2 ms, ~387 req/s. Usare questo dato come riferimento per la regressione,
+non come capacità di produzione: è un ambiente locale con un solo processo API.
