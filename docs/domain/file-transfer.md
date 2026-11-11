@@ -6,7 +6,7 @@ The file browser lets a `ServerAdmin` browse, download, upload, rename and delet
 
 | Column | Type | Notes |
 |---|---|---|
-| `Servers.FileTransferProtocol` | `varchar(10)` nullable | `Sftp` or `Ftp`; `NULL` disables the browser |
+| `Servers.FileTransferProtocol` | `varchar(10)` nullable | `Sftp`, `Ftp` or `Ftps`; `NULL` disables the browser |
 | `Servers.FileTransferPort` | `int` nullable | `22` for SFTP and `21` for FTP when empty; any 1–65535 value otherwise |
 | `Servers.FileTransferCredentialId` | `int` nullable | FK to `ServerCredentials`, `RESTRICT`; falls back to `Servers.CredentialId` |
 
@@ -25,18 +25,19 @@ The file browser lets a `ServerAdmin` browse, download, upload, rename and delet
 - Host key TOFU is enforced with the same `HostKeyFingerprint`; a changed key returns 409 `host_key_mismatch`.
 - The tunnel, SFTP client and jump session are disposed together.
 
-### FTP
+### FTP and FTPS
 
 > **Transport warning (PT-16).** Plain FTP is cleartext: username, password,
-> commands and file content cross the network unencrypted. Prefer SFTP. FTPS is
-> not implemented, so an FTP-only target is a legacy exception: restrict it to
-> a trusted network, record the exception per server and do not use it over the
-> internet. See [`../security/transport.md`](../security/transport.md).
+> commands and file content cross the network unencrypted. The deploy stack
+> sets `FileTransfer__AllowPlainFtp=false`, so the API refuses to save or open
+> a server with `protocol: "Ftp"` (422 `plain_ftp_disabled`); SFTP and FTPS stay
+> available. The flag defaults to `true` only in development. See
+> [`../security/transport.md`](../security/transport.md).
 
 - FluentFTP `AsyncFtpClient`, direct connection to the server address; **FTP is not tunnelled through a jump host**.
 - Requires a credential with `AuthType = Password`; a private key returns 422 `ftp_requires_password`.
 - Passive mode is used by default. The FTP server must advertise a passive address and port range reachable from the API container; a server behind NAT needs its passive settings fixed (for example `pasv_address` and `pasv_min_port`/`pasv_max_port`).
-- FTPS is not implemented.
+- `Ftps` uses explicit TLS (`AUTH TLS`): data connections are encrypted too, and the server certificate is validated against the host trust store (invalid or self-signed certificates fail).
 
 ## Browser API
 

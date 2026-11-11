@@ -5,19 +5,21 @@ token exposure. These are configuration/transport risks, not authorization
 bypasses. The evidence from the internal test is in
 [`pentest-2026-11.md`](pentest-2026-11.md) (PT-16).
 
-## File transfer: FTP is cleartext
+## File transfer: plain FTP is off in the deploy stack
 
-- `Servers.FileTransferProtocol = Ftp` uses plain FTP: username, password,
-  commands and file content are not encrypted. Anyone on the network path can
-  read or alter them.
+- The deploy stack sets `FileTransfer__AllowPlainFtp=false`. The API refuses to
+  save or open a server with `Servers.FileTransferProtocol = Ftp` (422
+  `plain_ftp_disabled`); SFTP and FTPS remain available.
 - Prefer `Sftp` (SSH, port 22 by default). It reuses the SSH host-key pinning
   and jump-host path.
 - FTPS (explicit TLS, port 21) is supported via `Servers.FileTransferProtocol = Ftps`;
   the API validates the server certificate against the host trust store and
   refuses invalid/self-signed certificates. Prefer SFTP unless the target only
-  offers FTPS. Plain `Ftp` remains a legacy exception:
-  restrict it to a trusted network or VPN, record why per server, and never use
-  it over the internet. Removing plain FTP is the safest end state.
+  offers FTPS. Plain `Ftp` remains a legacy exception: the operator must set
+  `FileTransfer__AllowPlainFtp=true` deliberately, restrict the target to a
+  trusted network or VPN, record why per server, and never use it over the
+  internet. In the deploy stack every human login is behind TOTP, but FTP still
+  leaks the file credential on the wire.
 - See [`../domain/file-transfer.md`](../domain/file-transfer.md).
 
 ## Browser and API: HTTPS outside loopback
@@ -56,7 +58,7 @@ bypasses. The evidence from the internal test is in
 
 ## Checklist
 
-- [ ] Every file-transfer server uses SFTP; each FTP exception is documented.
+- [ ] Deploy keeps `FileTransfer__AllowPlainFtp=false`; every file-transfer server uses SFTP or FTPS, and each FTP exception is documented.
 - [ ] Non-loopback instance URLs are HTTPS and the certificate validates.
 - [ ] `INFRAORGIT_INSECURE_TLS` is unset outside local development.
 - [ ] Dev servers and the API are not reachable from untrusted networks.

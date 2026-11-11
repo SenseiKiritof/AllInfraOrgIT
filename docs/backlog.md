@@ -105,11 +105,11 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Verification: API integration tests, deploy preflight/compose config, local full stack healthy; report section 10.
 
 - [x] **Pentest 2026-11 medium fixes**
-  RBAC metadata reads restricted to SystemAdmin (PT-05); session revocation on role/group changes (PT-07); SSH/SFTP host-key pinning (PT-09); audit rows for file transfer/inventory/tunnel services (PT-10); signed checksum manifest for desktop installs (PT-11); HTTP/SPA action confirmation (PT-13); tunnel-session target validation (PT-14); SameSite/transport/MCP prompt-injection docs (PT-15/16/18); deploy password policy and resource limits (PT-08/17).
-  Verification: API integration tests, Web 101 tests, desktop 153 tests, deploy preflight/compose config, publish manifest signature `Verified OK`.
+  RBAC metadata reads restricted to SystemAdmin (PT-05); session revocation on role/group changes (PT-07); SSH/SFTP host-key pinning (PT-09); audit rows for file transfer/inventory/tunnel services (PT-10); signed checksum manifest for desktop installs (PT-11); HTTP/SPA action confirmation (PT-13); tunnel-session target validation (PT-14); SameSite/transport/MCP prompt-injection docs (PT-15/16/18); deploy password policy, TOTP for every realm user and plain FTP off (PT-08/16/17).
+  Verification: API integration tests, Web 101 tests, desktop 153 tests, deploy preflight/compose config, disposable Keycloak 26.8.1 MFA login, publish manifest signature `Verified OK`.
 
 - [ ] **Pentest 2026-11 residual**
-  Audit hash chain is tamper-evident but external WORM/SIEM anchoring and prefix/suffix deletion detection remain a deployment responsibility. Image signing/SBOM/provenance, MFA for later administrators/SSH-capable accounts, and per-environment inventory reads (D7 accepted) remain operational/product decisions. Plain FTP stays a documented legacy exception.
+  Audit hash chain is tamper-evident but external WORM/SIEM anchoring and prefix/suffix deletion detection remain a deployment responsibility. Image signing/SBOM/provenance, per-environment inventory reads (D7 accepted), the MFA migration of an existing Keycloak realm (`--import-realm` does not update it) and MFA on the master realm/brokered IdPs remain operational/product decisions. Plain FTP is off in deploy; an operator can re-enable it only as an explicit, documented legacy exception.
 
 ## Workspace
 
