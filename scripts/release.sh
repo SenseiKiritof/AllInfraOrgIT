@@ -7,7 +7,7 @@ META_ROOT="$(cd "$HERE/.." && pwd)"
 ROOT="$(cd "$META_ROOT/.." && pwd)"
 VERSION="${VERSION:-}"
 TAG="v$VERSION"
-REPOS=(InfraOrgITApi InfraOrgITWeb InfraOrgITDocker)
+REPOS=(InfraOrgITApi InfraOrgITWeb InfraOrgITDocker InfraOrgITDesktop)
 
 if [[ ! "$VERSION" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
   echo "VERSION mancante o non valida (atteso 0.MINOR.PATCH)." >&2
@@ -37,6 +37,7 @@ done
 
 if [ "${SKIP_GATES:-}" != "1" ]; then
   make -C "$META_ROOT" ci
+  make -C "$META_ROOT" desktop-ci
 fi
 
 if [ "${SKIP_E2E:-}" != "1" ]; then
@@ -80,3 +81,7 @@ echo "Push (da eseguire a mano, dopo verifica):"
 for repo in "${REPOS[@]}" AllInfraOrgIT; do
   echo "  git -C $repo push origin main --follow-tags"
 done
+echo
+echo "Il tag $TAG su InfraOrgITDesktop avvia publish.yml: build dei quattro RID,"
+echo "firma/notarizzazione se i secret sono configurati e GitHub Release $TAG."
+echo "Il tag desktop deve stare su main: il workflow non crea tag."
