@@ -20,7 +20,9 @@ Index of the Phase 1 documents.
 | `operations/load-test.md` | targeted load on lists, topology and saves, with results |
 | `operations/mcp-tunnel-hardening.md` | MCP and tunnel hardening checklist: auth, RBAC, allowlist, rate limits, audit, load and abuse cases |
 | `operations/release.md` | release checklist, `make release`, tags, push and rollback |
-| `security/permissions.md` | permission matrix verified on the legacy app and target v1 |
+| `security/permissions.md` | permission matrix verified on the legacy app, current BFF session and the D7 read model |
+| `security/pentest-2026-11.md` | internal penetration test: findings, OWASP mappings and remediation status |
+| `security/transport.md` | transport warnings: FTP cleartext, desktop HTTP/dev TLS and local token exposure |
 | `ux/pages.md` | page map, flows and differences from the original |
 | `migration/legacy-mapping.md` | legacy → new schema mapping, IDs, credentials, diagrams |
 | `api/route-inventory.md` | complete inventory of legacy routes and new routes |

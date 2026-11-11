@@ -27,6 +27,12 @@ The file browser lets a `ServerAdmin` browse, download, upload, rename and delet
 
 ### FTP
 
+> **Transport warning (PT-16).** Plain FTP is cleartext: username, password,
+> commands and file content cross the network unencrypted. Prefer SFTP. FTPS is
+> not implemented, so an FTP-only target is a legacy exception: restrict it to
+> a trusted network, record the exception per server and do not use it over the
+> internet. See [`../security/transport.md`](../security/transport.md).
+
 - FluentFTP `AsyncFtpClient`, direct connection to the server address; **FTP is not tunnelled through a jump host**.
 - Requires a credential with `AuthType = Password`; a private key returns 422 `ftp_requires_password`.
 - Passive mode is used by default. The FTP server must advertise a passive address and port range reachable from the API container; a server behind NAT needs its passive settings fixed (for example `pasv_address` and `pasv_min_port`/`pasv_max_port`).
