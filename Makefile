@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose -f ../InfraOrgITDocker/compose.yaml
 DOCKER_DIR ?= ../InfraOrgITDocker
 
-.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci desktop-ci openapi backup restore load-test loadtest-mcp security-smoke legacy-dry-run release up-images
+.PHONY: dev infra full down config reset api web migrate seed test e2e e2e-full ci desktop-ci openapi backup restore load-test loadtest-mcp security-smoke legacy-dry-run release up-images check-env
 
 dev:
 	./scripts/dev.sh
@@ -39,7 +39,11 @@ full:
 
 up-images:
 	@test -f deploy/.env || { echo "Copia deploy/.env.example in deploy/.env"; exit 2; }
+	./deploy/scripts/check-env.sh deploy/.env
 	docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait
+
+check-env:
+	./deploy/scripts/check-env.sh deploy/.env
 
 infra:
 	KC_MODE=dev $(COMPOSE) up -d --wait mysql mysql-keycloak keycloak
