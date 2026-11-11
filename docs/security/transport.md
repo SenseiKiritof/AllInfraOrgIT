@@ -46,12 +46,10 @@ bypasses. The evidence from the internal test is in
 
 - Prefer the OS secret store: the desktop uses macOS Keychain, Windows
   Credential Manager or `secret-tool`.
-- **macOS limitation:** the current Keychain write passes the refresh token to
-  `security` with `-w <token>`, so the value is visible in the process argument
-  list (`ps`) to other local processes while the command runs. The window is
-  short and local, but on a host with untrusted local users treat the token as
-  exposed and revoke the device session after use. Passing the value on stdin or
-  using the native Security framework is the fix.
+- macOS uses the native Security.framework Keychain APIs (no `security -w`
+  child process), so the refresh token is never placed in process arguments.
+  Windows Credential Manager and Linux `secret-tool` are unchanged. If the
+  native store is unavailable the app falls back to memory for that run.
 - Do not paste tokens into shell history or command lines. Use `read -rs` into
   an environment variable or the client's secret store, and never pass a token
   with `--token` on a shared host.

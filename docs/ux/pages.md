@@ -115,6 +115,15 @@ value is shown once with a copy button. **Revoca** invalidates it immediately.
 The tokens authenticate MCP clients against `/mcp` and other non-browser
 clients; the browser session is not used there.
 
+## Account — MCP approvals `/approvals`
+
+Reached from the side menu or the tokens page. Lists the pending and recent
+action approvals for the signed-in user: action, server, deployment/action,
+requested/expiry time and state. **Approva**/**Nega** decide a Pending request
+(cookie + CSRF only; an MCP bearer token cannot decide). Approving is
+one-time and expires after 10 minutes; the AI client polls
+`get_mcp_approval` and executes only after approval.
+
 ## Admin — MCP grants `/mcp-grants`
 
 Reached from the **Users** page header (SystemAdmin). Lists the `McpGrants`
