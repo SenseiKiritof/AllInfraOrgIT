@@ -10,8 +10,9 @@ the API image's `migrate` job, and `init/base-data.sql` adds the base data
 - Docker Engine or Docker Desktop with Compose v2.
 - A published image tag: `main`/`dev`/`sha-<commit>` from a branch push, or
   `X.Y.Z`/`latest` from a `v*` tag (see the `docker` workflows in
-  `InfraOrgITApi` and `InfraOrgITWeb`). Prefer a version or `sha-<commit>`
-  tag; `API_DIGEST`/`WEB_DIGEST` can pin the exact manifest.
+  `InfraOrgITApi` and `InfraOrgITWeb`). Use an immutable `X.Y.Z` or
+  `sha-<commit>` tag. `main`, `dev` and `latest` are refused by the preflight
+  unless `API_DIGEST`/`WEB_DIGEST` pins the exact manifest.
 - The images must be readable: GHCR packages are private by default; either
   make them public or `docker login ghcr.io` with a token that can read them.
 
@@ -46,8 +47,19 @@ chmod 600 deploy/.env
 ```
 
 Then set `API_TAG` and `WEB_TAG` to a published version or `sha-<commit>`
-(`CHANGE_ME_*` is rejected by the preflight). Optionally set
-`API_DIGEST`/`WEB_DIGEST` to `sha256:...` to pin the manifest:
+(`CHANGE_ME_*` is rejected by the preflight). To pin the exact manifest, copy
+the digest printed by the registry and set it in `.env`; `main`/`dev`/`latest`
+without a digest are refused:
+
+```bash
+docker buildx imagetools inspect ghcr.io/senseikiritof/infraorgit-api:0.4.0 \
+  --format '{{json .Manifest}}' | jq -r .digest
+# API_DIGEST=sha256:<64 hex> in deploy/.env
+```
+
+The tag and the digest must describe the same manifest: the image reference
+becomes `<repository>:<tag>@sha256:<digest>`. After a registry update, re-pin
+the digest rather than leaving a moving branch tag.
 
 ```bash
 deploy/scripts/check-env.sh deploy/.env
@@ -56,9 +68,10 @@ make up-images
 ```
 
 `check-env.sh` refuses missing values, `CHANGE_ME` placeholders, the known
-`dev-*` secrets, the old all-`a` credential key and a bootstrap administrator
-password weaker than the realm password policy (see below). `make up-images`
-runs it before Compose, so the stack cannot start with the shipped defaults.
+`dev-*` secrets, the old all-`a` credential key, a bootstrap administrator
+password weaker than the realm password policy (see below) and a mutable
+`main`/`dev`/`latest` tag without a digest. `make up-images` runs it before
+Compose, so the stack cannot start with the shipped defaults.
 
 Open `https://localhost:8443` (self-signed certificate) and
 `http://localhost:18081/admin` for the Keycloak console.
@@ -122,10 +135,10 @@ connection is the operator's responsibility:
 The shipped Keycloak realm still creates the username `admin`, because the
 application database row in `init/base-data.sql` is also keyed to that name.
 The username is not a secret; the password must be unique. It comes from
-`INFRAORGIT_ADMIN_PASSWORD`, and the imported user has
-`temporary: true`: Keycloak forces a password change at the first login.
-Never use the old `dev-admin` password or any other value from the local
-development stack.
+`INFRAORGIT_ADMIN_PASSWORD`, and the imported user has `temporary: true` plus
+the `UPDATE_PASSWORD` and `CONFIGURE_TOTP` required actions: Keycloak forces a
+password change and TOTP enrollment at the first login. Never use the old
+`dev-admin` password or any other value from the local development stack.
 
 The master-realm Keycloak administrator is controlled by `KEYCLOAK_ADMIN`
 (default `admin`) and `KEYCLOAK_ADMIN_PASSWORD`. These values are only used on
@@ -161,29 +174,44 @@ stack deployed before this change, set the same policy in the Keycloak console
 administrator password. The master realm (`KEYCLOAK_ADMIN`) has its own policy
 and OTP settings; configure them in the console after the first start.
 
-MFA is deliberately **not** forced by the realm import. Enabling OTP on the
-only imported administrator before anyone has enrolled an authenticator would
-lock the deployment out. Require it as a post-bootstrap step:
+The deploy realm forces TOTP for the bootstrap administrator. The imported
+`admin` user carries `requiredActions: ["UPDATE_PASSWORD", "CONFIGURE_TOTP"]`
+in addition to the temporary password, so the first login cannot reach the
+application before the password is changed **and** an authenticator is
+enrolled. The `UPDATE_PASSWORD` action is explicit because a Keycloak 26.8
+realm import does not reliably mark the imported credential temporary. The
+realm also pins the OTP policy to TOTP, 6 digits, 30-second period, one
+look-ahead window and no code reuse. There is no "skip" action: cancelling the
+required-action page aborts the login.
 
-1. In the Keycloak admin console open Authentication -> Required actions and
-   enable **Configure OTP**, so users can enroll a TOTP authenticator.
-2. For every administrator and every account that can use stored SSH
-   credentials, the console or actions, open Users -> <user> -> Required
-   actions, add **Configure OTP** and save. The next login forces enrollment.
-3. To require OTP for a group rather than one user at a time, create a Keycloak
-   group or role (for example `mfa-required`), assign the administrators to it,
-   and bind a copy of the `browser` flow with a `Condition - user role`
-   subflow around `OTP Form`. Export the realm (or the custom flow) afterwards
-   so a rebuilt stack can reproduce it.
-4. Keep a break-glass path: a second administrator, the master-realm
-   administrator on the loopback port, and recovery codes stored offline. Test
-   the flow with a normal account before binding it realm-wide.
+Break-glass and recovery:
+
+1. The master-realm administrator (`KEYCLOAK_ADMIN`, loopback
+   `http://localhost:18081/admin`) can remove the OTP credential or reset the
+   required action for a locked-out application administrator. Secure that
+   account separately and keep its password offline; it is the emergency path.
+2. Create a second application administrator before relying on MFA, so one
+   lost phone does not block administration. Enroll recovery codes (Keycloak
+   `Configure recovery authentication codes`) on it and store them offline.
+3. The imported `admin` is the only forced account. For every other
+   administrator and every account that can use stored SSH credentials, the
+   console or actions, open Users -> <user> -> Required actions, add
+   **Configure OTP** and save. To enforce it by group, create a Keycloak group
+   (for example `mfa-required`), assign the privileged users, and bind a copy
+   of the `browser` flow with a `Condition - user role` subflow around
+   `OTP Form`; export the realm afterwards so a rebuilt stack reproduces it.
+4. `--import-realm` does not update an existing realm. On a stack created
+   before this change, add the `Configure OTP` required action to `admin` in
+   the console (or recreate the Keycloak database) and verify the first login
+   on a disposable account.
 
 `SystemAdmin` is an application role in the InfraOrgIT database, not a Keycloak
 role, so keeping the `mfa-required` group aligned with application
 administrators is an operational task: review it whenever roles change. The
 application has no step-up authentication of its own, so the Keycloak flow is
 the only second factor in front of console, action and credential operations.
+The local `InfraOrgITDocker` realm keeps its development credentials and does
+not force TOTP.
 
 ## Secrets and rotation
 
@@ -220,29 +248,49 @@ from `OIDC_CLIENT_SECRET`/`MCP_CLIENT_SECRET`; no working secret is committed.
 
 ## Container hardening
 
-`web` runs with `read_only: true`, `cap_drop: [ALL]` and
-`no-new-privileges:true`, with `/tmp` on tmpfs. `keycloak` runs with
-`cap_drop: [ALL]`, `no-new-privileges:true` and tmpfs for `/tmp` and
-`/opt/keycloak/data`, but keeps a writable root filesystem: the upstream image
-re-augments Quarkus into `/opt/keycloak/lib/quarkus` at startup, so a
-read-only root would prevent it from starting. Keycloak runs as uid 1000 and
-keeps its state in MySQL; the import file is rendered into tmpfs on each start.
+`web` runs as the unprivileged uid/gid `10001`, with `read_only: true`,
+`cap_drop: [ALL]`, `no-new-privileges:true`, `/tmp` on tmpfs and the two
+Caddy volumes mounted read-write. `NET_BIND_SERVICE` is the only capability
+added: uid 10001 cannot bind `:443` without it, and `no-new-privileges`
+prevents Caddy from using the file capability on its own binary. The upstream
+image has no `caddy` user and `/data`/`/config` are root-owned, but
+`/data/caddy` and `/config/caddy` are mode `1777` in the image (and in a fresh
+named volume copied from it), so the arbitrary uid can write certificates and
+autosave state while the root filesystem stays read-only.
 
-Two deliberate compromises:
+Upgrading a deployment created before this change: the existing certificates
+and autosave file are root-owned, and Caddy as uid 10001 cannot read them.
+Chown both volumes once, then recreate `web`:
 
-- `web` still runs as root. The published Caddy image has no unprivileged
-  user, and its `/data` and `/config` volumes are root-owned. Capabilities are
-  dropped instead. `NET_BIND_SERVICE` is added back because the Caddy binary
-  carries that file capability and `no-new-privileges` would otherwise refuse
-  to execute it.
-- With a read-only root filesystem Caddy logs a non-fatal warning that it
-  cannot install its local CA into the container trust store. The browser
-  already treats the `localhost` certificate as self-signed.
+```bash
+docker run --rm --user 0 --cap-drop ALL --cap-add CHOWN \
+  -v infraorgit-deploy_caddy-data:/data \
+  -v infraorgit-deploy_caddy-config:/config \
+  --entrypoint chown <web-image> -R 10001:10001 /data /config
+```
 
-MySQL 8.4 and Keycloak are pinned by digest. API/Web images remain tag-based
-because digests are release-specific; use a version or `sha-<commit>` tag, or
-set `API_DIGEST`/`WEB_DIGEST`, and `check-env.sh` warns about `main`, `dev` and
-`latest` without a digest.
+`keycloak` runs as the image's uid 1000, read-only, with `cap_drop: [ALL]`,
+`no-new-privileges:true`, tmpfs for `/tmp` and `/opt/keycloak/data`, and a
+named volume at `/opt/keycloak/lib/quarkus`. The unoptimized upstream image
+re-augments Quarkus there at startup; a plain read-only root fails with
+`NoSuchFileException: /opt/keycloak/lib/quarkus/quarkus-application.dat`, and
+an empty tmpfs at that path fails the same way because it hides the file
+shipped in the image. The named volume starts as a copy of the image directory
+and remains writable for the augmentation. The entrypoint renders the realm
+into the `/opt/keycloak/data` tmpfs on every start; Keycloak state stays in
+MySQL. After a Keycloak image upgrade, remove
+`infraorgit-deploy_keycloak-quarkus` if the cached augmentation prevents
+startup (it holds only build output, no realm data).
+
+With a read-only root filesystem Caddy logs a non-fatal warning that it cannot
+install its local CA into the container trust store. The browser already treats
+the `localhost` certificate as self-signed.
+
+MySQL 8.4 and Keycloak are pinned by digest. API/Web images must have an
+explicit `API_TAG`/`WEB_TAG`; `main`, `dev` and `latest` are refused by
+`check-env.sh` unless `API_DIGEST`/`WEB_DIGEST` is a full `sha256:<64 hex>`
+manifest digest. Image signing and provenance/SBOM attestations are still open
+and tracked separately from this deploy hardening.
 
 ## Resource limits
 
@@ -283,8 +331,9 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait
 docker compose --env-file deploy/.env -f deploy/compose.yaml down
 ```
 
-`down -v` removes the named volumes (Caddy certificates/config and API data
-protection keys). Application and Keycloak databases are bind mounts under
+`down -v` removes the named volumes (Caddy certificates/config, API data
+protection keys and the Keycloak Quarkus build cache). Application and
+Keycloak databases are bind mounts under
 `deploy/data/` and survive `down` and `down -v`; remove them explicitly only
 when you intend to reset that database.
 

@@ -109,7 +109,7 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Verification: API integration tests, Web 101 tests, desktop 153 tests, deploy preflight/compose config, publish manifest signature `Verified OK`.
 
 - [ ] **Pentest 2026-11 residual**
-  PT-10 tamper-evident audit chain is implemented, but WORM/external anchoring and prefix/suffix deletion detection remain; PT-16 macOS native Keychain/stdin; PT-18 server-enforced human approval; PT-17 Keycloak/web rootfs and mutable-tag warnings; MFA enforcement (documented, not forced).
+  PT-10 tamper-evident audit chain is implemented, but WORM/external anchoring and prefix/suffix deletion detection remain; PT-16 macOS native Keychain/stdin; PT-18 server-enforced human approval; PT-17 image signing/SBOM/provenance (web non-root, Keycloak read-only and immutable deploy tags are done); MFA for later administrators and SSH-capable accounts (bootstrap admin TOTP is forced; the `mfa-required` flow is operational).
 
 ## Workspace
 
