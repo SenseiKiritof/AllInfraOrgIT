@@ -67,7 +67,7 @@ identity and checks access exactly as the HTTP endpoints do.
 | Tool | Returns | Permission |
 |---|---|---|
 | `providers.list` | providers and environments | authenticated |
-| `servers.list` / `servers.get` | servers with sizing, OS, HA, operator | authenticated; filtered by environment access |
+| `servers.list` / `servers.get` | servers with sizing, OS, HA, operator | authenticated; **not filtered by environment today** (D7 read model, PT-05) |
 | `applications.list` / `applications.get` | catalog, types, versions | authenticated |
 | `deployments.list` | version on server, runtime, container fields, ports | authenticated |
 | `projects.list` / `projects.get` | projects and their servers (integrated/production) | authenticated |
@@ -119,7 +119,9 @@ this application") without adding new permissions.
   with an explicit marker.
 - Tool output is untrusted input for the AI client (prompt injection). The
   server only returns inventory data; action tools require an explicit
-  confirmation field and never accept arbitrary commands.
+  confirmation field and never accept arbitrary commands. The confirmation is
+  model-supplied, so clients must require a human approval step; see
+  [`../operations/mcp-tunnel-hardening.md`](../operations/mcp-tunnel-hardening.md#6-prompt-injection-untrusted-output-and-agency).
 
 ### 3.4 Endpoint and deployment
 
@@ -298,7 +300,9 @@ the SSH-command log and is not reshaped.
   token authentication and read-only tools: `list_servers`, `get_server`,
   `list_providers`, `list_applications`, `get_application`, `list_projects`,
   `get_project`, `list_deployments`, `list_reachability_tests`,
-  `get_topology`, `list_executions` (SystemAdmin).
+  `get_topology`, `list_executions` (SystemAdmin). The inventory read tools
+  return all environments under the D7 read model, not a per-environment
+  subset.
 - Every tool call writes an `AuditEvents` row; denied/revoked tokens get 401.
   `Audit:RetentionDays` (default 180) purges older rows in background
   batches; `GET /api/audit-events` and the `/audit` page expose them to
@@ -353,6 +357,10 @@ the SSH-command log and is not reshaped.
   the OS secret store (Keychain, Credential Manager, secret-tool) and access
   tokens stay in memory with refresh on expiry/401. Verified against the local
   realm (device request, consent, token and scopes).
+- Desktop transport: use `https://` for every non-loopback instance;
+  `INFRAORGIT_INSECURE_TLS=1` is development-only, and the macOS Keychain write
+  still passes the refresh token in the `security` argv. See
+  [`../security/transport.md`](../security/transport.md).
 - Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
   (Linux) built by `publish.yml`; signing, notarization and GitHub Release
   upload are wired behind repository secrets. The app checks the latest

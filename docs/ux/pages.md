@@ -96,7 +96,7 @@ Form selects (server, version, project, menu, location) are searchable: type to 
 - **SystemAdmin**: global master data (providers, environments, provider×environment, catalog, projects, templates, credentials, users/groups/roles/menu), global diagrams or diagrams with Provider/Project scope, audit.
 - **ServerAdmin on the environment**: servers, deployments, proxies, diagrams with environment-only scope, console; multi-environment writes require the role on all environments involved.
 - **ServerOperator on the environment**: run actions and reachability.
-- **All authenticated users**: reads; the menu shows only assigned entries.
+- **All authenticated users**: inventory reads (D7); the menu shows only assigned entries. Users, Groups, Roles and ProviderEnvironmentGroupRoles are `SystemAdmin`-only for reads and writes.
 - **SystemAdmin alone is not enough** for server/console/run: the environment role is also required.
 
 ## Pages the target can simplify
