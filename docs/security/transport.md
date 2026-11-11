@@ -12,9 +12,12 @@ bypasses. The evidence from the internal test is in
   read or alter them.
 - Prefer `Sftp` (SSH, port 22 by default). It reuses the SSH host-key pinning
   and jump-host path.
-- FTPS is **not implemented**. An FTP-only target is a legacy exception:
+- FTPS (explicit TLS, port 21) is supported via `Servers.FileTransferProtocol = Ftps`;
+  the API validates the server certificate against the host trust store and
+  refuses invalid/self-signed certificates. Prefer SFTP unless the target only
+  offers FTPS. Plain `Ftp` remains a legacy exception:
   restrict it to a trusted network or VPN, record why per server, and never use
-  it over the internet. Removing FTP is the safest end state.
+  it over the internet. Removing plain FTP is the safest end state.
 - See [`../domain/file-transfer.md`](../domain/file-transfer.md).
 
 ## Browser and API: HTTPS outside loopback
