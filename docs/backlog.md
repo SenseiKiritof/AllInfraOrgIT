@@ -98,6 +98,15 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [ ] **Penetration test**
   Full external pentest of the MCP surface, tunnel abuse and the web app; the security smoke only covers the automated baseline.
 
+## Security
+
+- [x] **Pentest 2026-11 high findings**
+  Deploy secrets/network/templating (PT-01), API-key history redaction + scrub (PT-02), deploy MCP scope/secret (PT-03), cross-environment jump host and proxy route guards (PT-04/PT-06).
+  Verification: API integration tests, deploy preflight/compose config, local full stack healthy; report section 10.
+
+- [ ] **Pentest 2026-11 medium/low findings**
+  Environment-filtered reads or accepted-risk decision (PT-05), session role revocation (PT-07), MFA/password policy (PT-08), file-transfer host-key pinning (PT-09), audit coverage/tamper evidence (PT-10), signed updater trust (PT-11), per-token rate limits (PT-12), HTTP confirmation enforcement (PT-13), tunnel session target validation (PT-14), SameSite/doc alignment (PT-15), transport hardening (PT-16), resource limits (PT-17), MCP prompt-injection guidance (PT-18).
+
 ## Workspace
 
 - [x] **Rename workspace and subrepositories**
