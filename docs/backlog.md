@@ -34,9 +34,15 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Verification: integration test for scope, RBAC, allowlist and audit rows.
 
 - [x] **Desktop tunnel engine**
-  System `ssh -L`/`-J` with `SSH_AUTH_SOCK`, local port allocation, start/stop/status and audit calls; token kept in memory or the OS keychain.
-  Verification: local sshd with a test key, negative test on a non-allowlisted target.
-  Done with the token in memory; checked against a local sshd container and `ssh-agent` (authenticated, local port listening). Non-allowlisted targets are rejected by the API integration test.
+  System `ssh -L`/`-D`/`-R` with `SSH_AUTH_SOCK`, multi-hop `-J`, local port allocation, start/stop/status, audit and heartbeats; token in the OS keychain.
+  Verification: local sshd with a test key, negative test on a non-allowlisted target, 93 desktop tests.
+
+- [x] **XPipe-style tunnel services**
+  Server services (Local/Dynamic/Remote, Tcp/Http/Https, openPath, autoStart), `ss -tlnH` port discovery, ServerAdmin CRUD, allowlist in the desktop, autoStart and open-in-browser for Local HTTP(S).
+  Verification: API integration tests for CRUD/discovery/jumps/remote visibility, desktop tests for all modes and autoStart.
+
+- [ ] **Tunnel persistence and auto-reconnect**
+  Keep tunnels alive after the window closes and restart an unexpectedly exited autoStart service with backoff; today tunnels stop with the app.
 
 - [x] **Desktop device login**
   RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token.
@@ -57,12 +63,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   `publish.yml` imports the macOS certificate, signs, notarizes and staples, signs Windows with signtool, and uploads a GitHub Release on `v*` tags; unsigned builds still work without secrets.
   Verification: actionlint/shellcheck clean and unsigned publish works; real certificates and notarization need the repository secrets.
 
-- [x] **Update check**
-  The manager reads GitHub `releases/latest`, compares the assembly version and opens the release page; notes capped, stable tags only.
-  Verification: 23 fake-handler tests and three-OS CI; no download/install.
+- [x] **Update check and download**
+  The manager reads GitHub `releases/latest`, compares the assembly version, downloads the matching archive, verifies its SHA-256 and opens the folder; stable tags only, missing checksum requires explicit confirmation.
+  Verification: 83 desktop tests, fake HTTP handlers and three-OS CI; no automatic install.
 
 - [ ] **Automatic update install**
-  Download the signed artifact, verify it and replace the app; the updater is still manual (release page) and the desktop repo is not in `make release`/`versions.lock`.
+  Replace the app from the verified archive and add the desktop repo to `make release`/`versions.lock`; installation is still manual (release page/download).
 
 ## Workspace
 
