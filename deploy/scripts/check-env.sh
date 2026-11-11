@@ -181,10 +181,26 @@ case "$web_bind" in
     ;;
 esac
 
+# Plain FTP is cleartext (PT-16). Compose defaults it to false; an explicit
+# opt-in is accepted but warned, and a value the API cannot parse as a boolean
+# fails before the stack starts.
+plain_ftp="$(get_value FileTransfer__AllowPlainFtp)"
+[ -n "$plain_ftp" ] || plain_ftp="false"
+case "$plain_ftp" in
+  false|FALSE|False) ;;
+  true|TRUE|True)
+    warn "FileTransfer__AllowPlainFtp=$plain_ftp riattiva FTP in chiaro: usare SFTP o FTPS e limitare FTP a una rete fidata con deroga documentata"
+    ;;
+  *)
+    fail "FileTransfer__AllowPlainFtp deve essere true o false (trovato '$plain_ftp')"
+    ;;
+esac
+
 keycloak_admin="$(get_value KEYCLOAK_ADMIN)"
 [ -n "$keycloak_admin" ] || keycloak_admin="admin"
 if [ "$keycloak_admin" = "admin" ]; then
   warn "KEYCLOAK_ADMIN resta 'admin': il nome e noto, la password deve essere unica e ruotata"
 fi
 
-printf 'check-env: OK (%s, WEB_BIND=%s)\n' "$ENV_FILE" "$web_bind"
+printf 'check-env: OK (%s, WEB_BIND=%s, FileTransfer__AllowPlainFtp=%s)\n' \
+  "$ENV_FILE" "$web_bind" "$plain_ftp"

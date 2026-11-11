@@ -69,9 +69,11 @@ make up-images
 
 `check-env.sh` refuses missing values, `CHANGE_ME` placeholders, the known
 `dev-*` secrets, the old all-`a` credential key, a bootstrap administrator
-password weaker than the realm password policy (see below) and a mutable
-`main`/`dev`/`latest` tag without a digest. `make up-images` runs it before
-Compose, so the stack cannot start with the shipped defaults.
+password weaker than the realm password policy (see below), a non-boolean
+`FileTransfer__AllowPlainFtp` and a mutable `main`/`dev`/`latest` tag without a
+digest; it warns when `WEB_BIND` leaves loopback or plain FTP is re-enabled.
+`make up-images` runs it before Compose, so the stack cannot start with the
+shipped defaults.
 
 Open `https://localhost:8443` (self-signed certificate) and
 `http://localhost:18081/admin` for the Keycloak console.
@@ -103,14 +105,17 @@ explicit.
 The stack protects only its own TLS endpoints. Every target and client
 connection is the operator's responsibility:
 
-- **FTP is cleartext.** The file-transfer connector supports SFTP over SSH and
-  plain FTP. Plain FTP sends the username, password, commands and file content
-  unencrypted, and an on-path attacker can read or alter them. Use SFTP for
-  every target. FTPS is not implemented in the connector, so it cannot be
-  selected as a mitigation today; if a legacy target only offers FTP, reach it
-  through an SSH tunnel or a dedicated management network and record a
-  time-boxed exception. Never expose FTP to the internet and never use it with
-  an administrator credential.
+- **Plain FTP is off; use SFTP or FTPS.** `compose.yaml` sets
+  `FileTransfer__AllowPlainFtp=false` (overridable in `.env`), so the API
+  refuses to save or open a server configured with the `Ftp` protocol (422
+  `plain_ftp_disabled`). SFTP and FTPS (explicit TLS) remain available; FTPS
+  validates the server certificate against the host trust store and refuses
+  invalid or self-signed certificates. Plain FTP sends the username, password,
+  commands and file content unencrypted. Treat it only as a legacy exception:
+  set the flag to `true` deliberately, keep the target on a trusted network,
+  record the exception per server and never use it with an administrator
+  credential. `check-env.sh` warns when the flag is not `false` and rejects a
+  value that is not a boolean.
 - **Local HTTP stays on loopback.** `http://localhost:18081/admin` (Keycloak)
   and the `http://localhost:3000` redirect in the realm are cleartext and must
   remain bound to `127.0.0.1`. Do not point `KEYCLOAK_HOSTNAME_ADMIN`,
@@ -136,9 +141,11 @@ The shipped Keycloak realm still creates the username `admin`, because the
 application database row in `init/base-data.sql` is also keyed to that name.
 The username is not a secret; the password must be unique. It comes from
 `INFRAORGIT_ADMIN_PASSWORD`, and the imported user has `temporary: true` plus
-the `UPDATE_PASSWORD` and `CONFIGURE_TOTP` required actions: Keycloak forces a
-password change and TOTP enrollment at the first login. Never use the old
-`dev-admin` password or any other value from the local development stack.
+the `UPDATE_PASSWORD` and `CONFIGURE_TOTP` required actions. TOTP is enforced
+for every realm user by the browser flow (see below), so the first login must
+enroll an authenticator before reaching the application; the `admin` account
+also has to change the seeded password. Never use the old `dev-admin` password
+or any other value from the local development stack.
 
 The master-realm Keycloak administrator is controlled by `KEYCLOAK_ADMIN`
 (default `admin`) and `KEYCLOAK_ADMIN_PASSWORD`. These values are only used on
@@ -174,44 +181,73 @@ stack deployed before this change, set the same policy in the Keycloak console
 administrator password. The master realm (`KEYCLOAK_ADMIN`) has its own policy
 and OTP settings; configure them in the console after the first start.
 
-The deploy realm forces TOTP for the bootstrap administrator. The imported
-`admin` user carries `requiredActions: ["UPDATE_PASSWORD", "CONFIGURE_TOTP"]`
-in addition to the temporary password, so the first login cannot reach the
-application before the password is changed **and** an authenticator is
-enrolled. The `UPDATE_PASSWORD` action is explicit because a Keycloak 26.8
-realm import does not reliably mark the imported credential temporary. The
-realm also pins the OTP policy to TOTP, 6 digits, 30-second period, one
-look-ahead window and no code reuse. There is no "skip" action: cancelling the
+The deploy realm requires TOTP for **every** username/password login, not only
+for the bootstrap administrator. The realm binds `browserFlow` to
+`browser-mfa`: the `Cookie` step (ALTERNATIVE), then a `browser-mfa-forms`
+subflow with `Username Password Form` and `OTP Form` both REQUIRED. A user
+without an OTP credential is sent to the `Configure OTP` enrollment page right
+after the password and cannot reach the application before enrolling; later
+logins ask for the six-digit code. The realm also marks `CONFIGURE_TOTP` as a
+default required action, so users created later in the console or through the
+API get enrollment at their first login. The OTP policy is TOTP, 6 digits,
+30-second period, one look-ahead window and no code reuse, and cancelling the
 required-action page aborts the login.
+
+The imported `admin` additionally carries `UPDATE_PASSWORD`. Required actions
+do not weaken the flow: even after the password change the browser flow still
+requires OTP, and the temporary password is the only seeded credential.
+
+Validated against a disposable Keycloak 26.8.1 import: the `admin` password is
+followed by TOTP enrollment and login completes only after a valid code; a
+second user created after the import is sent to enrollment; a user whose
+`CONFIGURE_TOTP` required action was removed is still forced into enrollment by
+the browser flow; a later login for the same user asks for TOTP and the
+password alone never reaches the application.
+
+What a realm import cannot do, and remains manual:
+
+1. `--import-realm` does not update an existing realm. On a stack created
+   before this change, either remove the Keycloak database
+   (`deploy/data/mysql-keycloak`; this destroys Keycloak users, clients and
+   sessions) for a fresh import, or reproduce the flow in the console:
+   Authentication -> Flows -> duplicate `browser` as `browser-mfa`, replace the
+   conditional 2FA subflow with a REQUIRED `OTP Form`, bind it as the realm
+   browser flow, then set `CONFIGURE_TOTP` as a default action. Existing
+   accounts are covered as soon as the flow is bound (the flow forces
+   enrollment); the default action only covers users created afterwards.
+   Verify on a disposable user.
+2. The master realm (`KEYCLOAK_ADMIN`, `http://localhost:18081/admin`) has its
+   own flow and is not part of the realm import. Enable OTP there in the console
+   if the emergency account must be MFA-protected.
+3. A brokered identity provider bypasses the local browser flow. If one is
+   added, enforce MFA at the provider (or add a pass-through step before the
+   redirector) and test it like the local login.
+4. Direct access grants stay disabled on every realm client. Enabling one would
+   bypass the browser flow (and TOTP) until the user has enrolled an OTP
+   credential; do not enable it for human clients.
+5. The local `InfraOrgITDocker` realm intentionally keeps development
+   credentials without forced TOTP; it is not a production profile.
 
 Break-glass and recovery:
 
 1. The master-realm administrator (`KEYCLOAK_ADMIN`, loopback
-   `http://localhost:18081/admin`) can remove the OTP credential or reset the
+   `http://localhost:18081/admin`) can remove the OTP credential or reset a
    required action for a locked-out application administrator. Secure that
    account separately and keep its password offline; it is the emergency path.
 2. Create a second application administrator before relying on MFA, so one
    lost phone does not block administration. Enroll recovery codes (Keycloak
    `Configure recovery authentication codes`) on it and store them offline.
-3. The imported `admin` is the only forced account. For every other
-   administrator and every account that can use stored SSH credentials, the
-   console or actions, open Users -> <user> -> Required actions, add
-   **Configure OTP** and save. To enforce it by group, create a Keycloak group
-   (for example `mfa-required`), assign the privileged users, and bind a copy
-   of the `browser` flow with a `Condition - user role` subflow around
-   `OTP Form`; export the realm afterwards so a rebuilt stack reproduces it.
-4. `--import-realm` does not update an existing realm. On a stack created
-   before this change, add the `Configure OTP` required action to `admin` in
-   the console (or recreate the Keycloak database) and verify the first login
-   on a disposable account.
+3. Lost authenticator: sign in with a recovery code, then re-enroll TOTP from
+   the account console, or use the master realm to clear the OTP credential.
 
+MFA is realm-wide, so there is no `mfa-required` group to keep aligned with
+application roles: keep the realm's enabled user list tight instead.
 `SystemAdmin` is an application role in the InfraOrgIT database, not a Keycloak
-role, so keeping the `mfa-required` group aligned with application
-administrators is an operational task: review it whenever roles change. The
-application has no step-up authentication of its own, so the Keycloak flow is
-the only second factor in front of console, action and credential operations.
-The local `InfraOrgITDocker` realm keeps its development credentials and does
-not force TOTP.
+role; disabling or deleting the Keycloak account is the only way to block
+login. The application has no step-up authentication of its own, so the
+Keycloak flow is the only second factor in front of console, action and
+credential operations. The local `InfraOrgITDocker` realm keeps its development
+credentials and does not force TOTP.
 
 ## Secrets and rotation
 
