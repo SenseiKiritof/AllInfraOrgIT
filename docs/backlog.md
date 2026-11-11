@@ -41,8 +41,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Server services (Local/Dynamic/Remote, Tcp/Http/Https, openPath, autoStart), `ss -tlnH` port discovery, ServerAdmin CRUD, allowlist in the desktop, autoStart and open-in-browser for Local HTTP(S).
   Verification: API integration tests for CRUD/discovery/jumps/remote visibility, desktop tests for all modes and autoStart.
 
-- [ ] **Tunnel persistence and auto-reconnect**
-  Keep tunnels alive after the window closes and restart an unexpectedly exited autoStart service with backoff; today tunnels stop with the app.
+- [x] **Auto-reconnect**
+  AutoStart custom services retry up to 3 times with a 5s delay after an unexpected ssh exit; user stop, panel change, logout and exit cancel retries, and token/auth failures do not retry.
+  Verification: 101 desktop tests, including retry budget, busy fixed port and new session ids.
+
+- [ ] **Tunnel persistence across restarts**
+  Keep/restore active tunnels when the app restarts; today they stop with the process, even though autoStart services start again when the panel loads.
 
 - [x] **Desktop device login**
   RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token.
