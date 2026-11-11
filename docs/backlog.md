@@ -76,16 +76,27 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   `publish.yml` imports the macOS certificate, signs, notarizes and staples, signs Windows with signtool, and uploads a GitHub Release on `v*` tags; unsigned builds still work without secrets.
   Verification: actionlint/shellcheck clean and unsigned publish works; real certificates and notarization need the repository secrets.
 
-- [x] **Update check and download**
-  The manager reads GitHub `releases/latest`, compares the assembly version, downloads the matching archive, verifies its SHA-256 and opens the folder; stable tags only, missing checksum requires explicit confirmation.
-  Verification: 83 desktop tests, fake HTTP handlers and three-OS CI; no automatic install.
+- [x] **Update check, download and install**
+  The manager reads GitHub `releases/latest`, compares the assembly version, downloads the matching archive and verifies SHA-256; macOS/Linux/Windows replace the published app through a detached helper and restart. Stable tags only; missing checksum requires explicit confirmation.
+  Verification: 144+ desktop tests, real mac/Linux helpers and Windows script checks, three-OS CI; signature verification beyond SHA-256 still open.
 
-- [x] **Automatic update install (macOS/Linux)**
-  After a verified download, macOS atomically replaces the `.app` with a detached helper (validates bundle id, restores on failure, relaunches) and Linux replaces the published directory; Windows opens the verified zip for manual extraction.
-  Verification: 133 desktop tests plus build/gui-smoke on three OS; helper scripts are not executed against the real app in CI.
+- [x] **Platform integration tests**
+  Real macOS Keychain, Windows Credential Manager, `secret-tool` when available, and macOS/Linux install helpers executed on disposable fake apps; Linux/macOS/Windows CI runs with OS guards.
+  Verification: 147/146/145 passed with only OS/tool skips.
 
-- [ ] **Windows self-replace**
-  Implement the same wait-replace-restart helper for the Windows zip/exe layout and validate it on a real runner.
+- [x] **Security smoke**
+  `scripts/security-smoke.py` + `make security-smoke`: 401 matrix, metadata/challenge RFC 9728, scope split, grant/RBAC denial, tunnel allowlist, audit denial, headers, CORS and optional 429 burst.
+  Verification: 16/16 PASS locally; the missing `resource_metadata` finding was fixed in the API and covered by a test.
+
+- [x] **Packaging artifacts**
+  Manual `publish` dispatch for `0.0.0-test` built and uploaded all four RIDs (osx-arm64, osx-x64, win-x64, linux-x64).
+  Verification: run 43010389019, artifacts present.
+
+- [ ] **Real signing and notarization**
+  Run the publish workflow with the Apple/Windows certificates and notarization secrets; verify Gatekeeper, stapled ticket and Authenticode on a clean machine.
+
+- [ ] **Penetration test**
+  Full external pentest of the MCP surface, tunnel abuse and the web app; the security smoke only covers the automated baseline.
 
 ## Workspace
 
