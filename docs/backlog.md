@@ -108,8 +108,8 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   RBAC metadata reads restricted to SystemAdmin (PT-05); session revocation on role/group changes (PT-07); SSH/SFTP host-key pinning (PT-09); audit rows for file transfer/inventory/tunnel services (PT-10); signed checksum manifest for desktop installs (PT-11); HTTP/SPA action confirmation (PT-13); tunnel-session target validation (PT-14); SameSite/transport/MCP prompt-injection docs (PT-15/16/18); deploy password policy, TOTP for every realm user and plain FTP off (PT-08/16/17).
   Verification: API integration tests, Web 101 tests, desktop 153 tests, deploy preflight/compose config, disposable Keycloak 26.8.1 MFA login, publish manifest signature `Verified OK`.
 
-- [ ] **Pentest 2026-11 residual**
-  Audit hash chain is tamper-evident but external WORM/SIEM anchoring and prefix/suffix deletion detection remain a deployment responsibility. Image signing/SBOM/provenance, per-environment inventory reads (D7 accepted), the MFA migration of an existing Keycloak realm (`--import-realm` does not update it) and MFA on the master realm/brokered IdPs remain operational/product decisions. Plain FTP is off in deploy; an operator can re-enable it only as an explicit, documented legacy exception.
+- [ ] **Pentest 2026-11 accepted/operational residual**
+  Inventory/environment reads stay open to authenticated users by design (D7); per-environment filtering is a product decision. The audit chain anchor is implemented (HMAC webhook) but needs a real append-only SIEM/WORM sink. Existing Keycloak realms need the MFA flow recreated (`--import-realm` does not update them); master realm/brokered IdPs remain operational. Plain FTP is off in deploy and only a dev/legacy opt-in. Images are signed with cosign, SBOM/provenance are published on non-PR builds.
 
 ## Workspace
 
