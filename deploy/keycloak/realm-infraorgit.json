@@ -19,16 +19,9 @@
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 28800,
-  "browserFlow": "browser-mfa",
+  "browserFlow": "__MFA_BROWSER_FLOW__",
   "requiredActions": [
-    {
-      "alias": "CONFIGURE_TOTP",
-      "name": "Configure OTP",
-      "providerId": "CONFIGURE_TOTP",
-      "enabled": true,
-      "defaultAction": true,
-      "priority": 10
-    }
+    "__MFA_REQUIRED_ACTIONS__"
   ],
   "authenticationFlows": [
     {
@@ -220,8 +213,7 @@
       "lastName": "InfraOrgIT",
       "email": "admin@example.invalid",
       "requiredActions": [
-        "UPDATE_PASSWORD",
-        "CONFIGURE_TOTP"
+        "__MFA_ADMIN_REQUIRED_ACTIONS__"
       ],
       "credentials": [
         {

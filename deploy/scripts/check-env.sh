@@ -172,6 +172,21 @@ check_digest WEB_DIGEST
 require_tag API_TAG API_DIGEST
 require_tag WEB_TAG WEB_DIGEST
 
+# MFA is opt-in (PT-08). Compose defaults it to false and the Keycloak
+# entrypoint accepts the same spellings; reject any other value before the
+# stack starts so a typo cannot silently enable or disable TOTP.
+keycloak_mfa="$(get_value KEYCLOAK_MFA)"
+[ -n "$keycloak_mfa" ] || keycloak_mfa="false"
+case "$(printf '%s' "$keycloak_mfa" | tr '[:upper:]' '[:lower:]')" in
+  true|1|yes) keycloak_mfa=true ;;
+  false|0|no) keycloak_mfa=false ;;
+  *)
+    fail "KEYCLOAK_MFA deve essere true/false/1/0/yes/no (trovato '$keycloak_mfa')"
+    ;;
+esac
+[ "$keycloak_mfa" = true ] ||
+  warn "KEYCLOAK_MFA=false: gli account del realm non richiedono un secondo fattore; abilitare con KEYCLOAK_MFA=true"
+
 web_bind="$(get_value WEB_BIND)"
 [ -n "$web_bind" ] || web_bind="127.0.0.1"
 case "$web_bind" in
@@ -202,5 +217,5 @@ if [ "$keycloak_admin" = "admin" ]; then
   warn "KEYCLOAK_ADMIN resta 'admin': il nome e noto, la password deve essere unica e ruotata"
 fi
 
-printf 'check-env: OK (%s, WEB_BIND=%s, FileTransfer__AllowPlainFtp=%s)\n' \
-  "$ENV_FILE" "$web_bind" "$plain_ftp"
+printf 'check-env: OK (%s, WEB_BIND=%s, KEYCLOAK_MFA=%s, FileTransfer__AllowPlainFtp=%s)\n' \
+  "$ENV_FILE" "$web_bind" "$keycloak_mfa" "$plain_ftp"
