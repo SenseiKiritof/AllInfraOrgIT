@@ -18,8 +18,9 @@ bypasses. The evidence from the internal test is in
   offers FTPS. Plain `Ftp` remains a legacy exception: the operator must set
   `FileTransfer__AllowPlainFtp=true` deliberately, restrict the target to a
   trusted network or VPN, record why per server, and never use it over the
-  internet. In the deploy stack every human login is behind TOTP, but FTP still
-  leaks the file credential on the wire.
+  internet. In the deploy stack set `KEYCLOAK_MFA=true` to put every human
+  login behind TOTP (the default is `false`), but FTP still leaks the file
+  credential on the wire.
 - See [`../domain/file-transfer.md`](../domain/file-transfer.md).
 
 ## Browser and API: HTTPS outside loopback

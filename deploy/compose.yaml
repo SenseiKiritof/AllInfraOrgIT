@@ -71,7 +71,8 @@ services:
     image: quay.io/keycloak/keycloak:26.8.1@sha256:a78d6b79572168cb25886b80a8b5b8d4ed4390743e3eecb810538683e209dd6b
     restart: unless-stopped
     # Renders deploy/keycloak/realm-infraorgit.json into the import directory,
-    # substituting the client/MCP secrets and the application admin password.
+    # substituting the client/MCP secrets, the application admin password and
+    # the optional TOTP browser flow (KEYCLOAK_MFA).
     entrypoint: ["/opt/keycloak/entrypoint.sh"]
     command: ["start", "--import-realm"]
     # Read-only rootfs. The upstream image augments Quarkus into
@@ -98,6 +99,7 @@ services:
       OIDC_CLIENT_SECRET: ${Oidc__ClientSecret:?definisci Oidc__ClientSecret in .env}
       MCP_CLIENT_SECRET: ${MCP_CLIENT_SECRET:?definisci MCP_CLIENT_SECRET in .env}
       INFRAORGIT_ADMIN_PASSWORD: ${INFRAORGIT_ADMIN_PASSWORD:?definisci INFRAORGIT_ADMIN_PASSWORD in .env}
+      KEYCLOAK_MFA: ${KEYCLOAK_MFA:-false}
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "true"
     ports:
