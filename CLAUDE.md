@@ -2,8 +2,8 @@
 
 `AGENTS.md` is a symlink to this file: edit `CLAUDE.md` only.
 
-Meta repository of the InfraOrgIT workspace. Command reference in `README.md`,
-open work in `docs/backlog.md`, decisions in `docs/adr/`.
+Meta repository of the InfraOrgIT workspace. Command reference in
+`docs/development.md`, open work in `docs/backlog.md`, decisions in `docs/adr/`.
 
 ## Workspace
 
