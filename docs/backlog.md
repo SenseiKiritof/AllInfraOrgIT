@@ -117,7 +117,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   `AllInfraOrgIT`, `InfraOrgITApi`, `InfraOrgITWeb`, `InfraOrgITDocker` (no legacy prefix, no dots). Updated `Makefile`, `scripts/`, workflows, `versions.lock`, docs, README and GitHub remotes. Legacy copies were archived outside the workspace.
   Compose project `infraorgit`, images `infraorgit-api`/`infraorgit-web` (Docker names must be lowercase).
 
-- [ ] **Validate the Docker images on the first tag**
-  Implemented `InfraOrgITWeb/Dockerfile` + `Caddyfile`, image version labels for the API, `docker.yml` workflows in `InfraOrgITApi` and `InfraOrgITWeb` (GHCR, tags `X.Y.Z`, `X.Y`, `sha`, `latest`).
-  Missing: first `v*` tag, workflow and push verification, image digests in `versions.lock`, published image usage in the release compose.
-  Verification: `gh run list` green, `docker pull` both images, `APP_VERSION`/`VITE_APP_VERSION` visible at runtime.
+- [ ] **Validate the versioned Docker images**
+  The `v0.2.0` tag and multi-arch GHCR images exist; `main`/`dev` images are
+  signed with cosign, with SBOM and build provenance verified. The release
+  compose uses explicit `API_TAG`/`WEB_TAG` and accepts a digest.
+  Missing: a new version tag after the signing change (`0.2.0`/`latest` predate
+  it), image digests in `versions.lock`, and a release-compose run pinned to a
+  digest.
+  Verification: `docker manifest inspect`, `cosign verify` and
+  `gh attestation verify` on `main`; `gh run list` green.
