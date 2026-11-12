@@ -186,6 +186,11 @@ services:
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:-https://localhost:8443}
       Auth__SecureCookies: "true"
       Mcp__Enabled: ${MCP_ENABLED:-true}
+      # Plain FTP is cleartext (PT-16). Off in deploy: the API refuses to save
+      # or open a server with FileTransferProtocol=Ftp. SFTP and FTPS stay
+      # available. Set FileTransfer__AllowPlainFtp=true only for a documented
+      # legacy exception; check-env.sh warns when it is enabled.
+      FileTransfer__AllowPlainFtp: ${FileTransfer__AllowPlainFtp:-false}
       Mcp__Oidc__Authority: ${MCP_OIDC_AUTHORITY:-https://localhost:8443/realms/infraorgit}
       Mcp__Oidc__MetadataAddress: ${MCP_OIDC_METADATA_ADDRESS:-http://keycloak:8080/realms/infraorgit/.well-known/openid-configuration}
       Mcp__Oidc__Issuer: ${MCP_OIDC_ISSUER:-https://localhost:8443/realms/infraorgit}
