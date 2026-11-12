@@ -311,9 +311,60 @@ step, remove the optional scopes from the client in Keycloak until an
 integration needs actions, then re-add them.
 
 `infraorgit-mcp-desktop` is a public client with PKCE and the device grant;
-its default scope is also `mcp:read`, with the two operate scopes optional.
-The secret in the realm template is a placeholder rendered at container start
-from `OIDC_CLIENT_SECRET`/`MCP_CLIENT_SECRET`; no working secret is committed.
+its default scope is also `mcp:read`, with the two operate scopes and
+`offline_access` optional. The secret in the realm template is a placeholder
+rendered at container start from `OIDC_CLIENT_SECRET`/`MCP_CLIENT_SECRET`; no
+working secret is committed.
+
+### Desktop offline access
+
+Silent desktop login uses an offline token: the desktop adds `offline_access`
+to the device authorization request (`scope=openid ... offline_access`) and
+Keycloak returns a refresh token of type `Offline`. The scope is optional and
+is not assigned to the web client `infraorgit` or to the `infraorgit-mcp`
+service account; only `infraorgit-mcp-desktop` can request it. Each device
+login shows the consent page with an "Offline Access" row; denying it ends the
+flow with `access_denied`, and a user without the `offline_access` role gets
+`not_allowed` ("Offline tokens not allowed for the user or client") at the
+token exchange. The desktop stores the token in the OS secret store (see
+`../docs/operations/mcp-tunnel-hardening.md`).
+
+Lifetimes are bounded at realm level:
+
+| Setting | Value | Effect |
+|---|---|---|
+| `offlineSessionIdleTimeout` | 30 days (2592000 s) | an unused offline session is removed |
+| `offlineSessionMaxLifespanEnabled` | `true` | enables the hard cap below |
+| `offlineSessionMaxLifespan` | 90 days (7776000 s) | an offline session is removed even if it is refreshed |
+| `ssoSessionIdleTimeout` / `ssoSessionMaxLifespan` | 30 min / 8 h (unchanged) | normal browser SSO only |
+
+Access tokens stay at 5 minutes. Refreshing keeps an offline session alive
+until the 90-day cap; after that the desktop must repeat the device flow.
+Imported users (including the bootstrap `admin`) get the realm role
+`offline_access` explicitly, because Keycloak does not apply the
+`default-roles-*` composite to imported users; users created later inherit it.
+Removing the role blocks offline tokens.
+
+To revoke an offline session:
+
+- In the desktop, sign out: the client deletes the refresh token from the OS
+  secret store. That does not by itself end the offline session on the server,
+  so for a lost device also revoke it in Keycloak.
+- In the Keycloak console, Users -> (user) -> Sessions -> Offline sessions ->
+  Sign out, or disable/delete the user. Deleting the client also ends its
+  offline sessions.
+
+An offline session survives a normal browser logout by design, so an explicit
+revoke (or one of the bounds above) is the only way to end silent access.
+Keycloak keeps the offline session row until revoke, expiry or user deletion;
+database backups may retain the row for their retention window, but an expired
+token is rejected by Keycloak even if the row is restored.
+
+The realm template sets these values on a fresh import. `--import-realm` does
+not update an existing realm: on a running deployment set the same values in
+the console (Realm settings -> Sessions -> Offline Session Idle, Offline
+Session Max Limited, Offline Session Max) and add `offline_access` as an
+optional client scope on `infraorgit-mcp-desktop`.
 
 ## Container hardening
 
