@@ -1,49 +1,70 @@
 # InfraOrgIT
 
-InfraOrgIT is one place to describe an organization's IT infrastructure and to work on it from the browser. You model the chain once, from provider to project, and the same model drives the topology diagram, the API tests, the network checks and the SSH console, with permissions per environment and an audit log of every action.
+InfraOrgIT is one place to describe an organization's IT infrastructure and to
+work on it from the browser. You model the chain once — provider → environment
+→ server → deployed application → project — and the same model drives the
+topology diagram, API tests, network checks, the SSH console, the file browser,
+AI actions and the audit log, with permissions per environment.
 
-![Diagram of the production environment with servers, deployed applications and proxy routes](docs/screenshots/diagram.png)
+![Production diagram with servers, deployed applications and proxy routes](docs/screenshots/diagram.png)
 
 ## What it does
 
-### 1. One model, from provider to project
+### Model the infrastructure
 
-- **Providers and environments**: datacenters and clouds, each with its environments (PRE, INT, PROD…).
-- **Servers**: IP and public address, hostname, SSH port and jump host, sizing (cores, memory, disk), operating system, HA node and third-party operator.
-- **Applications**: backend, frontend or infrastructure (SFTP, RabbitMQ, NGINX, Elastic, Kibana, Kafka, MySQL, MongoDB, Redis), each with its versions.
-- **Deployments**: an application version on a server and port, with how it runs: container or native service, image, container name, compose folder, host port behind a local proxy, HA role (primary or secondary).
-- **Projects**: group applications and list the servers they run on, production apart from the other environments.
-- **Traffic**: proxy connections and routes (path, virtual host, listen port, target deployment or next connection), drawn as an interactive diagram (provider → environment → server → deployed application) filtered by provider, environment or project, with saved layouts.
+- **Providers and environments**: datacenters and clouds, each with its
+  environments (PRE, INT, PROD…).
+- **Servers**: IP and public address, hostname, SSH port and jump host, sizing,
+  operating system, HA node and third-party operator.
+- **Applications**: backend, frontend or infrastructure (SFTP, RabbitMQ,
+  NGINX, Elastic, Kibana, Kafka, MySQL, MongoDB, Redis), each with versions.
+- **Deployments**: an application version on a server and port, with runtime,
+  image, container name, compose folder, host port and HA role.
+- **Projects and traffic**: group applications, list their servers and draw
+  proxy connections and routes. The interactive diagram is filtered by
+  provider, environment or project and keeps saved layouts.
 
-### 2. API tests straight from the documentation
+### Test, operate and audit
 
-Import an OpenAPI 3.x or Swagger 2.0 document into an application version: endpoints, query parameters and API key definitions are created in one step. Each API can then be called server-side on a chosen environment, with that environment's hostname and API keys (stored encrypted), and the call kept in a personal history.
+- **API tests** from an imported OpenAPI 3.x or Swagger 2.0 document, with the
+  environment hostname and encrypted API keys.
+- **Reachability tests** run from the server itself over SSH: the result is
+  what that server really reaches, OK or KO.
+- **SSH console and files**: several sessions side by side or minimized, plus
+  an SFTP/FTPS browser and command templates.
+- **Application actions** such as restart, logs and health check, with optional
+  confirmation, idempotency and shell-metacharacter checks.
+- **Audit log** of consoles, actions, tests, MCP calls and tunnels. The audit
+  chain is tamper-evident and can be anchored to an external SIEM/WORM sink.
 
-### 3. Reachability tests from the server itself
+### Roles, language and theme
 
-Network tests are host:port checks, defined per server or globally. Run them all or a selection: each check runs on the server over SSH, so the result shows what that server really reaches, OK or KO with the error.
+Keycloak login through a backend-for-frontend keeps tokens out of the browser.
+`SystemAdmin` owns the master data; `ServerAdmin` and `ServerOperator` are
+granted per environment and decide what a user can open or run. The menu is
+configurable, the interface is Italian and English, and the light/dark theme is
+remembered per user.
 
-### 4. Direct operation through the console
+### AI with a human in the loop
 
-A web SSH console with several sessions, side by side or minimized to a bar at the bottom of the page, and reconnection. The same bar opens a console or an SFTP/FTP file browser on any server the user administers. SSH credentials are encrypted with AES-GCM and the host key is pinned on first connection. Command templates with `{{Name}}` placeholders and application actions (restart, logs, health check) run from the same pages. Every console session, action and test lands in the audit log, with scripts and output redacted and custom values masked. An action can ask for confirmation before it runs, a repeated submission is not run twice, and placeholder values with shell metacharacters are rejected.
+MCP clients can read the inventory and request actions. Read tools use
+`mcp:read`/`mcp:operate`; action tools also need an `McpGrant`, the environment
+operator right and a human approval. The AI receives an `approvalId`, the
+request waits on `/approvals`, and only the owner can approve it from a browser
+session. The approval is one-time, expires after 10 minutes and is bound to the
+exact target and parameters.
 
-### 5. Access by role and environment
+### Desktop tunnels
 
-- **Login**: Keycloak through a backend-for-frontend, no token in the browser.
-- **Users, groups and roles** managed from the interface. `SystemAdmin` owns the master data: providers, environments, applications and projects, users and groups, SSH credentials, command templates and action scripts, global network tests and the audit log.
-- **Rights per environment**: `ServerAdmin` and `ServerOperator` are granted to groups on single environments. `ServerAdmin` manages servers, deployments, proxy routes and server tests and opens the SSH console and the SFTP/FTP browser; `ServerOperator` runs application actions and network tests. `SystemAdmin` does not imply either, and pages show only the actions allowed on that environment.
-- **Configurable menu**: entries, order and nesting are edited from the Menu page and each entry is assigned to roles, so the side menu shows every user only what they can use.
-
-### Around it
-
-- **Interface**: Italian and English, including the labels stored in the database (menus, roles); light and dark theme. The shell header carries the page name and its short description; a single record uses a compact form instead of a one-row table.
-- **MCP**: inventory tools, resources (`infraorgit://servers/{id}`, `infraorgit://applications/{id}`, `infraorgit://inventory/summary`) and prompts (`diagnose-server`, `application-impact`) over `/mcp` (Streamable HTTP), authenticated with personal API tokens from the user menu (`/tokens`) or Keycloak OAuth clients (`infraorgit-mcp` for client credentials, `infraorgit-mcp-desktop` for PKCE). Read tools require `mcp:read`/`mcp:operate`; action tools (`run_reachability_tests`, `run_application_action`) additionally require `mcp:operate`, an `McpGrant` for the user or group and the environment operator right. The desktop client defaults to read-only. Every call is audited; discovery is on `/.well-known/oauth-protected-resource`; SystemAdmin reads the audit log from `/audit` (180-day retention).
-- **Desktop e tunnel**: `InfraOrgITDesktop` (.NET 10 + Photino) apre più istanze in finestre separate, accede con device flow Keycloak (refresh token nel keychain di sistema) o token personale e gestisce tunnel `ssh -L`/`-D`/`-R` con l'agente SSH, catene di jump host e servizi per server (porta, tipo Http/Https, autoStart, scoperta porte via SSH); l'API espone allowlist, eventi e sessioni attive, visibili in `/tunnels`.
-- **Legacy import**: one-shot importer from the previous system's MySQL database or from JSON fixtures.
+InfraOrgIT Desktop opens instances in separate windows and manages SSH tunnels
+through the user's SSH agent: `-L`, `-D`, `-R`, jump chains, custom services,
+`autoStart` and automatic reconnect. The instance shows the live sessions on
+`/tunnels`.
 
 ## See it in action
 
-Recordings and screenshots come from a local instance with fictitious data (the "Acme" company); `pre-app-01` and `pre-proxy-01` are real SSH servers in that instance.
+The screenshots and recordings come from a local instance with fictitious
+data.
 
 **Diagram**
 
@@ -52,61 +73,59 @@ Recordings and screenshots come from a local instance with fictitious data (the 
 | Servers | Application |
 |---|---|
 | ![Server list with environment, IP, SSH port and jump host](docs/screenshots/servers.png) | ![Application with type, versions and APIs](docs/screenshots/application.png) |
-| **Server** | **Execution log** |
-| ![Server detail with sizing, SSH credential and reachability tests](docs/screenshots/server.png) | ![Audit log of console sessions, actions and reachability tests](docs/screenshots/executions.png) |
+| **Server detail** | **Execution log** |
+| ![Server detail with sizing, SSH credential and reachability tests](docs/screenshots/server.png) | ![Execution log of console sessions, actions and reachability tests](docs/screenshots/executions.png) |
 
 **Network tests and application actions**
 
-![Reachability tests run from pre-app-01 with OK and KO results, then the Health check and Recent logs actions of orders-api](docs/screenshots/tests-actions.gif)
+![Reachability tests with OK and KO results, then application actions](docs/screenshots/tests-actions.gif)
 
 **SSH console**
 
-![SSH session on pre-app-01: hostname, uptime, disk usage, application log and health endpoint](docs/screenshots/console.gif)
+![SSH session with hostname, uptime, disk usage, application log and health endpoint](docs/screenshots/console.gif)
 
-**Several consoles: split view and minimize**
+![Two consoles side by side, minimized to the bar and reopened](docs/screenshots/console-split.gif)
 
-![Consoles on pre-app-01 and pre-proxy-01 side by side, minimized to the bar and reopened](docs/screenshots/console-split.gif)
+**Human approval for AI actions**
 
-## Architecture
+![MCP approvals page with a pending action, Approve and Deny buttons and the human-approval warning](docs/screenshots/approvals.png)
 
-```
-browser ──► Caddy ─┬─ /             SPA: React 19, Vite, React Flow, xterm.js
-                   ├─ /api, /auth   API: .NET 10, EF Core ──► MySQL 8.4
-                   │                     └─ SSH/SFTP (SSH.NET), FTP (FluentFTP) ──► managed servers
-                   └─ /realms       Keycloak 26 ──► MySQL 8.4
-```
+**Desktop tunnels**
 
-- One origin for SPA, API and Keycloak: the session is an HttpOnly cookie, every mutation is checked for CSRF and `Origin`.
-- The backend owns the schema (EF Core migrations), RBAC and the OpenAPI contract the frontend is typed from.
-- Health checks and optional OpenTelemetry export (OTLP).
-
-## Workspace repositories
-
-This repository is the workspace meta repository: architecture decisions, shared configuration, orchestration and release lock.
-
-| Repository | Content |
+| Manager | Tunnel panel |
 |---|---|
-| [`AllInfraOrgIT`](https://github.com/SenseiKiritof/AllInfraOrgIT) | this repo: docs, ADRs, `Makefile`, `scripts/`, `versions.lock` |
-| [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 backend: API, EF migrations, legacy importer |
-| [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React + Vite frontend |
-| [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | Docker Compose, Caddy, Keycloak |
-| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | .NET 10 + Photino desktop shell |
+| ![Desktop manager with three instances](docs/screenshots/desktop-manager.png) | ![Tunnel panel with a server, deployed application, custom services and an active local tunnel](docs/screenshots/desktop-tunnels.png) |
 
-The four server directories live side by side; the desktop repository is
-optional and only needed when working on the desktop app:
+**Tunnels and audit**
 
+| Active tunnels | Audit log |
+|---|---|
+| ![Active tunnel with local port, target and last contact](docs/screenshots/tunnels.png) | ![Audit log of MCP calls and tunnel events](docs/screenshots/audit.png) |
+
+## Start
+
+### On a server, from published images
+
+Requirements: Docker Engine with Compose v2, and this repository. No API or web
+source and no local build.
+
+```bash
+git clone https://github.com/SenseiKiritof/AllInfraOrgIT.git
+cd AllInfraOrgIT
+cp deploy/.env.example deploy/.env   # replace CHANGE_ME_* secrets and pin tags/digests
+deploy/scripts/check-env.sh deploy/.env
+make up-images
 ```
-workspace/
-  AllInfraOrgIT/
-  InfraOrgITApi/
-  InfraOrgITWeb/
-  InfraOrgITDocker/
-  InfraOrgITDesktop/   # optional
-```
 
-## Quick start
+Open `https://localhost:8443`; the Keycloak console is on
+`http://localhost:18081/admin`. The stack includes MySQL, Keycloak, the API,
+the web app and Caddy. MFA is opt-in with `KEYCLOAK_MFA=true`; plain FTP is
+disabled by default. The full guide, TLS, backup and update notes are in
+[`deploy/README.md`](deploy/README.md).
 
-Prerequisites: Docker with Compose v2, .NET SDK 10, Node 24, Yarn 1, `make`.
+### Locally, from source
+
+Requirements: Docker Compose v2, .NET SDK 10, Node 24, Yarn 1.22 and `make`.
 
 ```bash
 git clone https://github.com/SenseiKiritof/AllInfraOrgIT.git
@@ -114,121 +133,44 @@ git clone https://github.com/SenseiKiritof/InfraOrgITApi.git
 git clone https://github.com/SenseiKiritof/InfraOrgITWeb.git
 git clone https://github.com/SenseiKiritof/InfraOrgITDocker.git
 git clone https://github.com/SenseiKiritof/InfraOrgITDesktop.git   # optional
-cp InfraOrgITDocker/.env.example InfraOrgITDocker/.env
 cd AllInfraOrgIT
 make dev
 ```
 
-`make dev` creates `.env` when missing, starts MySQL/Keycloak, applies EF migrations and starts API and Vite. Development credentials live in `InfraOrgITDocker/.env`.
+`make dev` applies the migrations, starts MySQL and Keycloak, the API on
+`:5298` and Vite on `:3000`. Use `make full` for the single Compose stack on
+`https://localhost:8443`. Development credentials are in
+`InfraOrgITDocker/.env`.
 
-## Commands
+## Workspace
 
-```bash
-make dev      # infra + migrations + API :5298 + Vite :3000; creates .env when missing
-make full     # single compose: API + web images, migration job, Keycloak production
-make test     # xunit + Testcontainers MySQL + Vitest
-make ci       # same gates as the workflows, locally
-make openapi  # regenerate openapi/InfraOrgIt.Api.json from the backend
-make backup   # MySQL application + Keycloak dump into backups/<UTC>
-make restore  # only with CONFIRM_RESTORE=yes BACKUP_DIR=...; overwrites the DBs
-make load-test # targeted load on lists, topology and saves
-make loadtest-mcp # MCP /mcp load with MCP_TOKEN; read-only, not in CI
-make security-smoke # negative security checks; needs MCP_TOKEN + MCP_OPERATE_TOKEN, not in CI
-make legacy-dry-run  # importer dry-run on JSON fixtures
-make migrate  # dotnet-ef from the local manifest
-make e2e      # Playwright; requires make dev running
-make e2e-full # Playwright against the full profile (Caddy/HTTPS)
-make config   # validate the Compose file
-make reset    # removes volumes: needed after Keycloak realm/client changes
-make down
-```
+| Repository | Content |
+|---|---|
+| [`AllInfraOrgIT`](https://github.com/SenseiKiritof/AllInfraOrgIT) | this repository: docs, ADRs, orchestration, deploy, release lock |
+| [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 API, EF migrations, MCP, legacy importer |
+| [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React 19 + Vite browser app |
+| [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | local Compose stack, Caddy, Keycloak |
+| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | .NET 10 + Photino desktop shell and tunnels |
 
-`make e2e` uses `http://localhost:3000`; `make e2e-full` uses `https://localhost:8443` and requires the `full` profile.
+## Learn more
 
-## Branching
-
-`dev` is the integration branch; `main` is the release branch.
-
-```bash
-git switch dev
-git switch -c feature/<scope>   # or fix/<scope>
-# work, commit, run make ci
-git push -u origin feature/<scope>
-gh pr create --base dev
-# merge when the required checks are green, then open dev -> main
-```
-
-Use the same branch name in every repository touched by the change. The
-`Main` ruleset blocks direct pushes, force-push and deletion on `main` and
-`dev`, and requires the pipelines: `build-test` + `image` (API),
-`lint-test-build` + `image` (web), `config` (Docker), `check` (meta). Releases
-are cut from `main` after `dev` has been merged.
-
-## Deploy from published images
-
-`AllInfraOrgIT/deploy/` starts the whole stack from GHCR images: no API/Web
-source, no local build, only this repository and Docker Compose v2.
-
-The `docker` workflows publish, on every branch push, `main`, `dev` and
-`sha-<commit>`, and on `v*` tags `X.Y.Z`, `X.Y`, `sha-<commit>` and `latest`.
-Branch and tag images are multi-arch (`linux/amd64`, `linux/arm64`); the
-packages are public, otherwise run `docker login ghcr.io` first. Prefer the
-immutable `X.Y.Z`/`sha-<commit>` tags: `main`, `dev` and `latest` are refused
-by the preflight unless `API_DIGEST`/`WEB_DIGEST` pins the manifest.
-
-```bash
-cd AllInfraOrgIT
-cp deploy/.env.example deploy/.env   # replace CHANGE_ME_* (secrets and image tags)
-deploy/scripts/check-env.sh deploy/.env
-make up-images
-# or: docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait
-```
-
-Open `https://localhost:8443` and the Keycloak console on
-`http://localhost:18081/admin`. The API image runs the EF migrations; the base
-data (environments, roles, menus, translations, bootstrap admin) comes from
-`deploy/init/base-data.sql`, and Keycloak imports the templated
-`deploy/keycloak/realm-infraorgit.json` with secrets rendered from `.env`.
-
-Update with `docker compose --env-file deploy/.env -f deploy/compose.yaml pull`
-then `up -d --wait`; `down` keeps the data in `deploy/data/`, `down -v` also
-removes the named volumes (API data protection keys, Caddy certificates).
-Full guide in `deploy/README.md`.
+- [`docs/development.md`](docs/development.md) — workspace, commands, tests,
+  branching, release and generated contracts.
+- [`docs/operations/release.md`](docs/operations/release.md) — release,
+  version tags, images and rollback.
+- [`docs/security/permissions.md`](docs/security/permissions.md) — role
+  matrix and environment rules.
+- [`docs/security/pentest-2026-11.md`](docs/security/pentest-2026-11.md) —
+  internal pentest, OWASP mappings and remediation status.
+- [`docs/architecture/mcp-server-and-tunnels.md`](docs/architecture/mcp-server-and-tunnels.md)
+  — MCP and tunnel architecture.
+- [`docs/README.md`](docs/README.md) — document index.
+- [`docs/backlog.md`](docs/backlog.md) — open work and verification.
 
 ## Status
 
-Phase 8 completed on the technical perimeter — 2026-10-30. Backend, frontend, admin/RBAC, remote management and the legacy importer (MySQL source or JSON fixtures) are working; the application database is initialized with schema, base data and the installation data from `InfraOrgITDocker/init/mysql`. `full` profile with API, migrations, Keycloak production mode and Caddy; `make ci` and 5 E2E tests green. The first version tag (`v0.2.0`) was created automatically from a merge title and the multi-arch images are published to GHCR; the image-based deploy stack starts and logs in. Still open: rehearsal on a representative dataset.
-
-## Contents
-
-| Path | Purpose |
-|---|---|
-| `docs/` | ERD, data dictionary, permissions, UX, legacy mapping, OpenAPI |
-| `docs/adr/` | ADRs 001–009 and template |
-| `docs/backlog.md` | open work and its verification |
-| `docs/screenshots/` | screenshots and recordings used in this README |
-| `scripts/` | `dev.sh` and `env.sh` for local development |
-| `tools/graphify/` | graphify workspace configuration |
-| `Makefile` | orchestration for infra, API, web, tests and migrations |
-| `deploy/` | stack from published images (`make up-images`), env example, Keycloak realm and base data |
-| `versions.lock` | commit SHAs and images of the application repos for reproducible releases |
-
-## Release and publishing
-
-Merging into `main` with `[Major]`, `[Minor]` or `[Patch]` in the pull request title makes the API/Web `tag` workflow create the next `vX.Y.Z` tag on the merge commit and start the image build. `make release VERSION=0.8.0` completes the missing repos (including `InfraOrgITDesktop`), updates `versions.lock` and skips tags that already exist; pushing stays manual. Version tags are created only from `main`: the `Version tags` ruleset makes `v*` immutable and the docker workflows reject a tag whose commit is not on `main`. The desktop `v*` tag must also be pushed from `main`; it starts `publish.yml`, which creates the GitHub Release with the signed (when the secrets exist) archives. Procedure in `docs/operations/release.md`.
-
-`v*` tags trigger `.github/workflows/docker.yml` in `InfraOrgITApi` and `InfraOrgITWeb`: image build, application version tag and push to GHCR.
-
-```bash
-docker pull ghcr.io/senseikiritof/infraorgit-api:0.8.0
-docker pull ghcr.io/senseikiritof/infraorgit-web:0.8.0
-docker run --rm -p 8080:80 ghcr.io/senseikiritof/infraorgit-web:0.8.0
-```
-
-Published tags: `X.Y.Z`, `X.Y`, `sha-<commit>`, `latest`. The version number is baked into the image (`org.opencontainers.image.version`, `APP_VERSION` for the API, `VITE_APP_VERSION` for the web app).
-
-`versions.lock` pins backend, frontend, docker and desktop commits. A release is the checkout of those commits; rollback is the previous lock. The desktop entry is added by the next `make release`; older locks without it stay valid.
-
-## Rules
-
-See `AGENTS.md`. No secrets, no production data, no legacy artifacts.
+Backend, browser app, RBAC, remote management, MCP, desktop tunnels and the
+legacy importer are working. The full stack runs from published multi-arch
+images; the API and web images are signed with cosign and include SBOM and
+provenance on non-PR builds. The remaining release work is the rehearsal on a
+representative legacy dataset and the first real signed desktop release.
