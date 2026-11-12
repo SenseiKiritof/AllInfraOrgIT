@@ -211,11 +211,23 @@ case "$plain_ftp" in
     ;;
 esac
 
+desktop_downloads="$(get_value DESKTOP_DOWNLOADS_ENABLED)"
+[ -n "$desktop_downloads" ] || desktop_downloads="true"
+case "$desktop_downloads" in
+  true|TRUE|True|1|yes|YES|Yes) desktop_downloads=true ;;
+  false|FALSE|False|0|no|NO|No) desktop_downloads=false ;;
+  *)
+    fail "DESKTOP_DOWNLOADS_ENABLED deve essere true/false/1/0/yes/no (trovato '$desktop_downloads')"
+    ;;
+esac
+[ "$desktop_downloads" = true ] ||
+  warn "DESKTOP_DOWNLOADS_ENABLED=false: il bridge desktop e disattivato e i ticket gia emessi non sono piu validi"
+
 keycloak_admin="$(get_value KEYCLOAK_ADMIN)"
 [ -n "$keycloak_admin" ] || keycloak_admin="admin"
 if [ "$keycloak_admin" = "admin" ]; then
   warn "KEYCLOAK_ADMIN resta 'admin': il nome e noto, la password deve essere unica e ruotata"
 fi
 
-printf 'check-env: OK (%s, WEB_BIND=%s, KEYCLOAK_MFA=%s, FileTransfer__AllowPlainFtp=%s)\n' \
-  "$ENV_FILE" "$web_bind" "$keycloak_mfa" "$plain_ftp"
+printf 'check-env: OK (%s, WEB_BIND=%s, KEYCLOAK_MFA=%s, FileTransfer__AllowPlainFtp=%s, DESKTOP_DOWNLOADS_ENABLED=%s)\n' \
+  "$ENV_FILE" "$web_bind" "$keycloak_mfa" "$plain_ftp" "$desktop_downloads"

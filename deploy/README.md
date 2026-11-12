@@ -117,6 +117,13 @@ connection is the operator's responsibility:
   record the exception per server and never use it with an administrator
   credential. `check-env.sh` warns when the flag is not `false` and rejects a
   value that is not a boolean.
+- **Desktop download bridge.** `DESKTOP_DOWNLOADS_ENABLED=true` (default) lets
+  the desktop app request a short-lived, one-time URL for a server file; the
+  download then runs in the desktop process with the user's permissions and is
+  audited. Set `DESKTOP_DOWNLOADS_ENABLED=false` to disable new tickets and
+  invalidate already-issued ones. The desktop then falls back to its native
+  webview download. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is only needed when
+  the API is reached through a proxy with a different public origin.
 - **Local HTTP stays on loopback.** `http://localhost:18081/admin` (Keycloak)
   and the `http://localhost:3000` redirect in the realm are cleartext and must
   remain bound to `127.0.0.1`. Do not point `KEYCLOAK_HOSTNAME_ADMIN`,
