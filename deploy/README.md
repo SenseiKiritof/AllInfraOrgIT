@@ -124,6 +124,12 @@ connection is the operator's responsibility:
   invalidate already-issued ones. The desktop then falls back to its native
   webview download. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is only needed when
   the API is reached through a proxy with a different public origin.
+  Tickets store metadata only (user, server, normalized path and timestamps),
+  never the raw token or file content. `DESKTOP_DOWNLOADS_RETENTION_DAYS`
+  (default 30, 1..365) deletes expired rows after the retention window, and
+  `DESKTOP_DOWNLOADS_CLEANUP_INTERVAL_MINUTES` (default 1440, 15..10080)
+  controls the background cleanup. Audit rows keep their separate 180-day
+  retention.
 - **Local HTTP stays on loopback.** `http://localhost:18081/admin` (Keycloak)
   and the `http://localhost:3000` redirect in the realm are cleartext and must
   remain bound to `127.0.0.1`. Do not point `KEYCLOAK_HOSTNAME_ADMIN`,
