@@ -335,10 +335,12 @@ the SSH-command log and is not reshaped.
   with jump chains and `hostPort ?? exposedPort`; it also carries the enabled
   `TunnelServices` (Local/Dynamic/Remote, Tcp/Http/Https, openPath, autoStart).
   `POST /api/tunnels/events` writes `TunnelStart`/`TunnelStop`/`TunnelError`
-  audit rows. Both require a token with `tunnels:operate`; Remote services are
-  visible only to ServerAdmin. ServerAdmin CRUDs services from the server
-  drawer and can discover listening ports with `ss -tlnH` over the server's
-  own SSH connection (`POST /api/servers/{id}/tunnel-services/discover`).
+  audit rows. Both accept a token with `tunnels:operate` or the authenticated
+  BFF session from the instance tab (same operator-environment filtering), so
+  the desktop does not need a second login when the user is already signed in;
+  Remote services are visible only to ServerAdmin. ServerAdmin CRUDs services
+  from the server drawer and can discover listening ports with `ss -tlnH` over
+  the server's own SSH connection (`POST /api/servers/{id}/tunnel-services/discover`).
 - Central tunnel visibility: `POST /api/tunnels/sessions` upserts a live row
   per tunnel (heartbeat every 30s), `GET /api/tunnels/sessions` returns active
   rows filtered to operator environments (SystemAdmin sees all), and a
