@@ -10,7 +10,7 @@ Meta repository of the InfraOrgIT workspace. Command reference in
 - Five sibling git repositories: this one plus `../InfraOrgITApi` (.NET 10
   API, EF migrations, legacy importer), `../InfraOrgITWeb` (React 19 + Vite),
   `../InfraOrgITDocker` (Compose, Caddy, Keycloak) and `../InfraOrgITDesktop`
-  (.NET 10 + Photino desktop shell).
+  (Electron desktop shell).
 - The `Makefile` and `scripts/` assume the five repositories side by side
   when releasing. Run `make` from this directory; do not rename or move those
   folders. The desktop repo stays optional for `make dev`/`make ci`; only
@@ -37,7 +37,7 @@ Meta repository of the InfraOrgIT workspace. Command reference in
 - Push the branch and open a pull request into `dev`; merge only when the
   required checks are green (`build-test`/`image` for the API,
   `lint-test-build`/`image` for the web, `config` for Docker,
-  `build-test` for the desktop, `check` for this repo). Then open `dev` ->
+  `build-test`/`test` for the desktop, `check` for this repo). Then open `dev` ->
   `main`.
 - The `Main` ruleset blocks direct pushes, force-push and deletion on `main`
   and `dev`, and requires the checks; the repo admin bypass exists only for
@@ -47,9 +47,10 @@ Meta repository of the InfraOrgIT workspace. Command reference in
   whose title contains `[Major]`, `[Minor]` or `[Patch]` creates the next tag
   automatically and starts the image build; `make release` completes the
   missing repos and skips tags that already exist. A `v*` tag on
-  `InfraOrgITDesktop` triggers `publish.yml`, which in turn publishes the
-  archives and creates or updates the GitHub Release; the desktop tag must be
-  created from `main` (the workflow does not create it). The `Version tags`
+  `InfraOrgITDesktop` triggers `publish.yml`, which checks the tag is on `main`,
+  builds the Electron packages for osx-arm64, osx-x64, win-x64 and linux-x64 and
+  creates or updates the GitHub Release; the desktop tag must be created from
+  `main` (the workflow does not create it). The `Version tags`
   ruleset makes them immutable, and the docker workflow refuses a version tag
   whose commit is not on `main`.
 
@@ -64,8 +65,8 @@ Meta repository of the InfraOrgIT workspace. Command reference in
   the API with `-warnaserror`, runs tests and the credential rewrap self-check,
   then Biome, `tsc --noEmit`, Vitest, the web build, `jq versions.lock`, the
   OpenAPI regeneration/drift check and the Redocly lint.
-- `make desktop-ci`: `dotnet build` with `-warnaserror` and `dotnet test` on
-  `../InfraOrgITDesktop/InfraOrgITDesktop.slnx`. It is part of `make release`
+- `make desktop-ci`: `npm ci` and `npm run test:unit` in
+  `../InfraOrgITDesktop/electron`. It is part of `make release`
   (under `SKIP_GATES`) but not of `make ci`, because the desktop repo stays
   optional for day-to-day backend/frontend work.
 - `.github/workflows/ci.yml` here only validates `versions.lock` and rejects a

@@ -117,6 +117,23 @@ connection is the operator's responsibility:
   record the exception per server and never use it with an administrator
   credential. `check-env.sh` warns when the flag is not `false` and rejects a
   value that is not a boolean.
+- **Desktop download compatibility.** `DESKTOP_DOWNLOADS_ENABLED=true` (default)
+  enables the signed-ticket endpoints: a client can request a short-lived,
+  one-time URL for a server file, then download it in the desktop process with
+  the user's permissions and the download is audited. The current Electron
+  client does not use this path: attachments go through Chromium's native
+  download and generated results through the desktop blob bridge. The
+  endpoints remain an API compatibility path for older clients and future
+  integrations. Set `DESKTOP_DOWNLOADS_ENABLED=false` to disable new tickets
+  and invalidate already-issued ones. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is
+  only needed when the API is reached through a proxy with a different public
+  origin.
+  Tickets store metadata only (user, server, normalized path and timestamps),
+  never the raw token or file content. `DESKTOP_DOWNLOADS_RETENTION_DAYS`
+  (default 30, 1..365) deletes expired rows after the retention window, and
+  `DESKTOP_DOWNLOADS_CLEANUP_INTERVAL_MINUTES` (default 1440, 15..10080)
+  controls the background cleanup. Audit rows keep their separate 180-day
+  retention.
 - **Local HTTP stays on loopback.** `http://localhost:18081/admin` (Keycloak)
   and the `http://localhost:3000` redirect in the realm are cleartext and must
   remain bound to `127.0.0.1`. Do not point `KEYCLOAK_HOSTNAME_ADMIN`,
@@ -132,9 +149,9 @@ connection is the operator's responsibility:
   `deploy/.env` at mode `600` and out of unencrypted backups. Do not set
   `INFRAORGIT_INSECURE_TLS=1` outside an isolated lab: the desktop client sends
   its bearer and refresh token to the configured instance, so an `http://`
-  non-loopback instance URL exposes them. On a shared host the macOS Keychain
-  helper can briefly expose a token in the process argument list (PT-16); use a
-  dedicated machine for desktop sessions.
+  non-loopback instance URL exposes them. The Electron shell keeps tokens in
+  the main process and `safeStorage`. Use a dedicated machine for desktop
+  sessions.
 
 ## Administrator bootstrap
 
@@ -298,9 +315,70 @@ step, remove the optional scopes from the client in Keycloak until an
 integration needs actions, then re-add them.
 
 `infraorgit-mcp-desktop` is a public client with PKCE and the device grant;
-its default scope is also `mcp:read`, with the two operate scopes optional.
-The secret in the realm template is a placeholder rendered at container start
-from `OIDC_CLIENT_SECRET`/`MCP_CLIENT_SECRET`; no working secret is committed.
+its default scope is also `mcp:read`, with the two operate scopes and
+`offline_access` optional. The secret in the realm template is a placeholder
+rendered at container start from `OIDC_CLIENT_SECRET`/`MCP_CLIENT_SECRET`; no
+working secret is committed.
+
+### Desktop offline access
+
+When the instance tab has no BFF session, silent desktop login uses an offline
+token: the desktop adds `offline_access` to the device authorization request
+(`scope=openid ... offline_access`) and Keycloak returns a refresh token of type
+`Offline`. The scope is optional and
+is not assigned to the web client `infraorgit` or to the `infraorgit-mcp`
+service account; only `infraorgit-mcp-desktop` can request it. Each device
+login shows the consent page with an "Offline Access" row; denying it ends the
+flow with `access_denied`, and a user without the `offline_access` role gets
+`not_allowed` ("Offline tokens not allowed for the user or client") at the
+token exchange. The desktop stores the token with Electron `safeStorage` (see
+`../docs/operations/mcp-tunnel-hardening.md`).
+
+Lifetimes are bounded at realm level:
+
+| Setting | Value | Effect |
+|---|---|---|
+| `offlineSessionIdleTimeout` | 30 days (2592000 s) | an unused offline session is removed |
+| `offlineSessionMaxLifespanEnabled` | `true` | enables the hard cap below |
+| `offlineSessionMaxLifespan` | 90 days (7776000 s) | an offline session is removed even if it is refreshed |
+| `ssoSessionIdleTimeout` / `ssoSessionMaxLifespan` | 30 min / 8 h (unchanged) | normal browser SSO only |
+
+Access tokens stay at 5 minutes. Refreshing keeps an offline session alive
+until the 90-day cap; after that a desktop that relies on the offline token must
+repeat the device flow.
+Imported users (including the bootstrap `admin`) get the realm role
+`offline_access` explicitly, because Keycloak does not apply the
+`default-roles-*` composite to imported users; users created later inherit it.
+Removing the role blocks offline tokens.
+
+The API issues a BFF session cookie of `Auth:DesktopSessionDays` (default 7
+days). While an instance tab is open, the desktop refreshes the offline token
+(when present) and calls `POST /auth/desktop-session` every six hours (and after system
+resume); the API extends the same session, so the cookie does not expire
+during normal use and the offline session bounds above remain the effective
+limit. If the offline token is revoked or expires, the next renewal clears the
+local copy and the desktop returns to the login page.
+
+To revoke an offline session:
+
+- In the desktop, sign out: the client deletes the refresh token from
+  `safeStorage`. That does not by itself end the offline session on the server,
+  so for a lost device also revoke it in Keycloak.
+- In the Keycloak console, Users -> (user) -> Sessions -> Offline sessions ->
+  Sign out, or disable/delete the user. Deleting the client also ends its
+  offline sessions.
+
+An offline session survives a normal browser logout by design, so an explicit
+revoke (or one of the bounds above) is the only way to end silent access.
+Keycloak keeps the offline session row until revoke, expiry or user deletion;
+database backups may retain the row for their retention window, but an expired
+token is rejected by Keycloak even if the row is restored.
+
+The realm template sets these values on a fresh import. `--import-realm` does
+not update an existing realm: on a running deployment set the same values in
+the console (Realm settings -> Sessions -> Offline Session Idle, Offline
+Session Max Limited, Offline Session Max) and add `offline_access` as an
+optional client scope on `infraorgit-mcp-desktop`.
 
 ## Container hardening
 

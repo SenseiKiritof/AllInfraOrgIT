@@ -13,13 +13,14 @@ workspace/
   InfraOrgITApi/      # .NET 10 API, EF migrations, MCP, legacy importer
   InfraOrgITWeb/      # React 19 + Vite SPA
   InfraOrgITDocker/   # local Compose stack, Caddy, Keycloak
-  InfraOrgITDesktop/  # .NET 10 + Photino desktop shell (optional)
+  InfraOrgITDesktop/  # Electron desktop shell (optional)
 ```
 
 `make` runs from `AllInfraOrgIT`. The desktop repository is optional for
 `make dev` and `make ci`; `make release` and `make desktop-ci` need it.
 
-Toolchain: .NET SDK 10, Node 24, Yarn 1.22.22, Docker Compose v2.
+Toolchain: .NET SDK 10, Node 24, Yarn 1.22.22 for the web, npm for the
+desktop, Docker Compose v2.
 
 ## Local stack
 
@@ -50,7 +51,7 @@ make dev       # infrastructure, migrations, API :5298, Vite :3000
 make full      # single Compose stack, including web and Caddy
 make test      # xunit + Testcontainers MySQL + Vitest
 make ci        # the real local gate: builds, tests, OpenAPI drift, lint
-make desktop-ci # dotnet build/test for InfraOrgITDesktop.slnx
+make desktop-ci # npm ci + Electron unit tests
 make e2e       # Playwright against make dev
 make e2e-full  # Playwright against the full stack on https://localhost:8443
 make openapi   # regenerate openapi/InfraOrgIt.Api.json
@@ -66,7 +67,7 @@ make down
 
 The API workflow requires `build-test` and `image`; the web workflow requires
 `lint-test-build` and `image`; Docker requires `config`; the meta repo requires
-`check`; the desktop requires `build-test` plus the platform smoke jobs. Run
+`check`; the desktop requires its Electron CI (`npm run test:unit`). Run
 `make ci` before claiming a change is done.
 
 Single tests:

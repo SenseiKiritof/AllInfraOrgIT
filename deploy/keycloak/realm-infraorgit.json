@@ -19,6 +19,9 @@
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 28800,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespan": 7776000,
+  "offlineSessionMaxLifespanEnabled": true,
   "browserFlow": "__MFA_BROWSER_FLOW__",
   "requiredActions": [
     "__MFA_REQUIRED_ACTIONS__"
@@ -130,7 +133,8 @@
             "introspection.token.claim": "true"
           }
         }
-      ]
+      ],
+      "optionalClientScopes": []
     },
     {
       "clientId": "infraorgit-mcp",
@@ -200,7 +204,8 @@
       ],
       "optionalClientScopes": [
         "mcp:operate",
-        "tunnels:operate"
+        "tunnels:operate",
+        "offline_access"
       ]
     }
   ],
@@ -209,6 +214,9 @@
       "username": "admin",
       "enabled": true,
       "emailVerified": true,
+      "realmRoles": [
+        "offline_access"
+      ],
       "firstName": "Admin",
       "lastName": "InfraOrgIT",
       "email": "admin@example.invalid",

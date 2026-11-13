@@ -82,6 +82,7 @@ for repo in "${REPOS[@]}" AllInfraOrgIT; do
   echo "  git -C $repo push origin main --follow-tags"
 done
 echo
-echo "Il tag $TAG su InfraOrgITDesktop avvia publish.yml: build dei quattro RID,"
-echo "firma/notarizzazione se i secret sono configurati e GitHub Release $TAG."
-echo "Il tag desktop deve stare su main: il workflow non crea tag."
+echo "Il tag $TAG su InfraOrgITDesktop avvia publish.yml: build dei pacchetti"
+echo "Electron per osx-arm64, osx-x64, win-x64 e linux-x64, GitHub Release $TAG."
+echo "I pacchetti sono non firmati finché non viene configurato un signing."
+echo "Il tag desktop deve stare su main: publish.yml verifica il branch e non crea tag."
