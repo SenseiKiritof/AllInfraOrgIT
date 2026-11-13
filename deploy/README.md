@@ -118,11 +118,13 @@ connection is the operator's responsibility:
   credential. `check-env.sh` warns when the flag is not `false` and rejects a
   value that is not a boolean.
 - **Desktop download bridge.** `DESKTOP_DOWNLOADS_ENABLED=true` (default) lets
-  the desktop app request a short-lived, one-time URL for a server file; the
-  download then runs in the desktop process with the user's permissions and is
-  audited. Set `DESKTOP_DOWNLOADS_ENABLED=false` to disable new tickets and
-  invalidate already-issued ones. The desktop then falls back to its native
-  webview download. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is only needed when
+  the legacy Photino desktop (or bridge mode) request a short-lived, one-time
+  URL for a server file; the download then runs in the desktop process with the
+  user's permissions and is audited. Set `DESKTOP_DOWNLOADS_ENABLED=false` to
+  disable new tickets and invalidate already-issued ones. Electron uses
+  Chromium's native download for attachments and its blob bridge for generated
+  results, so it is unaffected; the legacy Photino build falls back to its
+  native webview. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is only needed when
   the API is reached through a proxy with a different public origin.
   Tickets store metadata only (user, server, normalized path and timestamps),
   never the raw token or file content. `DESKTOP_DOWNLOADS_RETENTION_DAYS`
@@ -145,8 +147,9 @@ connection is the operator's responsibility:
   `deploy/.env` at mode `600` and out of unencrypted backups. Do not set
   `INFRAORGIT_INSECURE_TLS=1` outside an isolated lab: the desktop client sends
   its bearer and refresh token to the configured instance, so an `http://`
-  non-loopback instance URL exposes them. On a shared host the macOS Keychain
-  helper can briefly expose a token in the process argument list (PT-16); use a
+  non-loopback instance URL exposes them. The Electron shell keeps tokens in
+  the main process and safeStorage; the legacy Photino build can briefly expose
+  a token in the macOS Keychain helper process arguments (PT-16). Use a
   dedicated machine for desktop sessions.
 
 ## Administrator bootstrap
@@ -318,9 +321,10 @@ working secret is committed.
 
 ### Desktop offline access
 
-Silent desktop login uses an offline token: the desktop adds `offline_access`
-to the device authorization request (`scope=openid ... offline_access`) and
-Keycloak returns a refresh token of type `Offline`. The scope is optional and
+When the instance tab has no BFF session, silent desktop login uses an offline
+token: the desktop adds `offline_access` to the device authorization request
+(`scope=openid ... offline_access`) and Keycloak returns a refresh token of type
+`Offline`. The scope is optional and
 is not assigned to the web client `infraorgit` or to the `infraorgit-mcp`
 service account; only `infraorgit-mcp-desktop` can request it. Each device
 login shows the consent page with an "Offline Access" row; denying it ends the
@@ -339,7 +343,8 @@ Lifetimes are bounded at realm level:
 | `ssoSessionIdleTimeout` / `ssoSessionMaxLifespan` | 30 min / 8 h (unchanged) | normal browser SSO only |
 
 Access tokens stay at 5 minutes. Refreshing keeps an offline session alive
-until the 90-day cap; after that the desktop must repeat the device flow.
+until the 90-day cap; after that a desktop that relies on the offline token must
+repeat the device flow.
 Imported users (including the bootstrap `admin`) get the realm role
 `offline_access` explicitly, because Keycloak does not apply the
 `default-roles-*` composite to imported users; users created later inherit it.
@@ -347,7 +352,7 @@ Removing the role blocks offline tokens.
 
 The API issues a BFF session cookie of `Auth:DesktopSessionDays` (default 7
 days). While an instance tab is open, the desktop refreshes the offline token
-and calls `POST /auth/desktop-session` every six hours (and after system
+(when present) and calls `POST /auth/desktop-session` every six hours (and after system
 resume); the API extends the same session, so the cookie does not expire
 during normal use and the offline session bounds above remain the effective
 limit. If the offline token is revoked or expires, the next renewal clears the

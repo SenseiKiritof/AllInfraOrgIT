@@ -13,7 +13,7 @@ workspace/
   InfraOrgITApi/      # .NET 10 API, EF migrations, MCP, legacy importer
   InfraOrgITWeb/      # React 19 + Vite SPA
   InfraOrgITDocker/   # local Compose stack, Caddy, Keycloak
-  InfraOrgITDesktop/  # .NET 10 + Photino desktop shell (optional)
+  InfraOrgITDesktop/  # Electron shell + legacy .NET Photino app (optional)
 ```
 
 `make` runs from `AllInfraOrgIT`. The desktop repository is optional for

@@ -42,8 +42,8 @@ AI actions and the audit log, with permissions per environment.
 Keycloak login through a backend-for-frontend keeps tokens out of the browser.
 `SystemAdmin` owns the master data; `ServerAdmin` and `ServerOperator` are
 granted per environment and decide what a user can open or run. The menu is
-configurable, the interface is Italian and English, and the light/dark theme is
-remembered per user.
+configurable, the interface is Italian and English, and the
+light/dark/system theme is remembered per user.
 
 ### AI with a human in the loop
 
@@ -58,11 +58,12 @@ exact target and parameters.
 
 InfraOrgIT Desktop opens instances in one window with isolated tabs and
 manages SSH tunnels through the user's SSH agent: `-L`, `-D`, `-R`, jump
-chains, custom services, `autoStart` and automatic reconnect. The tunnel
-drawer groups servers by environment, searches by machine/IP/service and
-reuses the instance BFF session, so a user already signed in to the Web app
-does not need a second login. The desktop shell follows the account theme.
-The instance shows the live sessions on `/tunnels`.
+chains and custom services. The tunnel drawer groups servers by environment,
+searches by machine/IP/service and reuses the instance BFF session, so a user
+already signed in to the Web app does not need a second login. The desktop
+shell follows the account theme. The instance shows the live sessions on
+`/tunnels`; the legacy Photino build additionally supports `autoStart` and
+automatic reconnect.
 
 ## See it in action
 
@@ -153,7 +154,7 @@ make dev
 | [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 API, EF migrations, MCP, legacy importer |
 | [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React 19 + Vite browser app |
 | [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | local Compose stack, Caddy, Keycloak |
-| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | .NET 10 + Photino desktop shell and tunnels |
+| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | Electron shell, plus the legacy .NET 10 + Photino build |
 
 ## Learn more
 
