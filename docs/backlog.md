@@ -25,45 +25,29 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 
 ## Desktop — `InfraOrgITDesktop`
 
-- [x] **Shell and multi-instance manager**
-  .NET 10 + Photino (ADR-011); per-user `instances.json`, one child window per instance, URL validation, unit tests and three-OS CI.
-  Verification: `dotnet test InfraOrgITDesktop.slnx` and `ci` green on ubuntu/macos/windows.
+- [x] **Electron shell and multi-instance manager**
+  Electron (ADR-012); one manager window with an isolated Chromium partition per instance, per-user `instances.json`, URL validation, BFF session reuse, device-flow fallback and tunnel projection.
+  Verification: `npm --prefix InfraOrgITDesktop/electron run test:unit` green.
 
 - [x] **Tunnel allowlist and audit API**
   `tunnels:operate` token scope; `GET /api/tunnels/targets` (operator environments only, jump host and username from the server, target from the deployment) and `POST /api/tunnels/events` writing `TunnelStart`/`TunnelStop`/`TunnelError`.
   Verification: integration test for scope, RBAC, allowlist and audit rows.
 
 - [x] **Desktop tunnel engine**
-  System `ssh -L`/`-D`/`-R` with `SSH_AUTH_SOCK`, multi-hop `-J`, local port allocation, start/stop/status, audit and heartbeats; token in the OS keychain.
-  Verification: local sshd with a test key, negative test on a non-allowlisted target, 93 desktop tests.
+  System `ssh -L`/`-D`/`-R` with `SSH_AUTH_SOCK`, multi-hop `-J`, local port allocation, start/stop/status, audit and heartbeats; refresh token in `safeStorage`.
+  Verification: local sshd with a test key, negative test on a non-allowlisted target, Electron unit tests for the argument builder and port guard.
 
 - [x] **XPipe-style tunnel services**
-  Server services (Local/Dynamic/Remote, Tcp/Http/Https, openPath, autoStart), `ss -tlnH` port discovery, ServerAdmin CRUD, allowlist in the desktop, autoStart and open-in-browser for Local HTTP(S).
-  Verification: API integration tests for CRUD/discovery/jumps/remote visibility, desktop tests for all modes and autoStart.
-
-- [x] **Auto-reconnect**
-  AutoStart custom services retry up to 3 times with a 5s delay after an unexpected ssh exit; user stop, panel change, logout and exit cancel retries, and token/auth failures do not retry.
-  Verification: 101 desktop tests, including retry budget, busy fixed port and new session ids.
-
-- [x] **Tunnel persistence across restarts**
-  `tunnels.json` stores only identity (instance/server/service or deployment, mode, requested port), atomic and secret-free; startup restore refreshes the keychain token, loads the allowlist, prunes deleted/disabled services and skips active ones; clear action.
-  Verification: 117 desktop tests covering restore, missing token, pruning, stop/logout removal.
-
-- [x] **Windows GUI smoke**
-  `gui-smoke-windows` on `windows-latest` starts the app, waits 8s and fails on early exit; window handle logged. Linux job unchanged.
-  Verification: run 43004152371 green, negative path tested.
+  Server services (Local/Dynamic/Remote, Tcp/Http/Https, openPath), `ss -tlnH` port discovery, ServerAdmin CRUD and the allowlist in the desktop. The API still stores `autoStart`, but the Electron client does not auto-start services.
+  Verification: API integration tests for CRUD/discovery/jumps/remote visibility, Electron tests for every mode.
 
 - [x] **Desktop release flow**
-  Desktop in `REPOS`, `make desktop-ci` gate, five-repo `versions.lock`, release docs and push list; `publish.yml` refuses tags not on `main`; `Version tags` ruleset immutable.
+  Desktop in `REPOS`, `make desktop-ci` gate (npm unit tests), five-repo `versions.lock`, release docs and push list; `publish.yml` builds the Electron packages and checks the tag is on `main`; `Version tags` ruleset immutable.
   Verification: `make desktop-ci`, `make -n release`, shellcheck and workflow checks.
 
 - [x] **Desktop device login**
-  RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser and tunnel targets loaded with the resulting token.
-  Verification: full flow against the local realm (device request, consent, access token with `mcp:read tunnels:operate`, refresh token) and 23 desktop tests.
-
-- [x] **Desktop token persistence and refresh**
-  Refresh token in macOS Keychain, Windows Credential Manager or `secret-tool` (memory fallback), session restore, refresh within 60s of expiry and once on 401, logout clears the store.
-  Verification: 38 desktop tests; platform stores use fake runners in CI, real keychain/signtool behavior still needs a manual run.
+  RFC 8628 + PKCE with the `infraorgit-mcp-desktop` client, issuer discovery, user code opened in the browser, tunnel targets loaded with the resulting token and the refresh token encrypted with `safeStorage`.
+  Verification: full flow against the local realm (device request, consent, access token with `mcp:read tunnels:operate`, refresh token) and Electron unit tests.
 
 - [x] **Central tunnel visibility**
   `TunnelSessions` projection with 30s heartbeats, two-minute staleness cleanup, `GET /api/tunnels/sessions` filtered to operator environments and `/tunnels` page with 15s refresh.
@@ -72,28 +56,16 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [x] **Rate limits**
   Dedicated `mcp` and `tunnels` fixed windows (120/min per user or token), with a burst test returning 429.
 
-- [x] **Signing and notarization workflow**
-  `publish.yml` imports the macOS certificate, signs, notarizes and staples, signs Windows with signtool, and uploads a GitHub Release on `v*` tags; unsigned builds still work without secrets.
-  Verification: actionlint/shellcheck clean and unsigned publish works; real certificates and notarization need the repository secrets.
-
-- [x] **Update check, download and install**
-  The manager reads GitHub `releases/latest`, compares the assembly version, downloads the matching archive and verifies SHA-256; macOS/Linux/Windows replace the published app through a detached helper and restart. Stable tags only; missing checksum requires explicit confirmation.
-  Verification: 144+ desktop tests, real mac/Linux helpers and Windows script checks, three-OS CI; signature verification beyond SHA-256 still open.
-
-- [x] **Platform integration tests**
-  Real macOS Keychain, Windows Credential Manager, `secret-tool` when available, and macOS/Linux install helpers executed on disposable fake apps; Linux/macOS/Windows CI runs with OS guards.
-  Verification: 147/146/145 passed with only OS/tool skips.
-
 - [x] **Security smoke**
   `scripts/security-smoke.py` + `make security-smoke`: 401 matrix, metadata/challenge RFC 9728, scope split, grant/RBAC denial, tunnel allowlist, audit denial, headers, CORS and optional 429 burst.
   Verification: 16/16 PASS locally; the missing `resource_metadata` finding was fixed in the API and covered by a test.
 
-- [x] **Packaging artifacts**
-  Manual `publish` dispatch for `0.0.0-test` built and uploaded all four RIDs (osx-arm64, osx-x64, win-x64, linux-x64).
-  Verification: run 43010389019, artifacts present.
+- [ ] **Electron packaging release**
+  Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
+  Verification: workflow run green, each package installs and opens.
 
-- [ ] **Real signing and notarization**
-  Run the publish workflow with the Apple/Windows certificates and notarization secrets; verify Gatekeeper, stapled ticket and Authenticode on a clean machine.
+- [ ] **Signing and notarization**
+  Add an Electron signing/notarization setup (macOS Developer ID, Windows Authenticode) and verify Gatekeeper, stapled ticket and Authenticode on a clean machine; packages stay unsigned until then.
 
 - [ ] **Penetration test**
   Full external pentest of the MCP surface, tunnel abuse and the web app; the security smoke only covers the automated baseline.

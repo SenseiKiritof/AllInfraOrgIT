@@ -42,8 +42,8 @@ AI actions and the audit log, with permissions per environment.
 Keycloak login through a backend-for-frontend keeps tokens out of the browser.
 `SystemAdmin` owns the master data; `ServerAdmin` and `ServerOperator` are
 granted per environment and decide what a user can open or run. The menu is
-configurable, the interface is Italian and English, and the light/dark theme is
-remembered per user.
+configurable, the interface is Italian and English, and the
+light/dark/system theme is remembered per user.
 
 ### AI with a human in the loop
 
@@ -56,9 +56,12 @@ exact target and parameters.
 
 ### Desktop tunnels
 
-InfraOrgIT Desktop opens instances in separate windows and manages SSH tunnels
-through the user's SSH agent: `-L`, `-D`, `-R`, jump chains, custom services,
-`autoStart` and automatic reconnect. The instance shows the live sessions on
+InfraOrgIT Desktop opens instances in one window with isolated tabs and
+manages SSH tunnels through the user's SSH agent: `-L`, `-D`, `-R`, jump
+chains and custom services. The tunnel drawer groups servers by environment,
+searches by machine/IP/service and reuses the instance BFF session, so a user
+already signed in to the Web app does not need a second login. The desktop
+shell follows the account theme. The instance shows the live sessions on
 `/tunnels`.
 
 ## See it in action
@@ -92,9 +95,9 @@ data.
 
 **Desktop tunnels**
 
-| Manager | Tunnel panel |
+| Landing | Tunnel drawer |
 |---|---|
-| ![Desktop manager with three instances](docs/screenshots/desktop-manager.png) | ![Tunnel panel with a server, deployed application, custom services and an active local tunnel](docs/screenshots/desktop-tunnels.png) |
+| ![Electron manager with three instances, isolated tabs and the New instance action](docs/screenshots/desktop-electron-landing.png) | ![Global tunnel drawer grouped by environment with the searchable New tunnel form](docs/screenshots/desktop-electron-tunnels.png) |
 
 **Tunnels and audit**
 
@@ -150,7 +153,7 @@ make dev
 | [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 API, EF migrations, MCP, legacy importer |
 | [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React 19 + Vite browser app |
 | [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | local Compose stack, Caddy, Keycloak |
-| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | .NET 10 + Photino desktop shell and tunnels |
+| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | Electron desktop shell |
 
 ## Learn more
 
@@ -173,4 +176,4 @@ Backend, browser app, RBAC, remote management, MCP, desktop tunnels and the
 legacy importer are working. The full stack runs from published multi-arch
 images; the API and web images are signed with cosign and include SBOM and
 provenance on non-PR builds. The remaining release work is the rehearsal on a
-representative legacy dataset and the first real signed desktop release.
+representative legacy dataset and the first Electron desktop release.
