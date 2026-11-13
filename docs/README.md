@@ -31,7 +31,7 @@ Index of the Phase 1 documents.
 | `api/openapi.yaml` | OpenAPI 3.0.3 draft of the v1 contract |
 | `operations/first-push.md` | repository creation, first push, `main` protection, CI secrets |
 | `backlog.md` | open work: icons, detail header, UI bugs, workspace rename, Docker images |
-| `adr/` | ADRs 001–011 |
+| `adr/` | ADRs 001–012 |
 
 The Phase 1 OpenAPI draft covers 150 operations: the 20 legacy `/Paginated` routes are merged into lists with `page`/`pageSize`, and the refresh token is not exposed (it happens server-side). All 168 legacy HTTP operations plus the WebSocket are mapped in `api/route-inventory.md`.
 

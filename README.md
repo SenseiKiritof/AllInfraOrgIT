@@ -62,8 +62,7 @@ chains and custom services. The tunnel drawer groups servers by environment,
 searches by machine/IP/service and reuses the instance BFF session, so a user
 already signed in to the Web app does not need a second login. The desktop
 shell follows the account theme. The instance shows the live sessions on
-`/tunnels`; the legacy Photino build additionally supports `autoStart` and
-automatic reconnect.
+`/tunnels`.
 
 ## See it in action
 
@@ -154,7 +153,7 @@ make dev
 | [`InfraOrgITApi`](https://github.com/SenseiKiritof/InfraOrgITApi) | .NET 10 API, EF migrations, MCP, legacy importer |
 | [`InfraOrgITWeb`](https://github.com/SenseiKiritof/InfraOrgITWeb) | React 19 + Vite browser app |
 | [`InfraOrgITDocker`](https://github.com/SenseiKiritof/InfraOrgITDocker) | local Compose stack, Caddy, Keycloak |
-| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | Electron shell, plus the legacy .NET 10 + Photino build |
+| [`InfraOrgITDesktop`](https://github.com/SenseiKiritof/InfraOrgITDesktop) | Electron desktop shell |
 
 ## Learn more
 
@@ -177,4 +176,4 @@ Backend, browser app, RBAC, remote management, MCP, desktop tunnels and the
 legacy importer are working. The full stack runs from published multi-arch
 images; the API and web images are signed with cosign and include SBOM and
 provenance on non-PR builds. The remaining release work is the rehearsal on a
-representative legacy dataset and the first real signed desktop release.
+representative legacy dataset and the first Electron desktop release.

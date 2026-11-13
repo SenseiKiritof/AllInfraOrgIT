@@ -238,7 +238,7 @@ app ships. Do not build D unless a browser-only requirement appears later.
 |---|---|
 | XPipe links + `ssh -L` snippets + docs (interim) | 1–2 |
 | Desktop app shell + multi-instance + webview | 10–15 |
-| Device auth, keychain token storage, instance accounts | 4–6 |
+| Device auth, token storage, instance accounts | 4–6 |
 | Tunnel manager (system ssh, allowlist, ports, status, audit) | 8–12 |
 | macOS/Windows/Linux packaging, signing, notarization, auto-update | 8–12 |
 | Tests and docs | 4–6 |
@@ -327,9 +327,8 @@ the SSH-command log and is not reshaped.
   the tool queries and are audited as `read_resource`.
 - MCP prompts: `diagnose-server` and `application-impact`, templates that only
   describe which tools to call.
-- Desktop shell (`../InfraOrgITDesktop`, Electron in `prototype-electron`;
-  legacy .NET 10 + Photino in `src/`, ADR-011): one window with a landing
-  manager and one isolated Chromium partition per instance tab.
+- Desktop shell (`../InfraOrgITDesktop/electron/`, ADR-012): one window with a
+  landing manager and one isolated Chromium partition per instance tab.
 - Desktop tunnel API: `GET /api/tunnels/targets` returns only servers with
   deployments, a credential username and the caller's operator environments,
   with jump chains and `hostPort ?? exposedPort`; it also carries the enabled
@@ -347,36 +346,29 @@ the SSH-command log and is not reshaped.
   cleanup service marks rows stale after two minutes. `/tunnels` shows them
   with a 15s refresh. The dedicated `tunnels`/`mcp` limits are 120/min per
   user or token.
-- Desktop tunnel engine (`../InfraOrgITDesktop/prototype-electron/tunnels.js`
-  and `tunnel-projection.js`): `ssh -L`/`-D`/`-R` through the user's agent,
+- Desktop tunnel engine (`../InfraOrgITDesktop/electron/tunnels.js` and
+  `tunnel-projection.js`): `ssh -L`/`-D`/`-R` through the user's agent,
   multi-hop `-J`, loopback port allocation, custom services, open-in-browser
   for Local HTTP(S), active tunnel list, and start/stop/error plus session
-  heartbeats projected to the instance. The legacy Photino engine
-  (`../InfraOrgITDesktop/src/InfraOrgIt.Desktop/Tunnels`) additionally supports
-  `autoStart` and automatic reconnect. Verified locally with an sshd container +
-  `ssh-agent` (forward listening and authenticated).
+  heartbeats projected to the instance. Verified locally with an sshd container
+  + `ssh-agent` (forward listening and authenticated).
 - Desktop device login: the Electron shell first reuses the instance BFF
   session; without one it uses RFC 8628 + PKCE against
   `infraorgit-mcp-desktop`, discovery from the protected-resource metadata,
-  and the user code opened in the browser. The Electron refresh token is
-  encrypted with `safeStorage`; the legacy Photino app uses the OS secret store
-  (Keychain, Credential Manager, secret-tool). Access tokens stay in memory
-  with refresh on expiry/401. Verified against the local realm (device request,
-  consent, token and scopes).
+  and the user code opened in the browser. The refresh token is encrypted with
+  `safeStorage`; access tokens stay in memory with refresh on expiry/401.
+  Verified against the local realm (device request, consent, token and scopes).
 - Desktop transport: use `https://` for every non-loopback instance;
   `INFRAORGIT_INSECURE_TLS=1` is development-only. Electron keeps tokens in the
-  main process and `safeStorage`; the legacy Photino macOS Keychain write still
-  passes the refresh token in the `security` argv. See
+  main process and `safeStorage`. See
   [`../security/transport.md`](../security/transport.md).
-- Desktop packaging: unsigned `.app`/zip (macOS), zip (Windows) and tar.gz
-  (Linux) built by `publish.yml`; signing, notarization and GitHub Release
-  upload are wired behind repository secrets. The app checks the latest
-  GitHub release, downloads the matching archive, verifies its SHA-256 and,
-  on macOS/Linux, replaces itself through a detached helper and restarts;
-  Windows keeps the verified zip for manual extraction.
-- Still to do: real signing/notarization runs with the repository secrets and a
-  full penetration test; the automated security smoke and load baseline are
-  in place.
+- Desktop packaging: `publish.yml` builds Electron packages for macOS arm64
+  (`osx-arm64`), macOS Intel (`osx-x64`), Windows x64 (`win-x64`) and Linux x64
+  (`linux-x64`) on a `v*` tag and creates or updates the GitHub Release. The
+  packages are unsigned until a macOS/Windows signing setup is added.
+- Still to do: signing/notarization for the Electron packages and a full
+  penetration test; the automated security smoke and load baseline are in
+  place.
 
 ## 7. Open points
 

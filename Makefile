@@ -113,8 +113,8 @@ ci: config
 	npx --yes @redocly/cli lint docs/api/openapi.yaml
 
 desktop-ci:
-	dotnet build ../InfraOrgITDesktop/InfraOrgITDesktop.slnx -warnaserror
-	dotnet test ../InfraOrgITDesktop/InfraOrgITDesktop.slnx --no-build
+	npm --prefix ../InfraOrgITDesktop/electron ci
+	npm --prefix ../InfraOrgITDesktop/electron run test:unit
 
 release:
 	@test -n "$(VERSION)" || { echo "Uso: make release VERSION=0.8.0" >&2; exit 2; }

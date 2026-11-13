@@ -53,14 +53,12 @@ test -n "$TOKEN" && test "$TOKEN" != null
 ```
 
 Do not paste the token into the command line of a shared host: it is visible in
-the process list. Use `MCP_TOKEN` in the environment or the desktop keychain.
+the process list. Use `MCP_TOKEN` in the environment.
 
-The desktop stores the refresh token in the OS secret store. On macOS the
-current `security` invocation passes the value with `-w <token>`, so it is
-visible in the process argument list to other local processes while the command
-runs. This is a short local exposure, not a network one (PT-16): do not run the
-desktop on a host with untrusted local users, and treat the argv limitation as
-accepted until the store uses stdin or the native Keychain API. See
+The desktop keeps the refresh token encrypted with Electron `safeStorage` in
+the main process (macOS Keychain, Windows DPAPI or Linux Secret Service); access
+tokens are not written to disk. Without a usable Linux keyring the session
+stays in memory for that run. See
 [`../security/transport.md`](../security/transport.md).
 
 ## 2. RBAC matrix
@@ -109,7 +107,7 @@ for environments where the caller is an operator. The target port is
 `hostPort ?? exposedPort`; the jump host comes from the server, never from the
 client. The desktop proposes `SuggestedLocalPort` only for target ports at or
 above 1024 and binds `127.0.0.1`
-(`InfraOrgITDesktop/src/InfraOrgIt.Desktop/Tunnels/SshTunnel.cs`).
+(`InfraOrgITDesktop/electron/tunnels.js`).
 
 Controls to keep:
 
@@ -515,7 +513,7 @@ What this does not cover:
   scope. The security headers are checked on the API response, not on every
   edge route.
 - **Browser and desktop flows.** Cookie flags, CSP behavior in a real browser,
-  the tunnel process (`ssh -L`/`-J`, loopback bind, keychain) and the UI RBAC
+  the tunnel process (`ssh -L`/`-J`, loopback bind, `safeStorage`) and the UI RBAC
   are covered by the manual checklist and the integration tests, not here.
 - **Positive RBAC matrix.** Only the supplied personas are exercised; a
   `SystemAdmin` who is not an operator, a revoked/expired token and

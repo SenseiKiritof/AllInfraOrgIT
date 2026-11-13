@@ -47,15 +47,14 @@ bypasses. The evidence from the internal test is in
 
 ## Token handling on the local host
 
-- Prefer the OS secret store: the desktop uses macOS Keychain, Windows
-  Credential Manager or `secret-tool`.
-- macOS uses the native Security.framework Keychain APIs (no `security -w`
-  child process), so the refresh token is never placed in process arguments.
-  Windows Credential Manager and Linux `secret-tool` are unchanged. If the
-  native store is unavailable the app falls back to memory for that run.
-- Do not paste tokens into shell history or command lines. Use `read -rs` into
-  an environment variable or the client's secret store, and never pass a token
-  with `--token` on a shared host.
+- The Electron main process keeps the refresh token encrypted with
+  `safeStorage`: macOS Keychain, Windows DPAPI or Linux Secret Service. Without
+  a usable keyring the app keeps the session in memory for that run. Access
+  tokens never reach a renderer or disk.
+- Never pass a token in process arguments. Also do not paste tokens into shell
+  history or command lines. Use `read -rs` into an environment variable or the
+  client's secret store, and never pass a token with `--token` on a shared
+  host.
 
 ## Checklist
 

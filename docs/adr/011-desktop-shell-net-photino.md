@@ -1,6 +1,6 @@
 # ADR-011 — desktop shell with .NET and Photino
 
-- Status: accepted
+- Status: superseded by ADR-012
 - Date: 2026-11-10
 - Supersedes: none
 - Related: ADR-010 (MCP server and tunnel app), D3/D4/D5

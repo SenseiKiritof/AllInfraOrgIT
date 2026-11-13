@@ -117,15 +117,17 @@ connection is the operator's responsibility:
   record the exception per server and never use it with an administrator
   credential. `check-env.sh` warns when the flag is not `false` and rejects a
   value that is not a boolean.
-- **Desktop download bridge.** `DESKTOP_DOWNLOADS_ENABLED=true` (default) lets
-  the legacy Photino desktop (or bridge mode) request a short-lived, one-time
-  URL for a server file; the download then runs in the desktop process with the
-  user's permissions and is audited. Set `DESKTOP_DOWNLOADS_ENABLED=false` to
-  disable new tickets and invalidate already-issued ones. Electron uses
-  Chromium's native download for attachments and its blob bridge for generated
-  results, so it is unaffected; the legacy Photino build falls back to its
-  native webview. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is only needed when
-  the API is reached through a proxy with a different public origin.
+- **Desktop download compatibility.** `DESKTOP_DOWNLOADS_ENABLED=true` (default)
+  enables the signed-ticket endpoints: a client can request a short-lived,
+  one-time URL for a server file, then download it in the desktop process with
+  the user's permissions and the download is audited. The current Electron
+  client does not use this path: attachments go through Chromium's native
+  download and generated results through the desktop blob bridge. The
+  endpoints remain an API compatibility path for older clients and future
+  integrations. Set `DESKTOP_DOWNLOADS_ENABLED=false` to disable new tickets
+  and invalidate already-issued ones. `DESKTOP_DOWNLOADS_PUBLIC_BASE_URL` is
+  only needed when the API is reached through a proxy with a different public
+  origin.
   Tickets store metadata only (user, server, normalized path and timestamps),
   never the raw token or file content. `DESKTOP_DOWNLOADS_RETENTION_DAYS`
   (default 30, 1..365) deletes expired rows after the retention window, and
@@ -148,9 +150,8 @@ connection is the operator's responsibility:
   `INFRAORGIT_INSECURE_TLS=1` outside an isolated lab: the desktop client sends
   its bearer and refresh token to the configured instance, so an `http://`
   non-loopback instance URL exposes them. The Electron shell keeps tokens in
-  the main process and safeStorage; the legacy Photino build can briefly expose
-  a token in the macOS Keychain helper process arguments (PT-16). Use a
-  dedicated machine for desktop sessions.
+  the main process and `safeStorage`. Use a dedicated machine for desktop
+  sessions.
 
 ## Administrator bootstrap
 
@@ -330,7 +331,7 @@ service account; only `infraorgit-mcp-desktop` can request it. Each device
 login shows the consent page with an "Offline Access" row; denying it ends the
 flow with `access_denied`, and a user without the `offline_access` role gets
 `not_allowed` ("Offline tokens not allowed for the user or client") at the
-token exchange. The desktop stores the token in the OS secret store (see
+token exchange. The desktop stores the token with Electron `safeStorage` (see
 `../docs/operations/mcp-tunnel-hardening.md`).
 
 Lifetimes are bounded at realm level:
@@ -360,8 +361,8 @@ local copy and the desktop returns to the login page.
 
 To revoke an offline session:
 
-- In the desktop, sign out: the client deletes the refresh token from the OS
-  secret store. That does not by itself end the offline session on the server,
+- In the desktop, sign out: the client deletes the refresh token from
+  `safeStorage`. That does not by itself end the offline session on the server,
   so for a lost device also revoke it in Keycloak.
 - In the Keycloak console, Users -> (user) -> Sessions -> Offline sessions ->
   Sign out, or disable/delete the user. Deleting the client also ends its
