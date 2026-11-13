@@ -345,6 +345,14 @@ Imported users (including the bootstrap `admin`) get the realm role
 `default-roles-*` composite to imported users; users created later inherit it.
 Removing the role blocks offline tokens.
 
+The API issues a BFF session cookie of `Auth:DesktopSessionDays` (default 7
+days). While an instance tab is open, the desktop refreshes the offline token
+and calls `POST /auth/desktop-session` every six hours (and after system
+resume); the API extends the same session, so the cookie does not expire
+during normal use and the offline session bounds above remain the effective
+limit. If the offline token is revoked or expires, the next renewal clears the
+local copy and the desktop returns to the login page.
+
 To revoke an offline session:
 
 - In the desktop, sign out: the client deletes the refresh token from the OS
