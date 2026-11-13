@@ -56,10 +56,13 @@ exact target and parameters.
 
 ### Desktop tunnels
 
-InfraOrgIT Desktop opens instances in separate windows and manages SSH tunnels
-through the user's SSH agent: `-L`, `-D`, `-R`, jump chains, custom services,
-`autoStart` and automatic reconnect. The instance shows the live sessions on
-`/tunnels`.
+InfraOrgIT Desktop opens instances in one window with isolated tabs and
+manages SSH tunnels through the user's SSH agent: `-L`, `-D`, `-R`, jump
+chains, custom services, `autoStart` and automatic reconnect. The tunnel
+drawer groups servers by environment, searches by machine/IP/service and
+reuses the instance BFF session, so a user already signed in to the Web app
+does not need a second login. The desktop shell follows the account theme.
+The instance shows the live sessions on `/tunnels`.
 
 ## See it in action
 
@@ -92,9 +95,9 @@ data.
 
 **Desktop tunnels**
 
-| Manager | Tunnel panel |
+| Landing | Tunnel drawer |
 |---|---|
-| ![Desktop manager with three instances](docs/screenshots/desktop-manager.png) | ![Tunnel panel with a server, deployed application, custom services and an active local tunnel](docs/screenshots/desktop-tunnels.png) |
+| ![Electron manager with three instances, isolated tabs and the New instance action](docs/screenshots/desktop-electron-landing.png) | ![Global tunnel drawer grouped by environment with the searchable New tunnel form](docs/screenshots/desktop-electron-tunnels.png) |
 
 **Tunnels and audit**
 
