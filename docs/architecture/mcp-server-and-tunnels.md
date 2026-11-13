@@ -1,6 +1,6 @@
 # MCP server and local tunnels — feasibility study
 
-- Status: stage 1-2 implemented; desktop shell started (stage 3)
+- Status: stages 1-3 implemented; connection policy (stage 4) implemented for tunnels
 - Date: 2026-11-09
 - Scope: expose InfraOrgIT as an MCP server; evaluate local SSH tunnels (XPipe today) and how they could live in InfraOrgIT.
 
@@ -244,6 +244,29 @@ app ships. Do not build D unless a browser-only requirement appears later.
 | Tests and docs | 4–6 |
 | **Total, desktop app** | **34–51** |
 | API-host WebSocket proxy (not recommended) | 20–30 |
+
+### 4.5 Connection policy (implemented)
+
+The installation-level `ConnectionPolicies` row (ADR-013) chooses the tunnel
+transport:
+
+- `Server`: the API node opens the SSH forward and relays bytes to the desktop
+  over a WebSocket, using the stored server credential. Only `Local` services
+  and deployments with a fixed target port are relayed; `Dynamic` and `Remote`
+  are rejected because they would make the API a general proxy.
+- `Client`: the desktop spawns `ssh` with the local agent, as in 4.3.
+- `Auto`: the desktop tests the first SSH hop and uses the client when it is
+  reachable, otherwise the server relay.
+
+The policy is a singleton in the shared database. In a cluster every API node
+reads the same row; relay connections stay on the node that accepts the
+WebSocket, so the load balancer needs WebSocket upgrades but not sticky
+sessions. The central `TunnelSessions` projection records `Transport`
+(`Client`/`Server`) and the `/settings` admin page changes the mode.
+
+Console, file transfer and application actions still run on the API in all
+modes. Moving them to a native desktop bridge is the next phase; the policy
+endpoint and UI are already shared.
 
 ## 5. Roadmap
 

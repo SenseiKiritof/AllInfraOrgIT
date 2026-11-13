@@ -62,6 +62,9 @@ Verified against the legacy backend on 2026-10-25 (`MinimalApis/*`, `ServerAcces
 | Reachability run per environment | — | `ServerOperator` | `POST /ProviderEnvironments/{id}/ReachabilityTests/Run` |
 | CommandExecutions (audit) | `SystemAdmin` | — | server-side filter and pagination |
 | ServerAccess (`/ServerAccess/Me`) | authenticated | — | returns admin/operator environments |
+| Connection policy (`GET /api/connection-policy`) | authenticated | — | the desktop needs it before opening a tunnel; BFF or `tunnels:operate` token |
+| Connection policy (`PUT /api/connection-policy`) | — | `SystemAdmin` | installation-wide, stored in the shared `ConnectionPolicies` row |
+| Server tunnel relay (`GET /api/tunnels/relay`) | `ServerOperator` | — | Local service or deployment only; Origin and `tunnels:operate`/BFF required |
 | SSH console (`/socket/Servers/{id}/Console`) | `ServerAdmin` | — | Origin required; no implicit `SystemAdmin` |
 | File browser (`/Servers/{id}/Files...`) | `ServerAdmin` | — | same environment role as the console |
 | Auth/CurrentUser | authenticated | — | |
@@ -145,6 +148,9 @@ General rules:
 | SFTP/FTP file browser (`/api/servers/{id}/files...`) | `ServerAdmin` on the server's environment |
 | Run ApplicationActions and reachability per server/environment | `ServerOperator` on the environment |
 | CRUD ReachabilityTests per server | `ServerAdmin` on the server's environment |
+| Read connection policy | authenticated | — | the desktop needs it before opening a tunnel |
+| Update connection policy | `SystemAdmin` | — | one row shared by every API node in the cluster |
+| Server-side tunnel relay | `ServerOperator` on the server's environment | — | `Local` service or deployment only; fixed target host/port |
 | Read inventory: providers, environments, servers, deployments, applications/versions, projects, topology, reachability tests | authenticated (D7 read model) |
 | Read Users, Groups, Roles, ProviderEnvironmentGroupRoles | `SystemAdmin` |
 | Other reads: session, server access, menus | authenticated |
