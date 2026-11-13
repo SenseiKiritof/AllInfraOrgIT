@@ -65,6 +65,11 @@ Verified against the legacy backend on 2026-10-25 (`MinimalApis/*`, `ServerAcces
 | Connection policy (`GET /api/connection-policy`) | authenticated | — | the desktop needs it before opening a tunnel; BFF or `tunnels:operate` token |
 | Connection policy (`PUT /api/connection-policy`) | — | `SystemAdmin` | installation-wide, stored in the shared `ConnectionPolicies` row |
 | Server tunnel relay (`GET /api/tunnels/relay`) | `ServerOperator` | — | Local service or deployment only; Origin and `tunnels:operate`/BFF required |
+| Direct remote target (`GET /api/remote/targets/{id}`) | `ServerAdmin` | — | Host, jumps, username and host-key fingerprint; never a secret |
+| Direct console audit (`POST /api/remote/console-sessions…`) | `ServerAdmin` | — | Creates/completes the `CommandExecution`; owner check on completion |
+| Direct action intent/complete (`/intent`, `/api/remote/actions/{id}/complete`) | `ServerOperator` | — | Intent renders the script and creates the execution; completion checks the owner |
+| Direct file events (`POST /api/remote/file-events`) | `ServerAdmin` | — | Writes the `FileTransfer` audit kind |
+| Direct host key (`POST /api/remote/host-key`) | `ServerAdmin` | — | Stores first-use fingerprint; mismatch is 409 |
 | SSH console (`/socket/Servers/{id}/Console`) | `ServerAdmin` | — | Origin required; no implicit `SystemAdmin` |
 | File browser (`/Servers/{id}/Files...`) | `ServerAdmin` | — | same environment role as the console |
 | Auth/CurrentUser | authenticated | — | |
@@ -151,6 +156,7 @@ General rules:
 | Read connection policy | authenticated | — | the desktop needs it before opening a tunnel |
 | Update connection policy | `SystemAdmin` | — | one row shared by every API node in the cluster |
 | Server-side tunnel relay | `ServerOperator` on the server's environment | — | `Local` service or deployment only; fixed target host/port |
+| Direct console/files/actions | `ServerAdmin` (console/files), `ServerOperator` (actions) | — | `Client`/reachable `Auto`; target metadata and audit stay in the API |
 | Read inventory: providers, environments, servers, deployments, applications/versions, projects, topology, reachability tests | authenticated (D7 read model) |
 | Read Users, Groups, Roles, ProviderEnvironmentGroupRoles | `SystemAdmin` |
 | Other reads: session, server access, menus | authenticated |
