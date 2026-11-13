@@ -247,8 +247,8 @@ app ships. Do not build D unless a browser-only requirement appears later.
 
 ### 4.5 Connection policy (implemented)
 
-The installation-level `ConnectionPolicies` row (ADR-013) chooses the tunnel
-transport:
+The installation-level `ConnectionPolicies` row (ADR-013, default `Auto`)
+chooses the tunnel transport:
 
 - `Server`: the API node opens the SSH forward and relays bytes to the desktop
   over a WebSocket, using the stored server credential. Only `Local` services
@@ -264,9 +264,12 @@ WebSocket, so the load balancer needs WebSocket upgrades but not sticky
 sessions. The central `TunnelSessions` projection records `Transport`
 (`Client`/`Server`) and the `/settings` admin page changes the mode.
 
-Console, file transfer and application actions still run on the API in all
-modes. Moving them to a native desktop bridge is the next phase; the policy
-endpoint and UI are already shared.
+Console, file transfer and application actions follow the same mode. In
+`Client` and reachable `Auto`, the desktop uses `ssh2`/SFTP with the user's
+agent, while the API keeps the target metadata, host-key pinning, the
+`CommandExecution` rows for console/actions and the `FileTransfer` audit kind.
+`Server` keeps the existing API-side endpoints. Direct uploads are capped at
+8 MB; larger files use the server path in `Auto`/`Server`.
 
 ## 5. Roadmap
 

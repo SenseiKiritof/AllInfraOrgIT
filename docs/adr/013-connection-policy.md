@@ -21,7 +21,8 @@ file or per-node setting would make the cluster inconsistent.
 
 ## Decision
 
-Store a singleton `ConnectionPolicies` row in MySQL with three modes:
+Store a singleton `ConnectionPolicies` row in MySQL with three modes. The
+default is `Auto`; a missing row or an empty write also resolves to `Auto`:
 
 | Mode | Tunnel transport |
 |---|---|
@@ -69,9 +70,19 @@ Store a singleton `ConnectionPolicies` row in MySQL with three modes:
 - `Client` mode keeps the current agent-based security model but requires the
   client to reach the SSH target. If it cannot, `Auto` falls back to `Server`;
   `Client` fails with an explicit error.
-- Console, file transfer and application actions still use the API in both
-  modes. Moving them to the client is a follow-up bridge; the policy values and
-  the read endpoint are already in place for it.
+- Console, files and application actions follow the same mode. `Client` and
+  reachable `Auto` desktop sessions use `ssh2`/SFTP with the user's agent. The
+  API returns the target metadata and host-key fingerprint, creates the
+  `CommandExecution` for console/actions, and the desktop posts the result or
+  output back; direct file operations write the `FileTransfer` audit kind.
+  `Server` keeps the existing server-side endpoints.
+- Direct uploads are capped at 8 MB because they cross the message bridge as
+  base64. Larger files use the server path in `Auto`/`Server`; `Client` rejects
+  them. Chunked/streamed uploads are a follow-up.
+- Direct console/action output is client-reported, like tunnel events: the API
+  validates ownership and records the `CommandExecution`, but cannot verify the
+  bytes the desktop displays. The desktop redacts custom action values before
+  posting. The security boundary is the user's SSH agent, not the API.
 - The relay adds one WebSocket per local TCP connection. This is simple and
   stateless across the cluster, at the cost of an SSH setup per connection;
   multiplexing is a possible later optimisation.

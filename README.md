@@ -64,6 +64,25 @@ already signed in to the Web app does not need a second login. The desktop
 shell follows the account theme. The instance shows the live sessions on
 `/tunnels`.
 
+### Choose where connections run
+
+Every installation has one connection policy, set by `SystemAdmin` in
+**Impostazioni** (`/settings`). The default is **Auto**:
+
+| Mode | What runs where | Best for |
+|---|---|---|
+| **Auto** (default) | Tunnels, console, files and actions use the desktop when the client reaches the first SSH hop; otherwise they use the server. | Most installations; keeps the fast path local and still works behind NAT/firewalls. |
+| **Server** | The API node opens SSH with the stored server credential. Tunnels are relayed to the desktop; console, files and actions run on the server. Only `Local` services and deployments with a fixed target port are relayed. | Clients cannot reach SSH hosts, or traffic must leave through the server. |
+| **Client** | Tunnels, console, files and actions run in the desktop with the user's SSH agent; no server SSH. `Local`, `Dynamic` and `Remote` tunnels stay available. | Operators have an SSH agent and direct network access. |
+
+The policy lives in the shared MySQL database (`ConnectionPolicies`), so every
+API node in a cluster applies the same mode without a restart. Relay
+connections are owned by the node that accepts the WebSocket; each local TCP
+connection opens its own relay, so the load balancer needs WebSocket upgrades
+but no sticky sessions. Direct file downloads stream to a native save dialog;
+direct uploads are capped at 8 MB and larger files need `Auto` or `Server`.
+See [ADR-013](docs/adr/013-connection-policy.md).
+
 ## See it in action
 
 The screenshots and recordings come from a local instance with fictitious

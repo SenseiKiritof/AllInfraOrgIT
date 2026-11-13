@@ -61,8 +61,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Verification: 16/16 PASS locally; the missing `resource_metadata` finding was fixed in the API and covered by a test.
 
 - [x] **Connection policy and server relay**
-  `ConnectionPolicies` singleton in MySQL (`Server`/`Client`/`Auto`), `/api/connection-policy` read/write with SystemAdmin, `/settings` admin page, desktop transport selection with first-hop reachability, API WebSocket relay for Local services and deployments, `TunnelSessions.Transport` projection. Shared by every API node in a cluster; Dynamic/Remote stay client-only.
+  `ConnectionPolicies` singleton in MySQL (`Server`/`Client`/`Auto`, default `Auto`), `/api/connection-policy` read/write with SystemAdmin, `/settings` admin page, desktop transport selection with first-hop reachability, API WebSocket relay for Local services and deployments, `TunnelSessions.Transport` projection. Shared by every API node in a cluster; Dynamic/Remote stay client-only.
   Verification: API integration tests for policy RBAC/token/default and relay validation, Web 215 tests, desktop 50 unit tests and `tunnel-test`, OpenAPI regenerated.
+
+- [x] **Client-side console, files and actions**
+  Desktop `ssh2`/SFTP client with agent + jump chain and host-key pinning; `Client`/reachable `Auto` run console/files/actions directly, `Server`/unreachable `Auto` keep the API path. Target metadata, console/action `CommandExecutions` and `FileTransfer` audit rows stay in the API. Direct uploads cap at 8 MB.
+  Verification: API target/intent/host-key tests, desktop `ssh2` unit tests, Web console/file/action bridge tests, `make ci` and `make desktop-ci`.
 
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
