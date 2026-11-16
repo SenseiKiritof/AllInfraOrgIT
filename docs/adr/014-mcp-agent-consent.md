@@ -1,4 +1,4 @@
-# ADR-013 — MCP agent consent and permissions
+# ADR-014 — MCP agent consent and permissions
 
 - Status: accepted
 - Date: 2026-11-15
