@@ -87,11 +87,11 @@ No create/update/delete tools in v1. No raw shell: `commands` would be a
 free-form execution tool and defeats the action allowlist. The console stays
 interactive-only.
 
-Action tools are enabled per user, not only by scope (decision D2): a new
-`McpGrants` table (user or group, allowed read/action tools, optional
-environment filter) is checked before the environment RBAC. A user can see the
-tools they are granted and nothing more; a grant never overrides a missing
-`ServerAdmin`/`ServerOperator` right.
+Action tools are enabled per client, not only by scope (decision D2): the
+first action call creates a Pending `McpAgent`; its owner approves it once with
+individual permissions (action, optional environment filter). A legacy
+`McpGrants` table (user or group) remains an additional entitlement. Neither
+path overrides a missing `ServerAdmin`/`ServerOperator` right.
 
 Resources (`infraorgit://servers/{id}`, `infraorgit://applications/{id}`) can
 expose the same JSON for clients that prefer resources to tools. Prompts can
@@ -340,14 +340,20 @@ the SSH-command log and is not reshaped.
 - The `/mcp` policy requires `mcp:read` or `mcp:operate`; a token without a
   scope gets 403. The desktop client defaults to `mcp:read` with
   `mcp:operate` optional, so a single MCP connection can be read-only or
-  read-write by choice. Action tools will additionally require `McpGrants`.
+  read-write by choice. Action tools additionally require an approved
+  `McpAgent`.
 - Caddy routes `/mcp*` and the discovery path to the API.
 - Action tools `run_reachability_tests` and `run_application_action`:
-  require `mcp:operate`, an `McpGrant` for the user/group (optional
-  environment) and `ServerOperator`/`ServerAdmin`; `confirm=true` is
-  mandatory; results and denials are audited.
-- Grants are managed from `/mcp-grants` (Users page, SystemAdmin) and through
-  `/api/mcp/grants`.
+  require `mcp:operate`, an approved `McpAgent` with the individual permission
+  (or a legacy user/group `McpGrant`), and `ServerOperator`/`ServerAdmin`;
+  `confirm=true` is mandatory; results and denials are audited. There is no
+  per-call human approval: the agent is approved once with permissions.
+- Agents are created as Pending on the first action call and approved from
+  `/approvals` by their owner with individual permissions. Owners edit or
+  revoke them at any time; SystemAdmin sees every agent. The agent can call
+  `request_mcp_permission`; the owner approves or denies the request in the
+  same page. Legacy grants remain managed from `/mcp-grants` (Users page,
+  SystemAdmin) and through `/api/mcp/grants`.
 - MCP resources: `infraorgit://inventory/summary` (counts),
   `infraorgit://servers/{id}` and `infraorgit://applications/{id}`; reads reuse
   the tool queries and are audited as `read_resource`.

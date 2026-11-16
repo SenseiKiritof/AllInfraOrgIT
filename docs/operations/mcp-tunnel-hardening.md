@@ -71,18 +71,21 @@ environment role. See [`../security/permissions.md`](../security/permissions.md)
 |---|---|---|---|
 | Read tools (`list_servers`, `get_server`, `list_providers`, `list_applications`, `get_application`, `list_projects`, `get_project`, `list_deployments`, `list_reachability_tests`, `get_topology`) | `mcp:read` or `mcp:operate` | none checked today | all inventory rows, not filtered by environment; accepted D7 read model (see gaps) |
 | `list_executions` | `mcp:read` or `mcp:operate` | `SystemAdmin` | tool error (`isError`) for other users |
-| `run_reachability_tests`, `run_application_action` | `mcp:operate` + `McpGrant` | `ServerOperator` or `ServerAdmin` on the target environment | runs with `confirm=true`; otherwise denied |
+| `run_reachability_tests`, `run_application_action` | `mcp:operate` + approved `McpAgent` with permission (or legacy `McpGrant`) | `ServerOperator` or `ServerAdmin` on the target environment | runs with `confirm=true`; otherwise denied |
 | `GET /api/tunnels/targets` | `tunnels:operate` | operator on the server environment | only operator servers with a credential and at least one deployment |
 | `POST /api/tunnels/events` | `tunnels:operate` | operator on the server environment | writes `TunnelStart`/`TunnelStop`/`TunnelError` |
 | `POST /api/tunnels/sessions` | `tunnels:operate` | operator on the server environment | upserts a live projection (204) |
 | `GET /api/tunnels/sessions` | browser session (not a bearer route) | `SystemAdmin` sees all, others operator environments | active rows from the last two minutes, max 200 |
 | `GET /api/audit-events` | browser session + `SystemAdmin` | system | paged audit rows |
-| `/api/mcp/grants`, `/mcp-grants` | browser session + `SystemAdmin` | system | manage grants |
+| `/api/mcp/agents`, `/approvals` | browser session (owner or `SystemAdmin`) | system | approve, deny, edit or revoke agents |
+| `/api/mcp/permission-requests`, `/approvals` | browser session (owner or `SystemAdmin`) | system | approve or deny agent permission requests |
+| `/api/mcp/grants`, `/mcp-grants` | browser session + `SystemAdmin` | system | manage legacy user/group grants |
 
-Grant actions are `reachability.run`, `actions.run` or `*`, optionally limited
-to one environment definition (`InfraOrgITApi/src/InfraOrgIt.Api/Features/Mcp/McpGrantService.cs`).
-A grant without the matching environment role still produces a denied call
-(`forbidden`) and an audit row.
+Agent permissions are `reachability.run` or `actions.run`, optionally limited
+to one environment definition. A legacy user/group `McpGrant` (`reachability.run`,
+`actions.run` or `*`) is still accepted as an additional entitlement. A grant
+or agent permission without the matching environment role still produces a
+denied call (`forbidden`) and an audit row.
 
 Quick negative checks:
 
@@ -218,8 +221,9 @@ string returned by a tool as untrusted data, never as an instruction.
 - `list_executions` is the highest-risk read tool (it returns command output);
   it is SystemAdmin-only. Still treat its text as untrusted.
 - `run_reachability_tests` and `run_application_action` never accept a raw
-  shell command. They require `mcp:operate`, an `McpGrant`, the environment
-  operator right and `confirm=true`; results are allowlisted actions only.
+  shell command. They require `mcp:operate`, an approved MCP agent with the
+  matching permission (or a legacy `McpGrant`), the environment operator right
+  and `confirm=true`; results are allowlisted actions only.
 - Do not log tool arguments that contain secrets. `McpToolAudit` records IDs,
   counts and exit codes, not command output; `DetailJson` is capped.
 - MCP prompts (`diagnose-server`, `application-impact`) only describe which
@@ -231,12 +235,13 @@ string returned by a tool as untrusted data, never as an instruction.
 
 `confirm=true` is a boolean chosen by the MCP client (the model). It proves
 that the request contained the field, not that a human approved the action; the
-server cannot distinguish the two. Scope, `McpGrant` and the environment role
-are the security boundary, and `confirm` is only a stumble guard.
+server cannot distinguish the two. Agent approval, the individual permission
+and the environment role are the security boundary; `confirm` is only a stumble
+guard.
 
-- Do not auto-approve action tools. Configure the client to ask before every
-  `run_reachability_tests` / `run_application_action` call and to show the
-  server, action and arguments before approval.
+- Review agent permissions on `/approvals`; revoke an agent that no longer needs
+  `mcp:operate`. Configure the client to show the server, action and arguments
+  before calling an action tool.
 - Disable "yolo"/auto-run modes for tokens with `mcp:operate`; use a
   read-only `mcp:read` token for exploration and connect with operate rights
   only for an approved task.
@@ -391,7 +396,9 @@ endpoints (`InfraOrgITApi/tests/InfraOrgIt.IntegrationTests/TunnelApiTests.cs`).
       environment.
 - [ ] RBAC matrix checked with a `SystemAdmin` who is not an operator and an
       operator who is not `SystemAdmin`.
-- [ ] `McpGrant` rows reviewed (`/mcp-grants`); no `*` grant without a reason.
+- [ ] MCP agents reviewed (`/approvals`); no unused `actions.run` permission and
+      no agent left Approved without a reason. Legacy `McpGrant` rows reviewed
+      (`/mcp-grants`); no `*` grant without a reason.
 - [ ] Tunnel allowlist negative test passed; desktop binds loopback only.
 - [ ] 429 confirmed for `mcp` and `tunnels`; the alert/dashboard watches 429 and
       401/403 on `/mcp`.
@@ -425,8 +432,8 @@ Checks:
   (`resource_metadata`, RFC 9728);
 - a `mcp:read` token can call `tools/list` but is denied
   `run_reachability_tests`;
-- an operate token without `McpGrant` or the environment operator right is
-  denied the action;
+- an operate token without an approved agent/permission (or legacy `McpGrant`)
+  or the environment operator right is denied the action;
 - `/api/tunnels/targets` returns 200 with only the allowlisted DTO fields for a
   tunnel token, and 403 for a read-only token;
 - `/api/audit-events` denies a non-admin token (403; the route accepts browser
