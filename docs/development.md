@@ -78,10 +78,13 @@ yarn --cwd ../InfraOrgITWeb vitest run src/path/file.test.ts
 ```
 
 The integration suite shares one MySQL container (`TestMySql`); every test
-class creates its own database and xUnit runs two classes in parallel. New test
-classes must call `TestMySql.CreateDatabaseAsync(...)` and must not start a
-private MySQL container. Real SSH/FTP and legacy-source tests keep their
-dedicated service containers and run in the same bounded pool.
+class creates its own database and applies the migrations. Classes run
+sequentially: EF serializes the migrations on MySQL's global
+`__EFMigrationsLock`, and two parallel `WebApplicationFactory` hosts can stall
+the test host, so the bounded pool stays at one. New test classes must call
+`TestMySql.CreateDatabaseAsync(...)` and must not start a private MySQL
+container. Real SSH/FTP and legacy-source tests keep their dedicated service
+containers and run in the same pool.
 
 ## Branching and pull requests
 
