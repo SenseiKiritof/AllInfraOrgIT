@@ -115,20 +115,25 @@ value is shown once with a copy button. **Revoca** invalidates it immediately.
 The tokens authenticate MCP clients against `/mcp` and other non-browser
 clients; the browser session is not used there.
 
-## Account — MCP approvals `/approvals`
+## Account — MCP agents `/approvals`
 
-Reached from the side menu or the tokens page. Lists the pending and recent
-action approvals for the signed-in user: action, server, deployment/action,
-requested/expiry time and state. **Approva**/**Nega** decide a Pending request
-(cookie + CSRF only; an MCP bearer token cannot decide). Approving is
-one-time and expires after 10 minutes; the AI client polls
-`get_mcp_approval` and executes only after approval.
+Reached from the side menu or the tokens page. Lists the MCP agents of the
+signed-in user: name, client key, user, status, creation and last use.
+**Agenti in attesa** shows each new client; pick `reachability.run` and/or
+`actions.run`, choose one environment or all, then **Approva agente** or
+**Nega**. Approved agents show the same checkboxes with **Salva permessi** and
+**Revoca**. **Richieste di permesso** lists the Pending requests created by
+`request_mcp_permission` with action, environment, reason and
+**Approva**/**Nega**. All decisions require the cookie session and CSRF; an
+MCP bearer token cannot decide. SystemAdmin sees every agent; the owner sees
+only their own.
 
 ## Admin — MCP grants `/mcp-grants`
 
-Reached from the **Users** page header (SystemAdmin). Lists the `McpGrants`
-with subject (user or group), action, environment and creation date;
-**Nuovo grant** picks a subject, an action (`reachability.run`,
-`actions.run`, `*`) and an optional environment; **Elimina** revokes it.
-A grant only enables MCP action tools: the environment role
-(`ServerOperator`/`ServerAdmin`) is still required.
+Reached from the **Users** page header (SystemAdmin). Legacy user/group
+`McpGrants` remain valid as an additional entitlement for action tools: they
+list subject, action, environment and creation date; **Nuovo grant** picks a
+subject, an action (`reachability.run`, `actions.run`, `*`) and an optional
+environment; **Elimina** revokes it. New clients should be approved as MCP
+agents on `/approvals`; the environment role (`ServerOperator`/`ServerAdmin`)
+is still required in both cases.

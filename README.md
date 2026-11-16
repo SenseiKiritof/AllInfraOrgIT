@@ -47,12 +47,13 @@ light/dark/system theme is remembered per user.
 
 ### AI with a human in the loop
 
-MCP clients can read the inventory and request actions. Read tools use
-`mcp:read`/`mcp:operate`; action tools also need an `McpGrant`, the environment
-operator right and a human approval. The AI receives an `approvalId`, the
-request waits on `/approvals`, and only the owner can approve it from a browser
-session. The approval is one-time, expires after 10 minutes and is bound to the
-exact target and parameters.
+MCP clients can read the inventory and run approved actions. Read tools use
+`mcp:read`/`mcp:operate`; the first action call creates a Pending agent. The
+owner approves the agent once from `/approvals` with individual permissions
+(`reachability.run`, `actions.run`, per environment or all), then edits or
+revokes them at any time. The MCP client can request a new permission and the
+owner decides. Action calls still need the environment operator right and
+`confirm=true`; RBAC, rate limits and audit stay mandatory.
 
 ### Desktop tunnels
 
@@ -108,9 +109,9 @@ data.
 
 ![Two consoles side by side, minimized to the bar and reopened](docs/screenshots/console-split.gif)
 
-**Human approval for AI actions**
+**Agent approval for AI actions**
 
-![MCP approvals page with a pending action, Approve and Deny buttons and the human-approval warning](docs/screenshots/approvals.png)
+![MCP agents page with pending agents, individual permissions, Approve and Deny buttons](docs/screenshots/approvals.png)
 
 **Desktop tunnels**
 
