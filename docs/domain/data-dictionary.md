@@ -481,8 +481,55 @@ Append-only; indexes on `OccurredAt`, `(Kind, OccurredAt)` and
 | CreatedAt | datetime(6) | no | |
 
 Check `CK_McpGrants_Subject` (`(UserId IS NULL) + (GroupId IS NULL) = 1`) and
-`CK_McpGrants_Action`. Grants only enable MCP action tools; the normal
+`CK_McpGrants_Action`. Legacy grants only enable MCP action tools; the normal
 `ServerAdmin`/`ServerOperator` right on the environment is still required.
+New clients are approved as `McpAgents`.
+
+### McpAgents
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| UserId | int | no | FK `Users.Id` cascade; owner |
+| ClientKey | varchar(200) | no | `token:{id}` or `oauth:{client_id}`; unique with UserId |
+| Name | varchar(200) | no | token name or OAuth client id |
+| Status | varchar(20) | no | `Pending`, `Approved`, `Denied` |
+| ApprovedAt | datetime(6) | yes | |
+| ApprovedByUserId | int | yes | FK `Users.Id` set null |
+| LastSeenAt | datetime(6) | yes | last action call |
+| CreatedAt / UpdatedAt / Version | | no | concurrency token |
+
+Check `CK_McpAgents_Status`. One row per user and client key.
+
+### McpAgentPermissions
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| AgentId | int | no | FK `McpAgents.Id` cascade |
+| Action | varchar(50) | no | `reachability.run`, `actions.run`, `*` |
+| EnvironmentDefinitionId | int | yes | null = every environment; FK cascade |
+| CreatedAt / UpdatedAt / Version | | no | concurrency token |
+
+Check `CK_McpAgentPermissions_Action`. The environment role is still required
+at call time.
+
+### McpPermissionRequests
+
+| Column | Type | Null | Constraints / notes |
+|---|---|---|---|
+| Id | int | no | PK |
+| AgentId | int | no | FK `McpAgents.Id` cascade |
+| Action | varchar(50) | no | `reachability.run`, `actions.run` |
+| EnvironmentDefinitionId | int | yes | null = every environment; FK cascade |
+| Reason | varchar(500) | yes | shown to the owner |
+| Status | varchar(20) | no | `Pending`, `Approved`, `Denied` |
+| DecidedAt | datetime(6) | yes | |
+| DecidedByUserId | int | yes | FK `Users.Id` set null |
+| CreatedAt / UpdatedAt / Version | | no | concurrency token |
+
+Check `CK_McpPermissionRequests_Status`. Created by
+`request_mcp_permission`; approving adds an `McpAgentPermissions` row.
 
 ## Legacy → new enum mapping
 

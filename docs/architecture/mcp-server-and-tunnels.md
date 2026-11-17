@@ -1,6 +1,6 @@
 # MCP server and local tunnels — feasibility study
 
-- Status: stage 1-2 implemented; desktop shell started (stage 3)
+- Status: stages 1-3 implemented; connection policy (stage 4) implemented for tunnels
 - Date: 2026-11-09
 - Scope: expose InfraOrgIT as an MCP server; evaluate local SSH tunnels (XPipe today) and how they could live in InfraOrgIT.
 
@@ -87,11 +87,11 @@ No create/update/delete tools in v1. No raw shell: `commands` would be a
 free-form execution tool and defeats the action allowlist. The console stays
 interactive-only.
 
-Action tools are enabled per user, not only by scope (decision D2): a new
-`McpGrants` table (user or group, allowed read/action tools, optional
-environment filter) is checked before the environment RBAC. A user can see the
-tools they are granted and nothing more; a grant never overrides a missing
-`ServerAdmin`/`ServerOperator` right.
+Action tools are enabled per client, not only by scope (decision D2): the
+first action call creates a Pending `McpAgent`; its owner approves it once with
+individual permissions (action, optional environment filter). A legacy
+`McpGrants` table (user or group) remains an additional entitlement. Neither
+path overrides a missing `ServerAdmin`/`ServerOperator` right.
 
 Resources (`infraorgit://servers/{id}`, `infraorgit://applications/{id}`) can
 expose the same JSON for clients that prefer resources to tools. Prompts can
@@ -245,6 +245,34 @@ app ships. Do not build D unless a browser-only requirement appears later.
 | **Total, desktop app** | **34–51** |
 | API-host WebSocket proxy (not recommended) | 20–30 |
 
+### 4.5 Connection policy (implemented)
+
+The installation-level `ConnectionPolicies` row (ADR-013, default `Auto`)
+chooses the tunnel transport:
+
+- `Server`: the API node opens the SSH forward and relays bytes to the desktop
+  over a WebSocket, using the stored server credential. Only `Local` services
+  and deployments with a fixed target port are relayed; `Dynamic` and `Remote`
+  are rejected because they would make the API a general proxy.
+- `Client`: the desktop spawns `ssh` with the local agent, as in 4.3.
+- `Auto`: the desktop tests the first SSH hop and uses the client when it is
+  reachable **and** the server and every jump use a key credential; otherwise
+  it uses the server relay. Password credentials always relay because the
+  desktop only signs with the user's SSH agent.
+
+The policy is a singleton in the shared database. In a cluster every API node
+reads the same row; relay connections stay on the node that accepts the
+WebSocket, so the load balancer needs WebSocket upgrades but not sticky
+sessions. The central `TunnelSessions` projection records `Transport`
+(`Client`/`Server`) and the `/settings` admin page changes the mode.
+
+Console, file transfer and application actions follow the same mode. In
+`Client` and key-based `Auto`, the desktop uses `ssh2`/SFTP with the user's
+agent, while the API keeps the target metadata, host-key pinning, the
+`CommandExecution` rows for console/actions and the `FileTransfer` audit kind.
+`Server` keeps the existing API-side endpoints. Direct uploads are capped at
+8 MB; larger files use the server path in `Auto`/`Server`.
+
 ## 5. Roadmap
 
 1. **Stage 1 — 4–5 weeks**: `AuditEvents` foundation; MCP read-only with
@@ -314,14 +342,23 @@ the SSH-command log and is not reshaped.
 - The `/mcp` policy requires `mcp:read` or `mcp:operate`; a token without a
   scope gets 403. The desktop client defaults to `mcp:read` with
   `mcp:operate` optional, so a single MCP connection can be read-only or
-  read-write by choice. Action tools will additionally require `McpGrants`.
+  read-write by choice. Action tools additionally require an approved
+  `McpAgent`.
 - Caddy routes `/mcp*` and the discovery path to the API.
 - Action tools `run_reachability_tests` and `run_application_action`:
-  require `mcp:operate`, an `McpGrant` for the user/group (optional
-  environment) and `ServerOperator`/`ServerAdmin`; `confirm=true` is
-  mandatory; results and denials are audited.
-- Grants are managed from `/mcp-grants` (Users page, SystemAdmin) and through
-  `/api/mcp/grants`.
+  require `mcp:operate`, an approved `McpAgent` with the individual permission
+  (or a legacy user/group `McpGrant`), and `ServerOperator`/`ServerAdmin`;
+  `confirm=true` is mandatory; results and denials are audited. There is no
+  per-call human approval: the agent is approved once with permissions.
+- Agents are created as Pending on the first action call and approved from
+  `/approvals` by their owner with individual permissions. Owners edit or
+  revoke them at any time; SystemAdmin sees every agent. Denying or revoking an
+  agent revokes its personal API token (`ApiTokens.RevokedAt`), so a token
+  client must create a new token and be approved again; OAuth clients are
+  revoked in Keycloak. The agent can call
+  `request_mcp_permission`; the owner approves or denies the request in the
+  same page. Legacy grants remain managed from `/mcp-grants` (Users page,
+  SystemAdmin) and through `/api/mcp/grants`.
 - MCP resources: `infraorgit://inventory/summary` (counts),
   `infraorgit://servers/{id}` and `infraorgit://applications/{id}`; reads reuse
   the tool queries and are audited as `read_resource`.

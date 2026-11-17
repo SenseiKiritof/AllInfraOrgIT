@@ -47,12 +47,13 @@ light/dark/system theme is remembered per user.
 
 ### AI with a human in the loop
 
-MCP clients can read the inventory and request actions. Read tools use
-`mcp:read`/`mcp:operate`; action tools also need an `McpGrant`, the environment
-operator right and a human approval. The AI receives an `approvalId`, the
-request waits on `/approvals`, and only the owner can approve it from a browser
-session. The approval is one-time, expires after 10 minutes and is bound to the
-exact target and parameters.
+MCP clients can read the inventory and run approved actions. Read tools use
+`mcp:read`/`mcp:operate`; the first action call creates a Pending agent. The
+owner approves the agent once from `/approvals` with individual permissions
+(`reachability.run`, `actions.run`, per environment or all), then edits or
+revokes them at any time. The MCP client can request a new permission and the
+owner decides. Action calls still need the environment operator right and
+`confirm=true`; RBAC, rate limits and audit stay mandatory.
 
 ### Desktop tunnels
 
@@ -63,6 +64,25 @@ searches by machine/IP/service and reuses the instance BFF session, so a user
 already signed in to the Web app does not need a second login. The desktop
 shell follows the account theme. The instance shows the live sessions on
 `/tunnels`.
+
+### Choose where connections run
+
+Every installation has one connection policy, set by `SystemAdmin` in
+**Impostazioni** (`/settings`). The default is **Auto**:
+
+| Mode | What runs where | Best for |
+|---|---|---|
+| **Auto** (default) | Tunnels, console, files and actions use the desktop when the client reaches the first SSH hop **and the credential is key-based**; otherwise they use the server. Password credentials always use the server. | Most installations; keeps the fast path local and still works behind NAT/firewalls. |
+| **Server** | The API node opens SSH with the stored server credential. Tunnels are relayed to the desktop; console, files and actions run on the server. Only `Local` services and deployments with a fixed target port are relayed. | Clients cannot reach SSH hosts, or traffic must leave through the server. |
+| **Client** | Tunnels, console, files and actions run in the desktop with the user's SSH agent; no server SSH. `Local`, `Dynamic` and `Remote` tunnels stay available. | Operators have an SSH agent and direct network access. |
+
+The policy lives in the shared MySQL database (`ConnectionPolicies`), so every
+API node in a cluster applies the same mode without a restart. Relay
+connections are owned by the node that accepts the WebSocket; each local TCP
+connection opens its own relay, so the load balancer needs WebSocket upgrades
+but no sticky sessions. Direct file downloads stream to a native save dialog;
+direct uploads are capped at 8 MB and larger files need `Auto` or `Server`.
+See [ADR-013](docs/adr/013-connection-policy.md).
 
 ## See it in action
 
@@ -89,9 +109,9 @@ data.
 
 ![Two consoles side by side, minimized to the bar and reopened](docs/screenshots/console-split.gif)
 
-**Human approval for AI actions**
+**Agent approval for AI actions**
 
-![MCP approvals page with a pending action, Approve and Deny buttons and the human-approval warning](docs/screenshots/approvals.png)
+![MCP agents page with pending agents, individual permissions, Approve and Deny buttons](docs/screenshots/approvals.png)
 
 **Desktop tunnels**
 
