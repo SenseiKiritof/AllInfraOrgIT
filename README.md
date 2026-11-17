@@ -42,8 +42,9 @@ AI actions and the audit log, with permissions per environment.
 Keycloak login through a backend-for-frontend keeps tokens out of the browser.
 `SystemAdmin` owns the master data; `ServerAdmin` and `ServerOperator` are
 granted per environment and decide what a user can open or run. The menu is
-configurable, the interface is Italian and English, and the
-light/dark/system theme is remembered per user.
+configurable, the interface is English by default with Italian, French,
+German and Spanish translations (missing strings fall back to English), and
+the light/dark/system theme is remembered per user.
 
 ### AI with a human in the loop
 
