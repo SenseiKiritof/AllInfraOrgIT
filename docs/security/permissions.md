@@ -135,7 +135,7 @@ General rules:
 | CRUD Users, Groups, Roles, Menus, ProviderEnvironmentGroupRoles | `SystemAdmin` |
 | CRUD ServerCredentials; SSH assignment; host key reset | `SystemAdmin` |
 | File transfer configuration (`PUT /api/servers/{id}/file-transfer`) | `SystemAdmin` |
-| CRUD CommandTemplates; ApplicationActions config | `SystemAdmin` |
+| CRUD CommandTemplates; ApplicationActions config (including the sudo flag) | `SystemAdmin` |
 | Global ReachabilityTests (CRUD and run) | `SystemAdmin` |
 | Read CommandExecutions (audit) | `SystemAdmin` |
 | Server create/edit/delete | `ServerAdmin` on the server's environment |
