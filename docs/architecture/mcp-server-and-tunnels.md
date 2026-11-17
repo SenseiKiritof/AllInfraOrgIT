@@ -350,7 +350,10 @@ the SSH-command log and is not reshaped.
   per-call human approval: the agent is approved once with permissions.
 - Agents are created as Pending on the first action call and approved from
   `/approvals` by their owner with individual permissions. Owners edit or
-  revoke them at any time; SystemAdmin sees every agent. The agent can call
+  revoke them at any time; SystemAdmin sees every agent. Denying or revoking an
+  agent revokes its personal API token (`ApiTokens.RevokedAt`), so a token
+  client must create a new token and be approved again; OAuth clients are
+  revoked in Keycloak. The agent can call
   `request_mcp_permission`; the owner approves or denies the request in the
   same page. Legacy grants remain managed from `/mcp-grants` (Users page,
   SystemAdmin) and through `/api/mcp/grants`.
