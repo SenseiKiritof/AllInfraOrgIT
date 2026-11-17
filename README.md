@@ -72,7 +72,7 @@ Every installation has one connection policy, set by `SystemAdmin` in
 
 | Mode | What runs where | Best for |
 |---|---|---|
-| **Auto** (default) | Tunnels, console, files and actions use the desktop when the client reaches the first SSH hop; otherwise they use the server. | Most installations; keeps the fast path local and still works behind NAT/firewalls. |
+| **Auto** (default) | Tunnels, console, files and actions use the desktop when the client reaches the first SSH hop **and the credential is key-based**; otherwise they use the server. Password credentials always use the server. | Most installations; keeps the fast path local and still works behind NAT/firewalls. |
 | **Server** | The API node opens SSH with the stored server credential. Tunnels are relayed to the desktop; console, files and actions run on the server. Only `Local` services and deployments with a fixed target port are relayed. | Clients cannot reach SSH hosts, or traffic must leave through the server. |
 | **Client** | Tunnels, console, files and actions run in the desktop with the user's SSH agent; no server SSH. `Local`, `Dynamic` and `Remote` tunnels stay available. | Operators have an SSH agent and direct network access. |
 
