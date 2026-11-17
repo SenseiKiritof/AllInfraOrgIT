@@ -256,7 +256,9 @@ chooses the tunnel transport:
   are rejected because they would make the API a general proxy.
 - `Client`: the desktop spawns `ssh` with the local agent, as in 4.3.
 - `Auto`: the desktop tests the first SSH hop and uses the client when it is
-  reachable, otherwise the server relay.
+  reachable **and** the server and every jump use a key credential; otherwise
+  it uses the server relay. Password credentials always relay because the
+  desktop only signs with the user's SSH agent.
 
 The policy is a singleton in the shared database. In a cluster every API node
 reads the same row; relay connections stay on the node that accepts the
@@ -265,7 +267,7 @@ sessions. The central `TunnelSessions` projection records `Transport`
 (`Client`/`Server`) and the `/settings` admin page changes the mode.
 
 Console, file transfer and application actions follow the same mode. In
-`Client` and reachable `Auto`, the desktop uses `ssh2`/SFTP with the user's
+`Client` and key-based `Auto`, the desktop uses `ssh2`/SFTP with the user's
 agent, while the API keeps the target metadata, host-key pinning, the
 `CommandExecution` rows for console/actions and the `FileTransfer` audit kind.
 `Server` keeps the existing API-side endpoints. Direct uploads are capped at
