@@ -61,5 +61,8 @@ still decides.
   the `McpApprovals` table is dropped by the migration.
 - The `/approvals` page becomes the agent and permission-request page; the
   legacy `/mcp-grants` page remains for user/group grants.
+- Denying or revoking an agent revokes the personal API token that created it;
+  the client must create a new token and be approved again. OAuth clients are
+  revoked in Keycloak.
 - API clients see `agent_approval_required` and `permission_required` instead
   of `approval_required`.
