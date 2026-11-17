@@ -109,6 +109,10 @@ Meta repository of the InfraOrgIT workspace. Command reference in
   the EF schema (re-export it after a migration), `2-*.sql` is base data;
   a local `3-CustomData.sql` is git-ignored. Never force-add dumps, `data/`
   or SQL exports.
+- The Keycloak login theme is in `InfraOrgITDocker/keycloak/themes/infraorgit`
+  (mounted read-only; realm `loginTheme=infraorgit`, Italian default). Restart
+  Keycloak after CSS/message changes; realm changes on an existing database
+  need the admin console or `make reset`.
 - RBAC D7 = B: `SystemAdmin` does not imply `ServerAdmin`. Server, deployment,
   console and run actions require `ServerAdmin` on the environment, so a
   missing button can be correct. See `docs/security/permissions.md`.
