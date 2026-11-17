@@ -9,7 +9,8 @@ Phase 5, 2026-10-26. Functional reference: the legacy system, read-only. The per
 - Values written before the switch carry no `v2:` prefix and are **not readable** by the new code: run `tools/RewrapCredentials` once per database before deploying (`--apply`, dry-run by default, idempotent).
 - In development `scripts/env.sh` generates a key and stores it in `InfraOrgITDocker/.env` (ignored). In production the key comes from a secret manager.
 - A private key is validated with SSH.NET before saving; a password is not.
-- On update an empty secret leaves the stored one unchanged; changing `AuthType` requires the secret.
+- An optional `SudoPassword` is encrypted the same way in `EncryptedSudoSecret` with its own `SudoKeyVersion`; the DTO exposes only `hasSudoPassword`. A command that requires sudo uses the password via stdin (`sudo -S -p ''`) or `sudo -n` (NOPASSWD) when it is absent.
+- On update an empty secret leaves the stored one unchanged; changing `AuthType` requires the secret. An omitted sudo password keeps the stored one; an empty string clears it.
 - A credential assigned to a server cannot be deleted (409). SSH assignment and host key reset are `SystemAdmin`.
 
 ## SSH
@@ -38,6 +39,7 @@ Full reference: `docs/domain/file-transfer.md`.
 - Built-ins take precedence over custom values and are checked both at save time and at execution time.
 - Values are wrapped in single quotes with `'` escaped; shell metacharacters (`$`, backtick, `\`, `"`, CR/LF) are rejected in the values of the placeholders used, custom ones included.
 - An action has a template **or** a custom script (`SystemAdmin` only), with JSON `ParameterValues`.
+- `CommandTemplates.RequiresSudo` and `ApplicationActions.RequiresSudo` mark commands that need root; an action inherits the flag from its template. Sudo actions run only server-side: the desktop intent is rejected and the web uses the API path, because the sudo password never leaves the API. The execution row records `RequiresSudo` and the password goes to the command stdin, never to the script or the audit.
 - Action configuration: `SystemAdmin`; button list and run: `ServerOperator` on the deploy's environment.
 - The run reserves the audit row with `Idempotency-Key` **before** executing: a duplicate submission receives 409 and does not execute. If the command or the connection fails, the audit is still completed with the error.
 - The audit stores the unrendered template and replaces custom values with `***` in the output.
@@ -56,12 +58,13 @@ Full reference: `docs/domain/file-transfer.md`.
 
 ## Frontend
 
-- `/credentials`: credential CRUD, write-only secret, "set" indicator.
+- `/credentials`: credential CRUD, write-only secret and optional sudo password, "set" indicators.
 - `/commands`: template CRUD and placeholder count.
 - `/reachability`: global tests.
 - `/executions`: log with expandable output.
 - Server detail: SSH credential/port, host key reset, file access (SFTP/FTP protocol, port, optional separate credential), reachability test with run, deploy actions, console and file browser.
-- Application detail: action configuration (template or custom script, JSON parameters, confirmation).
+- Application detail: action configuration (template or custom script, JSON parameters, confirmation, sudo).
+- `/commands`: "Esegui con sudo" on the template; `/executions` shows a `sudo` badge.
 
 ## Configuration
 
