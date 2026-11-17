@@ -46,6 +46,20 @@ file keeps its three entries until the next `make release`, which adds
 `InfraOrgITDesktop`. Consumers only validate the JSON (`jq empty`) and read the
 SHAs they need; they must ignore unknown keys.
 
+## Fast release after green PRs
+
+When every `dev -> main` pull request is green on the exact commits being
+released, the same gates already ran in CI. Skip the local rerun:
+
+```bash
+SKIP_GATES=1 make release VERSION=0.x.y
+```
+
+`make e2e` still runs; add `SKIP_E2E=1` only when the browser suite is not
+needed. Use the full run when CI is red, when a repository changed after the
+green PR, or for the first release of a branch. Record "CI green on <SHAs>" in
+the release notes.
+
 ## Push and deploy
 
 Local tags are not a public release. After verification:
