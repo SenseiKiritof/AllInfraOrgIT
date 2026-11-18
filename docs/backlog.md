@@ -89,7 +89,8 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 
 - [ ] **Standalone desktop with a local instance**
   Find a viable way to run InfraOrgIT Desktop without Keycloak, Docker, MySQL or the server stack: local storage and migrations, local authentication (OS keychain or local users), backup/restore, versioned inventory export/import, embedded or local API, upgrade path and packaging. Keep the current remote-instance mode. Decide the single-user/local-only scope, the security model and what is explicitly out of scope before implementation.
-  Study: [`docs/architecture/standalone-desktop.md`](architecture/standalone-desktop.md) recommends a self-contained .NET sidecar + SQLite + local session bootstrap, with a 3–5 day spike before the 27–42 day implementation. Import/export is part of v1: checksummed JSON, dry-run, `replace` into an empty local DB, credential metadata without secrets. Next: run the spike and record the provider/migration result.
+  Study: [`docs/architecture/standalone-desktop.md`](architecture/standalone-desktop.md) recommends a self-contained .NET sidecar + SQLite + local session bootstrap, with a 3–5 day spike before the 27–42 day implementation. Import/export is part of v1: checksummed JSON, dry-run, `replace` into an empty local DB, credential metadata without secrets.
+  Spike (2026-11-18, branch `spike/standalone-sqlite`): SQLite migration, local session bootstrap, static Web serving and a CSRF-protected write work; MySQL tests stay green. Next: Electron sidecar supervisor/packaging, local tunnel smoke, import/export round-trip, and bypass OIDC/Keycloak readiness in local mode.
 
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
