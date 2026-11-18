@@ -72,8 +72,9 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   SafeStorage-encrypted inventory cache (targets, policy, counts, no TTL), offline badge and retry, Client-only tunnels with key-based local SSH, and local TCP/TLS/HTTP checks from the Mac or through the first jump host. Cache is removed on logout or instance removal; password credentials stay server-side.
   Verification: offline-cache and local-checks unit tests, Electron shell test for the check modal/IPC, `make desktop-ci`.
 
-- [ ] **Offline sync and audit**
-  Persist tunnel/check events in a tamper-evident local outbox and POST them with idempotency keys when the instance returns; add a `Desktop` source to the audit/reachability timeline instead of pretending they were server-side.
+- [x] **Offline sync and audit**
+  SafeStorage-encrypted outbox with a local SHA-256 chain; local checks and failed offline tunnel start/stop/error events are queued and retried every five minutes. `POST /api/client-events` deduplicates by `(username, eventId)` in `ClientEvents`, records `ClientCheck`/tunnel audit rows with `source=Desktop` and the client timestamp in the detail, and keeps tunnel RBAC per server. The audit page labels `ClientCheck`.
+  Verification: API integration test for idempotency/audit, outbox unit tests (chain, tamper, reload), desktop shell test and API/Web CI.
 
 - [ ] **Credential distribution (shared and per user)**
   A credential may belong to the installation (for example a shared `x3solutions` account) or to a single user. Deliver it to the desktop only after an authorized request, encrypted for that device/user (OS keychain + short-lived download ticket), never to the browser, with rotation, revocation, per-environment policy and audit. Decide explicitly whether shared secrets may be cached for offline use; they are never part of the offline inventory cache above.
