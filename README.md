@@ -34,6 +34,8 @@ AI actions and the audit log, with permissions per environment.
   an SFTP/FTPS browser and command templates.
 - **Application actions** such as restart, logs and health check, with optional
   confirmation, idempotency and shell-metacharacter checks.
+- **Credentials**: shared or per-user SSH credentials, optional offline use and
+  desktop devices that download them encrypted for their own RSA key.
 - **Audit log** of consoles, actions, tests, MCP calls and tunnels. The audit
   chain is tamper-evident and can be anchored to an external SIEM/WORM sink.
 
@@ -44,7 +46,9 @@ Keycloak login through a backend-for-frontend keeps tokens out of the browser.
 granted per environment and decide what a user can open or run. The menu is
 configurable, the interface is English by default with Italian, French,
 German and Spanish translations (missing strings fall back to English), and
-the light/dark/system theme is remembered per user.
+the light/dark/system theme is remembered per user. Global search and the
+console launcher support ArrowUp/ArrowDown, Enter and Escape; the active row
+stays visible in both themes.
 
 ### AI with a human in the loop
 
@@ -56,15 +60,37 @@ revokes them at any time. The MCP client can request a new permission and the
 owner decides. Action calls still need the environment operator right and
 `confirm=true`; RBAC, rate limits and audit stay mandatory.
 
-### Desktop tunnels
+### Desktop tunnels and offline work
 
 InfraOrgIT Desktop opens instances in one window with isolated tabs and
-manages SSH tunnels through the user's SSH agent: `-L`, `-D`, `-R`, jump
-chains and custom services. The tunnel drawer groups servers by environment,
-searches by machine/IP/service and reuses the instance BFF session, so a user
-already signed in to the Web app does not need a second login. The desktop
-shell follows the account theme. The instance shows the live sessions on
-`/tunnels`.
+manages SSH tunnels through the user's SSH agent or a downloaded credential:
+`-L`, `-D`, `-R`, jump chains and custom services. `Local` tunnels and
+console/files/actions run with the downloaded credential in memory; `Dynamic`
+and `Remote` still need an agent key. The tunnel drawer groups servers by
+environment, searches by machine/IP/service and reuses the instance BFF
+session, so a user already signed in to the Web app does not need a second
+login. The desktop shell follows the account theme. The instance shows the live
+sessions on `/tunnels`.
+
+When the instance is unreachable the desktop keeps an encrypted inventory
+snapshot, opens Client tunnels and runs local TCP/TLS/HTTP checks from the
+machine or through the first jump host. Check results and tunnel events are
+queued in an encrypted outbox and synchronized to the central audit when the
+instance returns. Offline credential copies exist only when `AllowOffline` is
+enabled and are dropped on logout, device revocation or a credential version
+change.
+
+### Credentials and device enrollment
+
+`/credentials` marks a credential as shared (installation-wide) or owned by a
+user, enables offline use and lists the enrolled desktop devices. Each desktop
+registers an RSA-3072 public key; the API encrypts the downloaded secret with
+AES-256-GCM and RSA-OAEP for that device only, and the private key stays in
+Electron `safeStorage`. Shared credentials are downloadable by operators of an
+environment where they are assigned, while personal credentials are
+download-only and cannot be assigned to servers or file transfer. Downloads are
+audited as `CredentialDownload`; revoking a device clears its cached copies on
+the next enrollment.
 
 ### Choose where connections run
 
@@ -73,9 +99,9 @@ Every installation has one connection policy, set by `SystemAdmin` in
 
 | Mode | What runs where | Best for |
 |---|---|---|
-| **Auto** (default) | Tunnels, console, files and actions use the desktop when the client reaches the first SSH hop **and the credential is key-based**; otherwise they use the server. Password credentials always use the server. | Most installations; keeps the fast path local and still works behind NAT/firewalls. |
+| **Auto** (default) | Tunnels, console, files and actions use the desktop when the client reaches the first SSH hop **and** has a key-based agent or a downloaded credential; otherwise they use the server. A password credential without a downloaded copy uses the server. | Most installations; keeps the fast path local and still works behind NAT/firewalls. |
 | **Server** | The API node opens SSH with the stored server credential. Tunnels are relayed to the desktop; console, files and actions run on the server. Only `Local` services and deployments with a fixed target port are relayed. | Clients cannot reach SSH hosts, or traffic must leave through the server. |
-| **Client** | Tunnels, console, files and actions run in the desktop with the user's SSH agent; no server SSH. `Local`, `Dynamic` and `Remote` tunnels stay available. | Operators have an SSH agent and direct network access. |
+| **Client** | Tunnels, console, files and actions run in the desktop with the SSH agent or a downloaded credential; no server SSH. `Local`, `Dynamic` and `Remote` tunnels stay available, but `Dynamic` and `Remote` require an agent key. | Operators have an SSH agent or downloaded credentials and direct network access. |
 
 The policy lives in the shared MySQL database (`ConnectionPolicies`), so every
 API node in a cluster applies the same mode without a restart. Relay
@@ -113,6 +139,12 @@ data.
 **Agent approval for AI actions**
 
 ![MCP agents page with pending agents, individual permissions, Approve and Deny buttons](docs/screenshots/approvals.png)
+
+**Credentials and offline checks**
+
+| Credentials and devices | Local check |
+|---|---|
+| ![Credential owners, offline flag and enrolled desktop devices](docs/screenshots/credentials.png) | ![Local check form with a searchable server, type, host and port](docs/screenshots/desktop-local-check.png) |
 
 **Desktop tunnels**
 
@@ -164,7 +196,9 @@ make dev
 `make dev` applies the migrations, starts MySQL and Keycloak, the API on
 `:5298` and Vite on `:3000`. Use `make full` for the single Compose stack on
 `https://localhost:8443`. Development credentials are in
-`InfraOrgITDocker/.env`.
+`InfraOrgITDocker/.env`. A source web image shows `dev` in the sidebar unless it
+is built with `--build-arg APP_VERSION=...`; published images receive the
+release tag.
 
 ## Workspace
 
@@ -193,8 +227,10 @@ make dev
 
 ## Status
 
-Backend, browser app, RBAC, remote management, MCP, desktop tunnels and the
-legacy importer are working. The full stack runs from published multi-arch
-images; the API and web images are signed with cosign and include SBOM and
-provenance on non-PR builds. The remaining release work is the rehearsal on a
-representative legacy dataset and the first Electron desktop release.
+Backend, browser app, RBAC, remote management, MCP, desktop tunnels, offline
+work and the legacy importer are working. `v0.3.12` is the current full-stack
+and desktop release; the published multi-arch API and web images are signed
+with cosign and include SBOM and provenance on non-PR builds. The remaining
+release work is Electron/Windows signing and notarization, credential rotation
+notification with a local cleanup action, clean-machine package checks and the
+rehearsal on a representative legacy dataset.
