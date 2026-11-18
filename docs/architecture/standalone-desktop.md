@@ -543,6 +543,10 @@ The first implementation slice is on the spike branches:
 - Verified on a packaged osx-arm64 app with a temporary `userData`: SQLite
   migration, local user/session, SPA served from the sidecar and
   `/api/menus` 200. Uncompressed app ~681 MB, sidecar ~158 MB.
+- Local SSH smoke against a disposable sshd from the SQLite API with a password
+  credential: reachability returned `reachable=true`; the console-start audit
+  path is the same endpoint used by the desktop. Linux and Windows sidecars and
+  Web resources were staged successfully in addition to macOS arm64/x64.
 
 **Go/no-go: GO**, conditional on these entry gates for the production slice:
 
