@@ -76,8 +76,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   SafeStorage-encrypted outbox with a local SHA-256 chain; local checks and failed offline tunnel start/stop/error events are queued and retried every five minutes. `POST /api/client-events` deduplicates by `(username, eventId)` in `ClientEvents`, records `ClientCheck`/tunnel audit rows with `source=Desktop` and the client timestamp in the detail, and keeps tunnel RBAC per server. The audit page labels `ClientCheck`.
   Verification: API integration test for idempotency/audit, outbox unit tests (chain, tamper, reload), desktop shell test and API/Web CI.
 
-- [ ] **Credential distribution (shared and per user)**
-  A credential may belong to the installation (for example a shared `x3solutions` account) or to a single user. Deliver it to the desktop only after an authorized request, encrypted for that device/user (OS keychain + short-lived download ticket), never to the browser, with rotation, revocation, per-environment policy and audit. Decide explicitly whether shared secrets may be cached for offline use; they are never part of the offline inventory cache above.
+- [x] **Credential distribution foundation (shared and per user)**
+  `ServerCredential.OwnerUserId` (null = installation-wide, set = personal) and `AllowOffline`; desktop RSA device enrollment (`DesktopDevices`), device-encrypted hybrid download (AES-GCM + RSA-OAEP), credential vault, revoke device, audit `CredentialDownload`, admin owner/offline fields and device revocation UI. Shared credentials are downloadable only by operators of an environment where they are assigned; personal credentials only by their owner. Cached offline secrets are invalidated when the credential version changes; device revocation clears them on the next enrollment attempt.
+  Verification: API integration test for enrollment, ownership, encryption, denial and revocation; desktop unit tests for device identity/vault; Web build/CI.
+
+- [ ] **Credential use in local tunnels and sessions**
+  Wire downloaded credentials into local password/key SSH for Client-mode tunnels, console/files and actions, with explicit in-memory use and no secret in command lines. Add a rotation notification and a "clear local credentials" action.
 
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
