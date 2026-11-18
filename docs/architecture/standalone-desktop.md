@@ -585,3 +585,22 @@ the release packaging gate.
 - `../../InfraOrgITApi/src/InfraOrgIt.Api/Infrastructure/Persistence/InfraOrgItDbContext.cs`
 - `../../InfraOrgITWeb/Caddyfile`
 - `../../InfraOrgITDesktop/electron/main.js`
+
+## Verification 2026-11-19
+
+- `make ci` green: API 63 unit + 111 integration, Web 228 tests, OpenAPI
+  regenerated without drift, Compose config and Redocly valid.
+- `make desktop-ci` green (85 unit) and the Electron shell test PASS.
+- `make e2e` green against the full stack (10/10).
+- Real SSH smoke on the desktop code path: `runCommand`, `openShell` and the
+  ssh2 Local tunnel against a disposable sshd with a password credential
+  returned `console-ok`, `shell-ok` and the SSH banner through the forwarded
+  local port.
+- GitHub `publish` workflow run `44423613579` completed on osx-arm64, osx-x64,
+  win-x64 and linux-x64; every artifact contains
+  `Resources/standalone/InfraOrgIt.Api` and `Resources/web/index.html`.
+  The manual run packaged API/Web `main`, so it validates the packaging path,
+  not the spike runtime; a functional standalone release still requires the
+  API/Web changes to be merged/tagged.
+- Still not verifiable here: signed/notarized clean-machine install (no
+  certificates configured) and the Web import/export page (not implemented).
