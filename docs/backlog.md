@@ -87,6 +87,9 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [ ] **Credential rotation notification and local cleanup**
   Notify the desktop when a downloaded credential version changes and add a "clear local credentials" action.
 
+- [ ] **Standalone desktop with a local instance**
+  Find a viable way to run InfraOrgIT Desktop without Keycloak, Docker, MySQL or the server stack: local storage and migrations, local authentication (OS keychain or local users), backup/restore, embedded or local API, upgrade path and packaging. Keep the current remote-instance mode. Decide the single-user/local-only scope, the security model and what is explicitly out of scope before implementation.
+
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
   Verification: workflow run green, each package installs and opens.
