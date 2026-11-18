@@ -80,8 +80,12 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   `ServerCredential.OwnerUserId` (null = installation-wide, set = personal) and `AllowOffline`; desktop RSA device enrollment (`DesktopDevices`), device-encrypted hybrid download (AES-GCM + RSA-OAEP), credential vault, revoke device, audit `CredentialDownload`, admin owner/offline fields and device revocation UI. Shared credentials are downloadable only by operators of an environment where they are assigned; personal credentials only by their owner. Cached offline secrets are invalidated when the credential version changes; device revocation clears them on the next enrollment attempt.
   Verification: API integration test for enrollment, ownership, encryption, denial and revocation; desktop unit tests for device identity/vault; Web build/CI.
 
-- [ ] **Credential use in local tunnels and sessions**
-  Wire downloaded credentials into local password/key SSH for Client-mode tunnels, console/files and actions, with explicit in-memory use and no secret in command lines. Add a rotation notification and a "clear local credentials" action.
+- [x] **Credential use in local tunnels and sessions**
+  Downloaded credentials are attached to the server target in memory and used by ssh2 for console, file and action sessions; Client-mode Local tunnels run through an ssh2 forwarding server with the jump chain and host key fingerprint. Dynamic and Remote tunnels require the SSH agent and return a clear error with a downloaded credential. Secrets stay out of command lines and tunnel rows; restart resolves the credential again.
+  Verification: desktop unit tests for the forwarding path, credential-only target hop and Dynamic/Remote rejection; API integration tests for the target fields; API/desktop CI.
+
+- [ ] **Credential rotation notification and local cleanup**
+  Notify the desktop when a downloaded credential version changes and add a "clear local credentials" action.
 
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
