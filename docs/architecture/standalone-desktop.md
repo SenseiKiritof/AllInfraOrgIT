@@ -1,0 +1,372 @@
+# Standalone desktop with a local instance
+
+Status: **study** — 2026-11-18. No implementation started.
+
+Goal: InfraOrgIT Desktop must be usable on one machine without Keycloak,
+Docker, MySQL or a remote InfraOrgIT installation. The existing remote-instance
+mode stays available; the standalone mode adds a local instance that starts and
+stops with the desktop app.
+
+## Executive summary
+
+The pragmatic option is a **self-contained .NET API sidecar** started by
+Electron, backed by **SQLite** in `userData`, serving the existing Web bundle
+from loopback and authenticating one local user without Keycloak. Reuse the
+current inventory, SSH/tunnel, audit and MCP code; do not rewrite the product
+or embed MySQL/Keycloak.
+
+This keeps feature parity with the Web app and limits the new surface to four
+areas:
+
+1. provider-neutral EF model + SQLite migrations;
+2. a `Local` host mode (SQLite session store, local session bootstrap, static
+   Web files);
+3. Electron sidecar lifecycle and packaging;
+4. local key storage, backup/restore and migration/import.
+
+Rough effort: **4–6 weeks for one developer** after a 3–5 day spike. Packaging
+size grows by roughly 80–120 MB per platform for a self-contained .NET sidecar.
+
+The main risk is not Electron: it is making 30+ MySQL migrations and the
+MySQL-specific model mapping portable without changing the production schema.
+A spike must prove that before the rest is planned in detail.
+
+## Current architecture and blockers
+
+Today the desktop is a shell around a remote instance:
+
+- `InfraOrgITDesktop` opens a URL in a `WebContentsView` and reuses the BFF
+  session (`electron/main.js`).
+- `InfraOrgITWeb` is a static SPA served by Caddy; every API call is same-origin
+  (`/api`, `/auth`, `/mcp`).
+- `InfraOrgITApi` is ASP.NET Core with `MySql.EntityFrameworkCore`, OIDC/JWT,
+  the BFF session handler and MySQL-backed sessions.
+- Keycloak provides login, roles in tokens and the desktop device flow.
+- Docker Compose supplies MySQL, Keycloak, the API and Caddy.
+
+Blocking assumptions for a local instance:
+
+| Area | Current assumption | Needed for standalone |
+|---|---|---|
+| Database | `ConnectionStrings:MySql`, `UseMySQL` (`Program.cs:49`) | SQLite provider and migrations |
+| Sessions | `MySqlSessionStore` uses `GET_LOCK`/`DO RELEASE_LOCK` | SQLite/in-process session store |
+| Login | `OidcOptions` validated at startup; `/auth/login` redirects to Keycloak | Local bootstrap session; OIDC optional |
+| Web origin | Caddy serves `/srv` and proxies `/api` | API serves the SPA or a local proxy |
+| Instance URL | Remote HTTPS; loopback HTTP allowed by `normalizeInstanceUrl` | Local loopback instance is accepted; packaged policy must allow it explicitly |
+| Secrets | API credential key from config; desktop uses `safeStorage` | Electron generates/decrypts the key and passes it to the sidecar |
+| Packaging | Electron only | Sidecar binary plus Web `dist` in the app bundle |
+| Updates | Replace the Electron app bundle | Already atomic; sidecar is inside the bundle |
+
+Relevant code:
+
+- `InfraOrgITApi/src/InfraOrgIt.Api/Program.cs` — provider, auth and OIDC
+  validation, health checks.
+- `InfraOrgITApi/src/InfraOrgIt.Api/Infrastructure/Persistence/InfraOrgItDbContext.cs`
+  — MySQL column types (`longtext`, `json`, `datetime(6)`) and check
+  constraints.
+- `InfraOrgITApi/src/InfraOrgIt.Api/BuildingBlocks/Auth/MySqlSessionStore.cs`
+  — MySQL lock and session table.
+- `InfraOrgIt.Web` `Caddyfile` — single-origin static + proxy contract.
+- `InfraOrgITDesktop/electron/main.js` — instance partitions, tunnel manager,
+  credential vault and updater.
+
+## Options
+
+### A. .NET sidecar + SQLite (recommended)
+
+Electron starts a self-contained `InfraOrgIt.Api` binary on `127.0.0.1` with a
+random port and a bootstrap secret. The API uses SQLite, serves the Web bundle
+and exposes the same endpoints. Electron creates a local instance tab pointing
+at that loopback origin.
+
+**Pros:** reuses all domain, RBAC, SSH, tunnel, audit and MCP code; same Web UI;
+no Docker; one data file; backup is a file copy; remote mode unchanged.
+
+**Cons:** .NET runtime/binary size; two processes; provider-neutral data layer
+work; local auth has to be designed carefully.
+
+### B. Desktop-only local manager
+
+Implement inventory and tunnels in the Electron manager with a JSON/SQLite
+store and no Web app.
+
+**Pros:** small runtime, fast start.
+
+**Cons:** duplicates the entire product; loses audit, diagrams, MCP, API tests,
+file browser and most UI; divergence grows immediately. Rejected.
+
+### C. Bundle MySQL + Keycloak
+
+Ship both services in Docker or as local binaries.
+
+**Pros:** no code changes.
+
+**Cons:** defeats “standalone”; huge install, ports, upgrades, backups and
+security surface; Keycloak still needs a realm and admin bootstrap. Rejected.
+
+### D. Rewrite the API in Node/Electron
+
+Move the domain into the main process.
+
+**Pros:** one process.
+
+**Cons:** rewrite of a tested .NET backend, EF model, migrations, MCP server and
+SSH stack. Rejected.
+
+## Recommended architecture
+
+```text
+┌──────────────────────────── Electron ────────────────────────────┐
+│ manager window + instance tab (WebContentsView)                  │
+│   │                                                              │
+│   ├─ local instance: http://127.0.0.1:<port> (persist partition)  │
+│   ├─ remote instances: existing HTTPS URLs                       │
+│   └─ sidecar supervisor: spawn, health, logs, stop, restart      │
+│          │                                                       │
+│          ▼                                                       │
+│   InfraOrgIt.Api --local (self-contained .NET)                   │
+│     ├─ SQLite: userData/standalone/infraorgit.db                 │
+│     ├─ Web bundle: resources/web (served same-origin)            │
+│     ├─ local session bootstrap + CSRF                            │
+│     └─ SSH/tunnels/audit/MCP as today                            │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Electron owns the process lifecycle and the OS key material. The sidecar owns
+the data and never opens a network listener beyond loopback.
+
+### Host mode
+
+Add `Local:Enabled` and `Database:Provider=Sqlite`:
+
+- `Program.cs` selects `UseSqlite(connectionString)` when the provider is
+  `Sqlite`; production keeps `UseMySQL`.
+- `/api/session`, `/api/session/theme`, menus, roles and the Web UI work
+  unchanged once a local session exists.
+- `/auth/login` and `/auth/desktop-session` return `404` or a local-mode error;
+  the SPA never reaches them because the local session is already present.
+- `Mcp:Oidc` stays empty in local mode; personal API tokens continue to work.
+  OAuth discovery endpoints are not mapped when no OIDC authority is set.
+- Audit anchor and OpenTelemetry stay opt-in; local mode defaults them off.
+
+### Local Web hosting
+
+The sidecar serves the SPA from `Local:WebRoot` (packaged `web/` directory)
+with `UseDefaultFiles`, `UseStaticFiles` and a fallback to `index.html` for
+client routes. This keeps one origin and avoids CORS, custom protocols and a
+second static server. The existing security headers move from Caddy into the
+API middleware for local mode (or the API serves the same headers).
+
+Alternative if serving static files in the API is unwanted: an Electron
+`protocol.handle("https://app.local")` handler serving the same bundle and
+proxying `/api` to the sidecar. It is more moving parts; not preferred for the
+first iteration.
+
+### Local authentication and session bootstrap
+
+Single-user local mode does not need a login screen:
+
+1. Electron starts the sidecar with a random `INFRAORGIT_LOCAL_BOOTSTRAP`
+   secret (never written to disk) and a loopback-only URL.
+2. Electron calls `POST /auth/local/session` through the instance partition with
+   that secret. The API creates or extends a session for the fixed local user
+   and sets the normal HttpOnly session cookie.
+3. The SPA loads; `/api/session` returns the session and CSRF token. All
+   existing CSRF and origin checks stay enabled.
+4. The local user has `SystemAdmin`, so the initial environment, provider,
+   credentials and servers can be created from the UI.
+
+The bootstrap endpoint is anonymous only in the sense that it does not require
+a cookie; it must require the per-launch secret, bind to loopback and be rate
+limited. The local OS account is the trust boundary. No local password is
+stored. If a password is later desired, it can be a local-only unlock screen,
+not a Keycloak replacement.
+
+Open design point: whether the local session should be persistent across
+restarts (session row in SQLite, cookie in the partition) or recreated on every
+launch. Recommendation: persist it, but rotate the bootstrap secret each
+launch; revoke it on logout.
+
+### Database and migrations
+
+SQLite is the only realistic embedded store. The domain uses no MySQL-only
+queries except `MySqlSessionStore`; the schema does use MySQL column types and
+migration DDL.
+
+Plan:
+
+- Move provider-specific mappings out of `OnModelCreating` into conditional
+  configuration: `longtext`, `json` and `datetime(6)` become provider-specific
+  or generic (`TEXT`, ISO timestamps).
+- Add `Microsoft.EntityFrameworkCore.Sqlite` and a second migrations assembly
+  or a `Migrations/Sqlite` folder with its own snapshot.
+- Keep the MySQL migrations frozen and generate SQLite migrations from the same
+  model. Verify schema parity with a table/column diff in CI.
+- Replace `MySqlSessionStore` with `LocalSessionStore` (EF + `SemaphoreSlim`)
+  selected by provider; keep the same `ISessionStore` contract.
+- Enable WAL, `busy_timeout`, foreign keys and a single writer. The desktop is
+  single-user, so contention is minimal.
+- Store the DB at `userData/standalone/infraorgit.db`. Keep it outside the app
+  bundle so updates never touch data.
+
+Do not use `EnsureCreated`: it bypasses migrations, seed data and future
+upgrades. If SQLite migrations prove too costly, a fallback is a versioned
+schema initializer owned by the sidecar; that is a deliberate compromise, not
+the default.
+
+### Credential key and secrets
+
+The API encrypts SSH credentials with AES-GCM keys
+(`ServerAccess:CredentialKeys`). In local mode:
+
+- Electron generates a 32-byte key on first run and stores it encrypted with
+  `safeStorage` (Keychain/DPAPI/Secret Service).
+- On each sidecar start Electron decrypts the key and passes it through the
+  child environment (`ServerAccess__CredentialKeys__1`,
+  `ServerAccess__CurrentKeyVersion=1`).
+- If `safeStorage` is unavailable, the key stays in memory for that run and the
+  app warns that credentials will not survive a restart. This mirrors the
+  existing token-store behavior.
+- Backups contain the encrypted credential ciphertext; the key is not in the
+  backup. Exporting to another machine requires a key export or re-entering
+  credentials. This must be explicit in the backup UI.
+
+### Backups and import
+
+- Local backup: stop writes (or use SQLite `VACUUM INTO`) and copy the DB to a
+  user-selected folder. Include a JSON manifest with app/schema version.
+- Restore: validate manifest, close the DB, replace the file atomically, reopen
+  and run migrations.
+- Initial standalone scope: start empty. Importing an existing remote MySQL
+  database is a separate project; offer JSON export/import from the Web app
+  later. Do not ship a MySQL client in the desktop.
+- Keep the existing desktop `safeStorage` stores (instances, credentials,
+  offline cache, outbox) outside the sidecar DB.
+
+### Packaging and lifecycle
+
+- Publish the API per target RID:
+  `dotnet publish -c Release -r osx-arm64 --self-contained` (and osx-x64,
+  win-x64, linux-x64).
+- Put the publish output under `Contents/Resources/api/` (macOS) or the
+  platform equivalent, and the Web `dist` under `Resources/web/`.
+- Electron picks a free loopback port, spawns the sidecar with a per-launch
+  bootstrap secret, waits for `/health/live`, then creates/opens the local
+  instance. On quit, send SIGTERM/`taskkill` and wait; the updater already
+  swaps the whole app bundle atomically.
+- Sidecar logs go to `userData/logs/api.log`, rotated by size. A crash restarts
+  the sidecar once, then shows an actionable error in the manager.
+- The local instance is a normal instance record with a reserved URL/name; it
+  cannot be removed while standalone mode is active. Remote instances remain
+  unchanged.
+- Packaging may need `extraResource` in `@electron/packager`; build time and
+  artifact size grow. Verify on all four targets before release.
+
+### Security model
+
+- Bind only `127.0.0.1`; never `0.0.0.0`. No LAN firewall exception.
+- Per-launch bootstrap secret; random port; no secret in URLs or logs.
+- Keep CSRF, Origin checks, HttpOnly cookie, CSP and frame denial. For loopback
+  HTTP set `Auth:SecureCookies=false` only in local mode; production remains
+  HTTPS with `__Host-` cookies.
+- The local OS account is the authentication boundary. Document that a shared
+  OS account or malware running as the same user can read the app data.
+- The sidecar must reject non-loopback requests even if a proxy is configured.
+- MCP remains local; personal tokens are stored as today. OAuth/Keycloak
+  discovery is absent in local mode.
+- Code signing is still required for a trustworthy desktop distribution; the
+  unsigned build warning remains.
+
+### Migration path from remote to local
+
+Out of scope for the first standalone release. Users can recreate inventory or
+use a future JSON import. A direct MySQL-to-SQLite migration would require a
+schema/type converter, credential rewrap and ID preservation; estimate it as a
+separate item after the local mode is stable.
+
+## Test strategy
+
+- API unit/integration tests run against both providers for the subset that
+  touches the DB; keep the existing Testcontainers MySQL suite as the
+  production gate.
+- Add SQLite integration tests: migrations on an empty file, seed roles/menu,
+  session create/expire/revoke, credential encrypt/decrypt, audit chain.
+- Desktop unit tests: sidecar supervisor (port, secret, health timeout, crash
+  restart, quit), local instance creation, data directory paths.
+- Web tests: no changes expected; add a mocked local session bootstrap.
+- E2E: start the packaged app (or test harness) with a temporary `userData`,
+  create a provider/server, open a console against a fake SSH server, restart
+  and verify data + session survive.
+- CI: matrix packaging of the sidecar per RID; verify the sidecar starts and
+  `/health/live` is 200 from a smoke script.
+
+## Risks
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| MySQL-specific model/migrations resist SQLite | high | Spike first; provider-neutral mappings; separate migrations; schema diff test |
+| Sidecar size/startup | medium | Self-contained publish; measure; consider trimming (EF may limit) |
+| Local auth/CSRF gaps | high | Bootstrap secret, loopback bind, keep CSRF/Origin, security review |
+| Credential key loss | high | safeStorage key + explicit backup warning; never silently regenerate |
+| Two-process lifecycle bugs | medium | supervisor state machine + tests; one restart then clear error |
+| Packaging/signing complexity | medium | build sidecar per RID in the publish workflow; sign/notarize the whole bundle |
+| Feature expectations | medium | publish a scope table: local mode parity, import/export and MCP limitations |
+
+## Phased plan and effort
+
+| Phase | Work | Estimate |
+|---|---|---|
+| 0. Spike | SQLite provider + conditional mappings + one migration; start API on SQLite; local session bootstrap; serve Web `dist`; one E2E smoke | 3–5 days |
+| 1. Data layer | Full SQLite migrations, session store, seed/versioning, backup/restore primitives, dual-provider tests | 5–8 days |
+| 2. Local host/auth | `Local` config, bootstrap endpoint, cookie/CSRF, static hosting, health/logging, disable OIDC paths | 4–6 days |
+| 3. Desktop integration | Sidecar supervisor, port/secret, local instance, quit/crash handling, settings/data paths | 4–6 days |
+| 4. Secrets/import | safeStorage key handoff, corruption/rotation, backup UI, import/export decision and implementation | 3–5 days |
+| 5. Hardening/release | Security review, tests, dual-provider CI, packaging all RIDs, docs, clean-machine checks | 4–6 days |
+| **Total** | | **23–36 dev days** |
+
+Add signing/notarization and a clean-machine test matrix as release dependencies,
+not as part of the estimate.
+
+## Spike acceptance criteria
+
+The spike is successful only if all of these pass on a developer machine:
+
+1. A self-contained API starts with `Database:Provider=Sqlite` on a fresh
+   `userData` directory and applies SQLite migrations without MySQL.
+2. Roles, menu and connection policy seed correctly; a local session can call
+   `/api/session` and create a provider, environment, server and credential.
+3. The Web bundle loads from the sidecar origin; login is bypassed with the
+   bootstrap secret; CSRF still rejects a mutation without the token.
+4. A Client tunnel and an SSH console work from the local instance against the
+   fake SSH fixture.
+5. The app survives a restart with data and the local session intact; the API
+   stops when Electron quits.
+6. No production MySQL migration or schema is changed.
+7. The packaged macOS arm64 app starts the sidecar from `Resources` and passes
+   the same smoke test.
+
+If criterion 1 or 6 fails, stop and revisit the provider strategy before
+writing desktop integration code.
+
+## Open decisions
+
+- Persist the local session or recreate it on every launch? (Recommendation:
+  persist, rotate bootstrap secret.)
+- Is the first standalone release single-user only? (Recommendation: yes.)
+- Import/export format and whether remote-to-local import is in scope for v1.
+- Where to store the credential key when `safeStorage` is unavailable: block
+  local credential use or keep it in memory only.
+- Whether to ship a reduced MCP surface in local mode or keep it identical.
+- Whether to sign the sidecar separately or rely on the signed/notarized app
+  bundle.
+
+## References
+
+- `../backlog.md` — standalone desktop item.
+- `mcp-server-and-tunnels.md` — existing tunnel/MCP design.
+- `../adr/012-electron-desktop-shell.md` — Electron shell decision.
+- `../adr/013-connection-policy.md` — transport policy.
+- `../../InfraOrgITApi/src/InfraOrgIt.Api/Program.cs`
+- `../../InfraOrgITApi/src/InfraOrgIt.Api/Infrastructure/Persistence/InfraOrgItDbContext.cs`
+- `../../InfraOrgITWeb/Caddyfile`
+- `../../InfraOrgITDesktop/electron/main.js`
