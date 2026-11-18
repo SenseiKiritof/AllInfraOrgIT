@@ -1,6 +1,6 @@
 # Standalone desktop with a local instance
 
-Status: **study** — 2026-11-18. No implementation started.
+Status: **study + spike** — 2026-11-18. SQLite/local-host spike completed; desktop packaging and import/export are next.
 
 Goal: InfraOrgIT Desktop must be usable on one machine without Keycloak,
 Docker, MySQL or a remote InfraOrgIT installation. The existing remote-instance
@@ -497,6 +497,32 @@ The spike is successful only if all of these pass on a developer machine:
 
 If criterion 1 or 6 fails, stop and revisit the provider strategy before
 writing desktop integration code.
+
+## Spike results (2026-11-18)
+
+The API spike is on branch `spike/standalone-sqlite` and proves the core path:
+
+- Added the SQLite provider and a derived `SqliteInfraOrgItDbContext` with its
+  own migration set; the MySQL model/schema is unchanged.
+- The first generated SQLite migration failed on `CHAR_LENGTH` in the audit
+  hash check. The check constraint now uses `length` only for SQLite.
+- Runtime registration must resolve the base context to the derived instance
+  (`AddDbContext<Sqlite...>` + a scoped `InfraOrgItDbContext` alias); otherwise
+  EF looks for the base migration set and applies nothing.
+- Local mode starts the API entirely on SQLite, applies the migration, serves
+  the Web `dist` from the same origin, creates a local SystemAdmin session with
+  the bootstrap secret and accepts a CSRF-protected provider create.
+- The static Web root conflicts with the existing `GET /` API info endpoint;
+  local mode must leave `/` to the SPA.
+- Existing MySQL unit and integration suites (63 + 108) stay green.
+
+Still open from the spike acceptance list:
+
+- Electron sidecar supervisor and packaged app;
+- local tunnel/console smoke against the fake SSH fixture;
+- import/export implementation and round-trip fixture;
+- local mode should skip OIDC option validation and the Keycloak readiness
+  check instead of requiring dummy OIDC settings.
 
 ## Open decisions
 
