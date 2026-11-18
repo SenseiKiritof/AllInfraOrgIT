@@ -228,7 +228,7 @@ release tag.
 ## Status
 
 Backend, browser app, RBAC, remote management, MCP, desktop tunnels, offline
-work and the legacy importer are working. `v0.3.12` is the current full-stack
+work and the legacy importer are working. The current 0.3.x line is the full-stack
 and desktop release; the published multi-arch API and web images are signed
 with cosign and include SBOM and provenance on non-PR builds. The remaining
 release work is Electron/Windows signing and notarization, credential rotation
