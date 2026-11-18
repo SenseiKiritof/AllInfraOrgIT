@@ -524,6 +524,36 @@ Still open from the spike acceptance list:
 - local mode should skip OIDC option validation and the Keycloak readiness
   check instead of requiring dummy OIDC settings.
 
+## Implementation update (2026-11-18)
+
+The first implementation slice is on the spike branches:
+
+- API: versioned `.infraorgit.json` export and `replace` import with checksum,
+  validation, dry-run token, pre-import SQLite backup and credential metadata.
+  Smoke: export/import of provider + environment + server into a fresh DB
+  returns the same rows; MySQL suites stay green.
+- Desktop: `DESKTOP_STANDALONE=1` starts the self-contained API on a free
+  loopback port, stores SQLite/backups under `userData/standalone`, injects the
+  local session into the instance partition, creates the **InfraOrgIT locale**
+  instance and stops the sidecar on quit.
+- Packaging: `package.js --api-dir --web-dir` copies `Resources/standalone` and
+  `Resources/web`; `publish.yml` checks out API/Web sources, publishes the API
+  per target RID and builds the Web bundle.
+- Verified on a packaged osx-arm64 app with a temporary `userData`: SQLite
+  migration, local user/session, SPA served from the sidecar and
+  `/api/menus` 200. Uncompressed app ~681 MB, sidecar ~158 MB.
+
+**Go/no-go: GO**, conditional on these entry gates for the production slice:
+
+1. local SSH tunnel and console smoke against a disposable SSH target;
+2. local mode skips OIDC option validation and the Keycloak readiness check;
+3. import/export Web UI and a golden round-trip test;
+4. signed/notarized package on a clean machine.
+
+No schema or MySQL production path regression was found. The remaining work is
+the Electron/API wiring review, security review of the loopback bootstrap and
+the release packaging gate.
+
 ## Open decisions
 
 - Persist the local session or recreate it on every launch? (Recommendation:
