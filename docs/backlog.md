@@ -88,8 +88,8 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
   Notify the desktop when a downloaded credential version changes and add a "clear local credentials" action.
 
 - [ ] **Standalone desktop with a local instance**
-  Find a viable way to run InfraOrgIT Desktop without Keycloak, Docker, MySQL or the server stack: local storage and migrations, local authentication (OS keychain or local users), backup/restore, embedded or local API, upgrade path and packaging. Keep the current remote-instance mode. Decide the single-user/local-only scope, the security model and what is explicitly out of scope before implementation.
-  Study: [`docs/architecture/standalone-desktop.md`](architecture/standalone-desktop.md) recommends a self-contained .NET sidecar + SQLite + local session bootstrap, with a 3–5 day spike before the 23–36 day implementation. Next: run the spike and record the provider/migration result.
+  Find a viable way to run InfraOrgIT Desktop without Keycloak, Docker, MySQL or the server stack: local storage and migrations, local authentication (OS keychain or local users), backup/restore, versioned inventory export/import, embedded or local API, upgrade path and packaging. Keep the current remote-instance mode. Decide the single-user/local-only scope, the security model and what is explicitly out of scope before implementation.
+  Study: [`docs/architecture/standalone-desktop.md`](architecture/standalone-desktop.md) recommends a self-contained .NET sidecar + SQLite + local session bootstrap, with a 3–5 day spike before the 27–42 day implementation. Import/export is part of v1: checksummed JSON, dry-run, `replace` into an empty local DB, credential metadata without secrets. Next: run the spike and record the provider/migration result.
 
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
