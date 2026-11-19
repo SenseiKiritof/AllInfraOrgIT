@@ -115,6 +115,9 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [ ] **Pentest 2026-11 accepted/operational residual**
   Inventory/environment reads stay open to authenticated users by design (D7); per-environment filtering is a product decision. The audit chain anchor is implemented (HMAC webhook) but needs a real append-only SIEM/WORM sink. Existing Keycloak realms need the MFA flow recreated and enabled explicitly (`KEYCLOAK_MFA=true`; `--import-realm` does not update them); master realm/brokered IdPs remain operational. Plain FTP is off in deploy and only a dev/legacy opt-in. Images are signed with cosign, SBOM/provenance are published on non-PR builds.
 
+- [ ] **OWASP 2026-11-19 remediation**
+  Signed Electron update manifest and signed/notarized packages (OW-01); redact or omit command scripts from inventory export (OW-02); OS-keychain local credential key or explicit fallback consent (OW-03); signed export manifest for cross-boundary files (OW-04). Report: [`docs/security/owasp-2026-11-19.md`](security/owasp-2026-11-19.md).
+
 ## Workspace
 
 - [x] **Rename workspace and subrepositories**

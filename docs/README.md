@@ -25,6 +25,7 @@ Index of the Phase 1 documents.
 | `operations/release.md` | release checklist, `make release`, tags, push and rollback |
 | `security/permissions.md` | permission matrix verified on the legacy app, current BFF session and the D7 read model |
 | `security/pentest-2026-11.md` | internal penetration test: findings, OWASP mappings and remediation status |
+| `security/owasp-2026-11-19.md` | OWASP Top 10 re-review of the full stack, including standalone local mode and export/import |
 | `security/transport.md` | transport warnings: FTP cleartext, desktop HTTP/dev TLS and local token exposure |
 | `ux/pages.md` | page map, flows and differences from the original |
 | `migration/legacy-mapping.md` | legacy → new schema mapping, IDs, credentials, diagrams |
