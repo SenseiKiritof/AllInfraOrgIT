@@ -551,8 +551,8 @@ The first implementation slice is on the spike branches:
 **Go/no-go: GO**, conditional on these entry gates for the production slice:
 
 1. local SSH tunnel and console smoke against a disposable SSH target;
-2. import/export Web UI and a golden round-trip test (API round-trip now
-   covered by three SQLite integration tests; UI still pending);
+2. import/export Web UI and a golden round-trip test (API and UI smoke now
+   covered; a repeatable UI fixture remains nice to have);
 3. signed/notarized package on a clean machine;
 4. four-target package matrix (Linux and Windows staging already packaged
    manually; CI matrix still to run).
@@ -606,5 +606,8 @@ the release packaging gate.
   `userData`: SQLite sidecar healthy, local user created, SPA loaded, local
   instance tab opened, no crash report. GHCR API/Web `0.3.17` manifests and the
   four desktop release archives are present.
+- **Impostazioni → Dati e backup** UI tested against the SQLite instance:
+  export download, import preview, confirm/replace and success/backup message.
+  The full stack also exported the inventory from the same page.
 - Still not verifiable here: signed/notarized clean-machine install (no
-  certificates configured) and the Web import/export page (not implemented).
+  certificates configured).
