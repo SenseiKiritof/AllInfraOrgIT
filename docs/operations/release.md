@@ -100,12 +100,17 @@ The desktop repo is tagged with the same `v0.MINOR.PATCH`, from `main`. The
   (`osx-x64`), Windows x64 (`win-x64`) and Linux x64 (`linux-x64`);
 - uploads the archives and their `.sha256` files as workflow artifacts and to
   the GitHub Release named after the tag (created or updated, never a new tag);
+- builds `checksums.txt` with all archive hashes, signs it with the
+  `UPDATE_SIGNING_KEY` repository secret and verifies the result against
+  `electron/update-public.pem`; the release fails when the secret is missing,
+  so an unsigned release is never published;
 - publishes unsigned packages. macOS signing/notarization and Windows signing
   are not configured; a future signing setup can add them without changing the
   tag flow.
 
 The Electron app is built with npm and packaged by the workflow. Never commit
-certificates or passwords.
+certificates or passwords. The manifest signing key lives only in the
+`UPDATE_SIGNING_KEY` secret: rotate it together with `electron/update-public.pem`.
 
 Manual `workflow_dispatch` runs only upload workflow artifacts. Re-running the
 workflow for the same tag updates the existing GitHub Release.
