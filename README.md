@@ -93,8 +93,9 @@ remote mode.
 The local API exposes versioned inventory export/import
 (`.infraorgit.json`): checksummed JSON, dry-run summary, `replace` into an empty
 local database, automatic pre-import backup and credential metadata without
-secrets. The package includes the API and Web resources; the Settings toggle
-takes effect on the next launch.
+secrets. **Impostazioni → Dati e backup** gives the same export, preview,
+confirm/replace and warning flow in the browser. The package includes the API
+and Web resources; the Settings toggle takes effect on the next launch.
 
 ### Credentials and device enrollment
 
