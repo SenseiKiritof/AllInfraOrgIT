@@ -83,19 +83,20 @@ change.
 ### Standalone desktop with a local instance
 
 InfraOrgIT Desktop can run without Keycloak, Docker, MySQL or a remote server:
-**Impostazioni → Istanza locale** starts the bundled .NET API on loopback, keeps
+**Impostazioni → Istanze locali** starts the bundled .NET API on loopback, keeps
 the inventory in SQLite under the desktop data directory and serves the normal
-Web workspace. The local user is a SystemAdmin with no login prompt; the OS
-account is the trust boundary. Remote instances stay available in the same
-window. Local SSH tunnels, console, files and actions use the same code as the
-remote mode.
+Web workspace. Several local instances can coexist, each with its own database,
+backups and credential key; remote instances stay available in the same window
+and a second launch focuses the existing one. The local user is a SystemAdmin
+with no login prompt; the OS account is the trust boundary. Local SSH tunnels,
+console, files and actions use the same code as the remote mode.
 
 The local API exposes versioned inventory export/import
 (`.infraorgit.json`): checksummed JSON, dry-run summary, `replace` into an empty
 local database, automatic pre-import backup and credential metadata without
 secrets. **Impostazioni → Dati e backup** gives the same export, preview,
 confirm/replace and warning flow in the browser. The package includes the API
-and Web resources; the Settings toggle takes effect on the next launch.
+and Web resources; new local instances start on the next launch.
 
 ### Credentials and device enrollment
 
