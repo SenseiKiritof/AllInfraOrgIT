@@ -90,7 +90,7 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [ ] **Standalone desktop with a local instance**
   Find a viable way to run InfraOrgIT Desktop without Keycloak, Docker, MySQL or the server stack: local storage and migrations, local authentication (OS keychain or local users), backup/restore, versioned inventory export/import, embedded or local API, upgrade path and packaging. Keep the current remote-instance mode. Decide the single-user/local-only scope, the security model and what is explicitly out of scope before implementation.
   Study: [`docs/architecture/standalone-desktop.md`](architecture/standalone-desktop.md) recommends a self-contained .NET sidecar + SQLite + local session bootstrap, with a 3–5 day spike before the 27–42 day implementation. Import/export is part of v1: checksummed JSON, dry-run, `replace` into an empty local DB, credential metadata without secrets.
-  Released in `v0.3.17` after full gates: SQLite migration, local session/static Web, export/import with backup and three SQLite integration tests, Electron sidecar with one restart, Settings toggle, local SSH exec/shell/tunnel smoke, `make ci`/`make desktop-ci`/`make e2e` green. Publish workflows built all four artifacts with sidecar + Web resources; the osx-arm64 artifact launched with fresh `userData` and served the local instance. Remaining: import/export Web UI + UI round-trip, signed/notarized clean-machine package.
+  Released in `v0.3.17`/`v0.3.18` after full gates: SQLite migration, local session/static Web, export/import with backup and three SQLite integration tests, Settings toggle, sidecar with one restart, local SSH exec/shell/tunnel smoke, `make ci`/`make desktop-ci`/`make e2e` green, and Settings → Dati e backup UI tested against SQLite and the full stack. Publish workflows built all four artifacts with sidecar + Web resources; the osx-arm64 artifact launched with fresh `userData`. Remaining: signed/notarized clean-machine package.
 
 - [ ] **Electron packaging release**
   Run the Electron publish workflow and verify the four packages on clean machines: osx-arm64, osx-x64, win-x64 and linux-x64, with artifacts and GitHub Release assets present.
@@ -114,6 +114,9 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 
 - [ ] **Pentest 2026-11 accepted/operational residual**
   Inventory/environment reads stay open to authenticated users by design (D7); per-environment filtering is a product decision. The audit chain anchor is implemented (HMAC webhook) but needs a real append-only SIEM/WORM sink. Existing Keycloak realms need the MFA flow recreated and enabled explicitly (`KEYCLOAK_MFA=true`; `--import-realm` does not update them); master realm/brokered IdPs remain operational. Plain FTP is off in deploy and only a dev/legacy opt-in. Images are signed with cosign, SBOM/provenance are published on non-PR builds.
+
+- [ ] **OWASP 2026-11-19 remediation**
+  Signed Electron update manifest and signed/notarized packages (OW-01); redact or omit command scripts from inventory export (OW-02); OS-keychain local credential key or explicit fallback consent (OW-03); signed export manifest for cross-boundary files (OW-04). Report: [`docs/security/owasp-2026-11-19.md`](security/owasp-2026-11-19.md).
 
 ## Workspace
 

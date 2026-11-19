@@ -68,6 +68,9 @@ TARGET_FIELDS = {
     "sshHost",
     "sshPort",
     "username",
+    "clientAuth",
+    "credentialId",
+    "hostKeyFingerprint",
     "jump",
     "jumps",
     "targets",
@@ -97,6 +100,7 @@ SERVICE_FIELDS = {
     "autoStart",
     "enabled",
 }
+SENSITIVE_ALLOWED = {"credentialid"}
 SENSITIVE_FRAGMENTS = (
     "password",
     "secret",
@@ -387,6 +391,18 @@ def _denial(payload: Optional[dict]) -> Tuple[bool, str]:
     result = _result(payload)
     if result and result.get("isError") is True:
         return True, _content_text(payload) or "tool reported isError=true"
+    text = _content_text(payload)
+    if text:
+        try:
+            decision = json.loads(text)
+        except json.JSONDecodeError:
+            decision = None
+        if isinstance(decision, dict) and decision.get("status") in {
+            "agent_approval_required",
+            "permission_required",
+            "denied",
+        }:
+            return True, f"{decision['status']}: {decision.get('message', '')}"
     return False, "tool reported success"
 
 
@@ -395,7 +411,9 @@ def _sensitive_field(value: Any, path: str = "") -> Optional[str]:
         for key, child in value.items():
             child_path = f"{path}.{key}" if path else key
             lowered = key.lower()
-            if any(fragment in lowered for fragment in SENSITIVE_FRAGMENTS):
+            if lowered not in SENSITIVE_ALLOWED and any(
+                fragment in lowered for fragment in SENSITIVE_FRAGMENTS
+            ):
                 return child_path
             found = _sensitive_field(child, child_path)
             if found:
