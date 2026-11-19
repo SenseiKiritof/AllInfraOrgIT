@@ -602,5 +602,9 @@ the release packaging gate.
   The manual run packaged API/Web `main`, so it validates the packaging path,
   not the spike runtime; a functional standalone release still requires the
   API/Web changes to be merged/tagged.
+- `v0.3.17` published. The osx-arm64 artifact was launched with a fresh
+  `userData`: SQLite sidecar healthy, local user created, SPA loaded, local
+  instance tab opened, no crash report. GHCR API/Web `0.3.17` manifests and the
+  four desktop release archives are present.
 - Still not verifiable here: signed/notarized clean-machine install (no
   certificates configured) and the Web import/export page (not implemented).
