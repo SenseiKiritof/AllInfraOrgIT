@@ -606,6 +606,10 @@ the release packaging gate.
   `userData`: SQLite sidecar healthy, local user created, SPA loaded, local
   instance tab opened, no crash report. GHCR API/Web `0.3.17` manifests and the
   four desktop release archives are present.
+- `v0.4.0` packaged the database-backed application types: the installed
+  sidecar applied the SQLite migrations, `ApplicationTypes` has the 12 seeded
+  rows and the FK from `Applications.Type`, and the embedded Web served the
+  local instance.
 - **Impostazioni → Dati e backup** UI tested against the SQLite instance:
   export download, import preview, confirm/replace and success/backup message.
   The full stack also exported the inventory from the same page.
