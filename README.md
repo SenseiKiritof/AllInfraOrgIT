@@ -80,6 +80,22 @@ instance returns. Offline credential copies exist only when `AllowOffline` is
 enabled and are dropped on logout, device revocation or a credential version
 change.
 
+### Standalone desktop with a local instance
+
+InfraOrgIT Desktop can run without Keycloak, Docker, MySQL or a remote server:
+**Impostazioni → Istanza locale** starts the bundled .NET API on loopback, keeps
+the inventory in SQLite under the desktop data directory and serves the normal
+Web workspace. The local user is a SystemAdmin with no login prompt; the OS
+account is the trust boundary. Remote instances stay available in the same
+window. Local SSH tunnels, console, files and actions use the same code as the
+remote mode.
+
+The local API exposes versioned inventory export/import
+(`.infraorgit.json`): checksummed JSON, dry-run summary, `replace` into an empty
+local database, automatic pre-import backup and credential metadata without
+secrets. The package includes the API and Web resources; the Settings toggle
+takes effect on the next launch.
+
 ### Credentials and device enrollment
 
 `/credentials` marks a credential as shared (installation-wide) or owned by a
@@ -199,6 +215,11 @@ make dev
 `InfraOrgITDocker/.env`. A source web image shows `dev` in the sidebar unless it
 is built with `--build-arg APP_VERSION=...`; published images receive the
 release tag.
+
+For a machine with no server stack, install the desktop package and enable
+**Impostazioni → Istanza locale**. The package carries the API and Web bundle;
+data stays in the desktop user-data directory. The packages are unsigned, so
+the first launch needs the usual Gatekeeper/SmartScreen confirmation.
 
 ## Workspace
 
