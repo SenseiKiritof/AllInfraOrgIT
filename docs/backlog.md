@@ -20,6 +20,9 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [x] **Database query console**
   `Query DB` on database deployments: server-side clients over SSH (MySQL/MariaDB, PostgreSQL, MongoDB, Redis, SQL Server, Oracle), no database password stored in InfraOrgIT, read-only transaction for SQL engines, write/escape blocklist and 20 s timeout. MySQL/PostgreSQL/Oracle enforce reads in the database; MongoDB, Redis and SQL Server need a read-only login on the server. No query allowlist: joins, CTEs, pipelines and read commands are allowed. Verification: 16 unit tests on the script builder, integration test with fake SSH, Playwright on the full stack.
 
+- [x] **Automatic OS version and EOL check**
+  Hourly background check over SSH (read-only): `/etc/os-release` on Ubuntu, Debian, RHEL/Alma/Rocky/Oracle and SLES; endoflife.date fallback with a 24 h cache for the major target and the EOL date. Last result only on the server row: current version, target, LTS flag, EOL, status and detail. EOL is orange within 60 days and red after expiry. Global enabled/LTS policy plus a per-server override; RHEL, SLES and Debian stay LTS. Verification: parser/catalog/checker unit tests, integration policy test, Playwright on the full stack.
+
 ## MCP
 
 - [x] **Read tools and audit**
