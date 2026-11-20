@@ -17,6 +17,9 @@ Opened on 2026-10-27. Each item is work not done yet: tick only after its verifi
 - [x] **Servers page UI bugs**
   Sidebar made scrollable (`min-h-0 overflow-y-auto`) and shell `overflow-hidden`; tables already inside `overflow-x-auto`. The residual overlay from the screenshot is not reproducible after refresh: if it comes back, note the route and menu state.
 
+- [x] **Database query console**
+  `Query DB` on database deployments: server-side clients over SSH (MySQL/MariaDB, PostgreSQL, MongoDB, Redis, SQL Server, Oracle), no database password stored in InfraOrgIT, read-only transaction for SQL engines, write/escape blocklist and 20 s timeout. MySQL/PostgreSQL/Oracle enforce reads in the database; MongoDB, Redis and SQL Server need a read-only login on the server. No query allowlist: joins, CTEs, pipelines and read commands are allowed. Verification: 16 unit tests on the script builder, integration test with fake SSH, Playwright on the full stack.
+
 ## MCP
 
 - [x] **Read tools and audit**
