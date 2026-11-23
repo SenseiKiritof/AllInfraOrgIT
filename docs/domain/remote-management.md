@@ -53,7 +53,7 @@ Full reference: `docs/domain/file-transfer.md`.
 ## Executions and console
 
 - `GET /api/command-executions` (`SystemAdmin`): paginated, filterable by server, kind and text; script and output are redacted.
-- WebSocket console `/api/socket/servers/{id}/console`: session cookie, **Origin** required and allowed, `ServerAdmin` role on the environment, maximum duration 30 min. The audit records opening/closing and any error, never the keystrokes.
+- WebSocket console `/api/socket/servers/{id}/console`: session cookie, **Origin** required and allowed, `ServerAdmin` role on the environment. The session stays open while the browser socket is connected, regardless of input and without a maximum duration; a closed socket leaves it resumable for `ConsoleResumeMinutes`, then it is terminated. Dead sockets are detected by the WebSocket keepalive. The audit records opening/closing and any error, never the keystrokes.
 - The console dock at the bottom also has **+** to open a console by choosing a server (only environments where the user is `ServerAdmin`) and **File** to open the SFTP/FTP browser for the same servers.
 
 ## Frontend
@@ -74,7 +74,7 @@ ServerAccess__CredentialKeys__1=<32-byte base64>
 ServerAccess__CommandTimeoutMinutes=10
 ServerAccess__MaxOutputBytes=1048576
 ServerAccess__MaxAuditOutputBytes=65536
-ServerAccess__ConsoleMaxMinutes=30
+ServerAccess__ConsoleResumeMinutes=10
 ```
 
 The keys are mandatory at startup: without `CredentialKeys` the API does not start.
@@ -87,7 +87,7 @@ The keys are mandatory at startup: without `CredentialKeys` the API does not sta
 
 ## Known limits
 
-- The console shows the terminal without full ANSI emulation (sequences stripped) and only has the duration limit, not a separate idle timeout.
+- The console shows the terminal without full ANSI emulation (sequences stripped). It has no input-idle timeout and no maximum duration: it closes when the browser socket disconnects and the resume window expires.
 - Key rotation is done from configuration, not from the UI.
 - Reachability runs servers sequentially; a very large environment needs a queue.
 - Importing legacy credentials with the old key remains in Phase 7; without a key, `NeedsReauth` is used.
