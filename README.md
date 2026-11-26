@@ -23,6 +23,10 @@ AI actions and the audit log, with permissions per environment.
 - **Projects and traffic**: group applications, list their servers and draw
   proxy connections and routes. The interactive diagram is filtered by
   provider, environment or project and keeps saved layouts.
+- **HAProxy fleet**: discover HAProxy hosts over the same read-only SSH access,
+  opt each installation into monitoring, and keep routes, backend servers and
+  certificate metadata in the inventory. The HAProxy page reconciles backend
+  servers with the deployed applications and aggregates every proxy.
 
 ### Test, operate and audit
 
@@ -31,13 +35,28 @@ AI actions and the audit log, with permissions per environment.
 - **Reachability tests** run from the server itself over SSH: the result is
   what that server really reaches, OK or KO.
 - **SSH console and files**: several sessions side by side or minimized, plus
-  an SFTP/FTPS browser and command templates.
+  an SFTP/FTPS browser and command templates. Closing a pane compacts the
+  layout, and a minimized session takes the freed pane before the layout
+  shrinks.
 - **Application actions** such as restart, logs and health check, with optional
   confirmation, idempotency and shell-metacharacter checks.
 - **Credentials**: shared or per-user SSH credentials, optional offline use and
   desktop devices that download them encrypted for their own RSA key.
 - **Audit log** of consoles, actions, tests, MCP calls and tunnels. The audit
   chain is tamper-evident and can be anchored to an external SIEM/WORM sink.
+
+### Monitor HAProxy
+
+HAProxy discovery runs over the existing read-only SSH access; monitoring is an
+explicit choice per installation and never changes the proxy configuration.
+The Data Plane API or the stats endpoint feeds requests, 4xx/5xx, response
+time, sessions, server checks and weights, protocol counters and certificate
+metadata. The **HAProxy** page shows an aggregate view of all proxies, one
+series per installation plus the total, filters and groups servers by backend,
+normalizes one- and five-minute buckets to requests per minute, and compares
+1/6/24 h or 7 days by requests, errors or response time. Certificates and
+HTTP/2, HTTP/3 and QUIC counters live in the instance tabs. Design notes:
+[HAProxy management](docs/architecture/haproxy-management.md).
 
 ### Roles, language and theme
 
