@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-27T11:06:08Z",
+  "generatedAt": "2026-11-27T15:34:49Z",
   "repos": {
-    "InfraOrgITApi": "7c3c62439a5eccdfd0da912339ffaf7d35ee9fa0",
-    "InfraOrgITWeb": "53e2306fe76664f246d53d1767a2ea5fcbfe15cc",
+    "InfraOrgITApi": "368804523054145347d1a4ed40c5a22484611f37",
+    "InfraOrgITWeb": "9ee31c49da4d54dbc523008f63765a986bf53a88",
     "InfraOrgITDocker": "531569fd0b6d6169c436c05330896e639169d2f6",
     "InfraOrgITDesktop": "88552bf2846bfba49c8e9292abb3a475aa4039a8"
   }
