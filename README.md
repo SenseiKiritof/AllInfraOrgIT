@@ -55,8 +55,11 @@ metadata. The **HAProxy** page shows an aggregate view of all proxies, one
 series per installation plus the total, filters and groups servers by backend,
 normalizes one- and five-minute buckets to requests per minute, and compares
 1/6/24 h or 7 days by requests, errors or response time. Certificates and
-HTTP/2, HTTP/3 and QUIC counters live in the instance tabs. Design notes:
-[HAProxy management](docs/architecture/haproxy-management.md).
+HTTP/2, HTTP/3 and QUIC counters live in the instance tabs.
+
+![HAProxy fleet overview with per-instance series, server status and application reconciliation](docs/screenshots/haproxy-overview.png)
+
+Design notes: [HAProxy management](docs/architecture/haproxy-management.md).
 
 ### Roles, language and theme
 
